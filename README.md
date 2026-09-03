@@ -3,6 +3,7 @@
 A responsive web platform developed for the **Lametna** (لمتنا بصمة) youth volunteer initiative in Jordan to provide an official digital presence and showcase community activities.
 
 ## Tech Stack
+* **Backend:** Python (Flask)
 * **Frontend:** HTML5, CSS3, JavaScript
 * **Version Control:** Git, GitHub
 
