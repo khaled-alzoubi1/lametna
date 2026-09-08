@@ -3,319 +3,358 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة مبادرة لمتنا بصمة التطوعية</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>لمتنا بصمة | المنصة التطوعية الرسمية</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div id="toast-banner" class="toast-banner hidden"></div>
 
-    <!-- شاشة البداية Splash Screen -->
-    <div id="splash-screen">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="شعار لمتنا بصمة" class="splash-logo">
-        <h1 class="splash-text">لمتنا بصمة</h1>
+    <!-- 1. القائمة العلوية التفاعلية Navbar -->
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            <div class="nav-brand-title">لمتنا <span>بصمة</span></div>
+        </a>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}" class="active">الرئيسية</a></li>
+                <li><a href="#about">من نحن</a></li>
+                <li><a href="#leadership">الهيئة الإدارية</a></li>
+                <li><a href="#activities">الفعاليات</a></li>
+                <li><a href="#gallery">المعرض</a></li>
+                <li><a href="#contact">تواصل معنا</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="{{ url_for('profile') }}">ملفي الشخصي</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-danger" style="padding: 6px 14px; text-decoration: none; border-radius: 6px;">تسجيل خروج</a></li>
+                {% elif session.get('admin_logged_in') %}
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="btn-nav-action">لوحة التحكم</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-danger" style="padding: 6px 14px; text-decoration: none; border-radius: 6px;">تسجيل خروج</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">تسجيل الدخول</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn-nav-action">انضم كمتطوع</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <!-- 2. شريط رسائل النظام (Flash Messages) -->
+    <div class="container" style="max-width: 1200px; margin: 1rem auto 0; padding: 0 5%;">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     </div>
 
-    <div id="main-content" class="hidden">
-        <!-- شريط التنقل العلوي -->
-        <nav class="navbar">
-            <div class="nav-right">
-                <button id="profile-btn" class="profile-btn" title="حسابي">👤</button>
-            </div>
-            <div class="nav-center">
-                <div class="brand-container">
-                    <img src="{{ url_for('static', filename='logo.png') }}" alt="شعار لمتنا بصمة" class="nav-logo">
-                    <span class="nav-title">مبادرة لمتنا بصمة التطوعية</span>
+    <!-- 3. الواجهة الترحيبية والإحصائيات والتسجيل السريع -->
+    <main class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">الشباب والمجتمع،<br><span>أثرٌ يتصل.</span></h1>
+            <p class="hero-desc">
+                مبادرة شبابية أردنية تأسست لنثبت أن التغيير الحقيقي يبدأ بجمع طاقتنا معاً. نؤمن أن العمل التطوعي ليس مجرد ساعات نقدّمها، بل أثر ملموس ومستدام نتركه في حياة الناس والمجتمع؛ لأن كل لقاء يجمعنا هو خطوة لصناعة أمل، وكل جهد نبذله يترك وراءه بصمة لا تُمحى.
+            </p>
+            
+            <div class="stats-container">
+                <div class="stat-box">
+                    <span class="stat-number">+{{ stats.volunteers_count|default(150) }}</span>
+                    <span class="stat-label">متطوع فاعل</span>
                 </div>
-            </div>
-            <div class="nav-left"></div>
-        </nav>
-
-        <!-- الشاشة الرئيسية للموقع -->
-        <div class="container" id="home-section">
-            <div id="global-announcement" class="announcement-bar hidden"></div>
-
-            <div class="about-card">
-                <h2 class="about-title">🌟 عن مبادرة لمتنا بصمة</h2>
-                <p id="display-about-text" class="about-body">جاري تحميل النبذة التعريفية...</p>
-            </div>
-
-            <div class="action-buttons">
-                <button class="btn-primary" id="register-btn">تسجيل كمتطوع جديد</button>
-                <button class="btn-primary" id="login-btn">تسجيل الدخول</button>
-            </div>
-
-            <div class="social-links">
-                <a href="https://www.instagram.com/lametna_basmeh" target="_blank" class="social-btn">إنستغرام</a>
-                <a href="https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8" target="_blank" class="social-btn">واتساب</a>
-                <a href="https://www.nahno.org/ngo/فريق-لمتنا-بصمة-81843" target="_blank" class="social-btn">منصة نحن</a>
+                <div class="stat-box">
+                    <span class="stat-number">+{{ stats.hours_count|default(1200) }}</span>
+                    <span class="stat-label">ساعة تطوعية</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">+{{ stats.events_count|default(25) }}</span>
+                    <span class="stat-label">فعالية منجزة</span>
+                </div>
             </div>
         </div>
 
-        <!-- منصة المتطوع التفاعلية (Community Hub) -->
-        <div class="container hidden" id="volunteer-hub-section">
-            <div class="hub-header">
-                <h2>أهلاً بك يا <span id="hub-volunteer-name"></span> 👋</h2>
-                <div class="hub-tabs">
-                    <button class="tab-btn active" id="hub-tab-feed">تغطيات وأخبار الفريق</button>
-                    <button class="tab-btn" id="hub-tab-events">الفعاليات المتاحة للتسجيل</button>
-                    <button class="tab-btn" id="hub-tab-profile">ملفي الشخصي</button>
-                </div>
-            </div>
-
-            <!-- تغذية الأخبار والمنشورات -->
-            <div id="hub-view-feed">
-                <div id="hub-posts-container" class="posts-feed-grid"></div>
-            </div>
-
-            <!-- الفعاليات المتاحة للتسجيل -->
-            <div id="hub-view-events" class="hidden">
-                <div id="hub-events-container" class="volunteers-cards-container"></div>
-            </div>
-
-            <!-- الملف الشخصي للمتطوع -->
-            <div id="hub-view-profile" class="hidden">
-                <div class="profile-container" style="box-shadow:none; padding:0; border:none; margin:0;">
-                    <div class="profile-header">
-                        <div id="profile-avatar-container" class="avatar-wrapper">
-                            <span id="profile-default-avatar" class="avatar">👤</span>
-                            <img id="profile-image-avatar" src="" alt="الصورة الشخصية" class="profile-avatar-img hidden">
-                        </div>
-                        <h2 class="volunteer-name" id="profile-display-name">اسم المتطوع</h2>
-                        <span class="volunteer-rank rank-new" id="profile-display-rank">مستجد</span>
-                        <div id="profile-leader-badge" class="leader-badge hidden">⭐ قائد ميداني</div>
-                    </div>
-                    
-                    <div class="profile-stats">
-                        <div class="stat-box">
-                            <h3 id="profile-display-events">0</h3>
-                            <p>فعاليات شاركت بها</p>
-                        </div>
-                        <div class="stat-box">
-                            <h3 id="profile-display-warnings">0</h3>
-                            <p>إنذارات</p>
-                        </div>
-                    </div>
-                    
-                    <div class="events-history">
-                        <h3 class="section-title">حالة العضوية:</h3>
-                        <p id="profile-display-status" style="font-weight: bold; color: #a30000; margin-top: 10px;">قيد المراجعة</p>
-                    </div>
-
-                    <div class="event-form-box" style="margin-top: 20px;">
-                        <h3>تعديل الملف الشخصي والصورة:</h3>
-                        <label style="font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px;">🖼️ تغيير صورتك الشخصية:</label>
-                        <input type="file" id="edit-profile-avatar" accept="image/*" class="input-field">
-                        <input type="tel" id="edit-profile-phone" placeholder="رقم الهاتف" class="input-field">
-                        <input type="text" id="edit-profile-location" placeholder="مكان السكن" class="input-field">
-                        <button type="button" id="save-profile-btn" class="btn-primary" style="margin-top: 8px;">حفظ التعديلات والصورة</button>
-                    </div>
-                </div>
-            </div>
-
-            <button type="button" class="btn-secondary logout-trigger-btn" style="margin-top: 25px;">تسجيل الخروج</button>
-        </div>
-
-        <!-- نموذج تسجيل متطوع جديد -->
-        <div class="register-container hidden" id="register-section">
-            <h2 class="form-title">نموذج تسجيل متطوع</h2>
-            <form id="register-form">
-                <h3 class="section-title">المعلومات الشخصية وبيانات الحساب:</h3>
-                <input type="text" id="reg-name" placeholder="الاسم الرباعي" required class="input-field">
-                <input type="tel" id="reg-phone" placeholder="رقم الهاتف / الواتساب (مثال: 0791234567)" required class="input-field">
-                <input type="email" id="reg-email" placeholder="البريد الإلكتروني (لتسجيل الدخول لاحقاً)" required class="input-field">
-                <input type="password" id="reg-password" placeholder="كلمة المرور" required class="input-field">
-                
-                <div class="row-inputs">
-                    <input type="number" id="reg-age" placeholder="العمر" min="15" max="60" required class="input-field small-input">
-                    <div class="gender-container">
-                        <label><input type="radio" name="gender" value="ذكر" checked required> ذكر</label>
-                        <label><input type="radio" name="gender" value="أنثى" required> أنثى</label>
-                    </div>
-                </div>
-
-                <input type="text" id="reg-location" placeholder="مكان السكن (المحافظة والمنطقة)" required class="input-field">
-
-                <h3 class="section-title">أسئلة الموقف وسلوك العمل:</h3>
-                <select id="reg-pressure" required class="input-field">
-                    <option value="" disabled selected>كيف تتصرف تحت الضغط العالي؟</option>
-                    <option value="1">أحافظ على هدوئي وأعيد ترتيب الأولويات بدقة</option>
-                    <option value="2">أتعامل بشكل طبيعي ولكن قد أطلب المساعدة عند تفاقم الأمور</option>
-                    <option value="3">أواجه صعوبة وأفقد تركيزي تحت الضغط الشديد</option>
-                </select>
-
-                <select id="reg-punctuality" required class="input-field">
-                    <option value="" disabled selected>ما هو موقفك من الالتزام بالوقت؟</option>
-                    <option value="1">أحضر قبل الموعد المحدد</option>
-                    <option value="2">أحضر على الوقت تماماً</option>
-                    <option value="3">أتأخر أحياناً عن الموعد</option>
-                </select>
-
-                <select id="reg-conflict" required class="input-field">
-                    <option value="" disabled selected>كيف تتعامل مع الخلافات أو الغضب داخل الفريق؟</option>
-                    <option value="1">أفصل المشاعر الشخصية وأركز على الحلول والهدف المشترك</option>
-                    <option value="2">ألتزم الصمت وأتجنب النقاش المباشر لحين هدوء الموقف</option>
-                    <option value="3">أدافع عن رأيي بحدة وأتأثر عاطفياً بالموقف</option>
-                </select>
-
-                <select id="reg-workstyle" required class="input-field">
-                    <option value="" disabled selected>ما هو نمط العمل المفضل لديك؟</option>
-                    <option value="1">العمل الجماعي والتعاون الكامل مع الفريق</option>
-                    <option value="2">المهام الفردية المحددة والواضحة</option>
-                    <option value="3">القيادة وتوجيه الآخرين</option>
-                </select>
-
-                <h3 class="section-title">المهارات والخبرات:</h3>
-                <div class="checkbox-group">
-                    <label><input type="checkbox" name="skill" value="تصوير"> تصوير فوتوغرافي وتوثيق ميداني</label>
-                    <label><input type="checkbox" name="skill" value="مونتاج"> مونتاج وصناعة محتوى مرئي</label>
-                    <label><input type="checkbox" name="skill" value="تصميم"> تصميم جرافيك وصناعة هوية بصرية</label>
-                    <label><input type="checkbox" name="skill" value="سوشيال_ميديا"> إدارة منصات التواصل الاجتماعي والتسويق</label>
-                    <label><input type="checkbox" name="skill" value="تنظيم"> تنظيم وإدارة الفعاليات الميدانية</label>
-                    <label><input type="checkbox" name="skill" value="إلقاء"> إلقاء وخطابة وتقديم فعاليات</label>
-                    <label><input type="checkbox" name="skill" value="موسيقى"> عزف على آلات موسيقية</label>
-                    <label><input type="checkbox" id="exp-checkbox" name="skill" value="خبرة_سابقة"> خبرة تطوعية سابقة</label>
-                </div>
-
-                <textarea id="exp-details" class="input-field hidden" placeholder="اذكر المبادرات أو المنظمات التي تطوعت معها وطبيعة دورك السابق بالتفصيل..." rows="4"></textarea>
-
-                <button type="submit" class="btn-primary" style="background:#007a3d;">إرسال الطلب</button>
-                <button type="button" class="btn-secondary" id="back-btn">رجوع للصفحة الرئيسية</button>
-            </form>
-        </div>
-
-        <!-- لوحة تحكم الإدارة -->
-        <div class="admin-dashboard-container hidden" id="admin-dashboard">
-            <div class="dashboard-top-bar">
-                <h2 class="form-title" style="margin:0;">لوحة تحكم الإدارة</h2>
-                <div style="display:flex; gap:8px;">
-                    <button id="copy-phones-btn" class="action-btn btn-whatsapp">📋 نسخ جميع الأرقام</button>
-                    <a href="/api/export/volunteers" class="export-btn" download>📥 تصدير (Excel)</a>
-                </div>
-            </div>
-
-            <!-- بطاقات الإحصائيات السريعة -->
-            <div class="admin-stats-grid">
-                <div class="stat-card">
-                    <h3 id="stat-total">0</h3>
-                    <p>إجمالي المسجلين</p>
-                </div>
-                <div class="stat-card stat-accepted">
-                    <h3 id="stat-accepted">0</h3>
-                    <p>المقبولين</p>
-                </div>
-                <div class="stat-card stat-pending">
-                    <h3 id="stat-pending">0</h3>
-                    <p>قيد المراجعة</p>
-                </div>
-                <div class="stat-card stat-events">
-                    <h3 id="stat-events">0</h3>
-                    <p>الفعاليات المقامة</p>
-                </div>
-            </div>
-
-            <!-- تبويبات الإدارة -->
-            <div class="admin-tabs">
-                <button class="tab-btn active" id="tab-volunteers-btn">إدارة المتطوعين</button>
-                <button class="tab-btn" id="tab-events-btn">إدارة الفعاليات</button>
-                <button class="tab-btn" id="tab-content-btn">إدارة المحتوى والنشر</button>
-                <button class="tab-btn" id="tab-leaders-btn">الهيكل القيادي (Leaders)</button>
-            </div>
-
-            <!-- قسم المتطوعين -->
-            <div id="section-volunteers-view">
-                <div class="controls-row">
-                    <input type="text" id="volunteer-search-input" placeholder="🔍 ابحث بالاسم، مكان السكن، رقم الهاتف، أو البريد..." class="input-field search-input">
-                    <select id="skill-filter-select" class="input-field filter-select">
-                        <option value="">عرض جميع المهارات</option>
-                        <option value="مونتاج">مونتاج وصناعة محتوى</option>
-                        <option value="تصوير">تصوير فوتوغرافي</option>
-                        <option value="تصميم">تصميم جرافيك</option>
-                        <option value="سوشيال_ميديا">إدارة سوشيال ميديا</option>
-                        <option value="تنظيم">تنظيم فعاليات</option>
-                        <option value="إلقاء">إلقاء وخطابة</option>
-                        <option value="موسيقى">عزف وموسيقى</option>
-                        <option value="خبرة_سابقة">أصحاب الخبرات السابقة</option>
+        <div class="selector-card">
+            <h3 class="selector-title">انضم لمجتمع لمتنا بصمة</h3>
+            <form action="{{ url_for('register') }}" method="GET">
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 8px; font-weight: 700;">المحافظة</label>
+                    <select name="city" required>
+                        <option value="عمان">العاصمة عمان</option>
+                        <option value="الزرقاء">الزرقاء</option>
+                        <option value="إربد">إربد</option>
+                        <option value="البلقاء">البلقاء</option>
+                        <option value="أخرى">محافظة أخرى</option>
                     </select>
                 </div>
-                <div id="volunteers-list" class="volunteers-cards-container"></div>
-            </div>
-
-            <!-- قسم الفعاليات -->
-            <div id="section-events-view" class="hidden">
-                <form id="create-event-form" class="event-form-box">
-                    <h3>إنشاء فعالية جديدة:</h3>
-                    <input type="text" id="event-title" placeholder="عنوان الفعالية" required class="input-field">
-                    <input type="text" id="event-location" placeholder="الموقع" required class="input-field">
-                    <input type="date" id="event-date" required class="input-field">
-                    <button type="submit" class="btn-primary" style="background:#007a3d;">إضافة الفعالية</button>
-                </form>
-
-                <h3 style="margin-top: 20px;">قائمة الفعاليات والمسجلين والحضور:</h3>
-                <div id="events-list" class="volunteers-cards-container"></div>
-            </div>
-
-            <!-- قسم إدارة المحتوى والنشر (CMS) -->
-            <div id="section-content-view" class="hidden">
-                <div class="event-form-box">
-                    <h3>تعديل نبذة المبادرة والإعلانات العامة:</h3>
-                    <textarea id="admin-edit-about" rows="3" class="input-field" placeholder="اكتب نبذة المبادرة هنا..."></textarea>
-                    <input type="text" id="admin-edit-announcement" placeholder="إعلان عاجل أعلى الصفحة (اتركه فارغاً للإلغاء)" class="input-field">
-                    <button type="button" id="save-site-info-btn" class="btn-primary" style="margin-top:8px;">حفظ معلومات الموقع</button>
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 8px; font-weight: 700;">اللجنة الميدانية المفضلة</label>
+                    <select name="team" required>
+                        <option value="الميداني">الفريق الميداني واللوجستي</option>
+                        <option value="الإعلامي">الفريق الإعلامي والتوثيق</option>
+                        <option value="التنظيم">لجنة التنظيم والتخطيط</option>
+                    </select>
                 </div>
-
-                <div class="event-form-box" style="margin-top: 15px;">
-                    <h3>نشر تغطية جديدة (Post / Video):</h3>
-                    <input type="text" id="post-title" placeholder="عنوان المنشور أو التغطية" required class="input-field">
-                    <textarea id="post-caption" rows="2" placeholder="اكتب تفاصيل التغطية أو المنشور..." class="input-field"></textarea>
-                    
-                    <div style="margin: 8px 0;">
-                        <label style="font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px;">📤 رفع صورة أو فيديو من جهازك:</label>
-                        <input type="file" id="post-file-input" accept="image/*,video/mp4,video/quicktime" class="input-field">
-                    </div>
-
-                    <div style="text-align: center; margin: 4px 0; color: #64748b; font-size: 12px; font-weight: bold;">— أو استخدام رابط خارجي —</div>
-                    <input type="url" id="post-media-url" placeholder="ضع رابط الصورة أو الفيديو الخارجي هنا..." class="input-field">
-
-                    <button type="button" id="create-post-btn" class="btn-primary" style="background:#007a3d; margin-top:8px;">نشر الآن</button>
-                </div>
-
-                <h3 style="margin-top: 20px;">المنشورات الحالية:</h3>
-                <div id="admin-posts-list" class="volunteers-cards-container"></div>
-            </div>
-
-            <!-- قسم الهيكل القيادي -->
-            <div id="section-leaders-view" class="hidden">
-                <div class="event-form-box">
-                    <h3>تعيين قائد جديد (Leader):</h3>
-                    <input type="number" id="leader-v-id" placeholder="أدخل رقم المتطوع (ID)" class="input-field">
-                    <input type="text" id="leader-role-title" placeholder="المسمى القيادي (مثال: قائد اللجنة الإعلامية / قائد تنظيمي)" class="input-field">
-                    <button type="button" id="assign-leader-btn" class="btn-primary" style="background:#007a3d; margin-top:8px;">تعيين كقائد رسمي</button>
-                </div>
-
-                <h3 style="margin-top:20px;">قائمة قادة المبادرة الميدانيين:</h3>
-                <div id="leaders-list" class="volunteers-cards-container"></div>
-            </div>
-
-            <button type="button" class="btn-secondary logout-trigger-btn" style="margin-top: 20px;">تسجيل الخروج من الإدارة</button>
+                <button type="submit" class="btn-primary-block">متابعة التسجيل</button>
+            </form>
         </div>
-    </div>
+    </main>
 
-    <!-- نافذة تسجيل الدخول الموحدة -->
-    <div id="login-modal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-btn" id="close-login">&times;</span>
-            <h2 class="form-title">تسجيل الدخول</h2>
-            <form id="login-form">
-                <input type="email" id="login-email" placeholder="البريد الإلكتروني" required class="input-field">
-                <input type="password" id="login-password" placeholder="كلمة المرور" required class="input-field">
-                <button type="submit" class="btn-primary">دخول</button>
-                <div style="text-align: center; margin-top: 12px;">
-                    <a href="#" id="forgot-password-link" style="color: #007a3d; font-size: 13px; font-weight: bold; text-decoration: none;">نسيت كلمة المرور؟</a>
+    <!-- 4. قسم الرؤية والرسالة (مستوحى من تمبلت EduLine) -->
+    <section class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 5%; width: 100%;" id="about">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+            <div style="background: var(--jo-white); padding: 2rem; border-radius: var(--radius-md); border-top: 4px solid var(--jo-green); box-shadow: var(--shadow-sm);">
+                <h3 style="color: var(--jo-green); margin-bottom: 1rem; font-size: 1.3rem;"><i class="fa-solid fa-bullseye"></i> رؤيتنا</h3>
+                <p style="line-height: 1.7; color: var(--jo-dark-gray);">
+                    الوصول إلى مجتمع شبابي ريادي يقود المبادرات المجتمعية بأعلى معايير التنظيم، وتوسيع مظلة الأثر التطوعي لتغطي كافة محافظات المملكة.
+                </p>
+            </div>
+            <div style="background: var(--jo-white); padding: 2rem; border-radius: var(--radius-md); border-top: 4px solid var(--jo-red); box-shadow: var(--shadow-sm);">
+                <h3 style="color: var(--jo-red); margin-bottom: 1rem; font-size: 1.3rem;"><i class="fa-solid fa-hand-holding-heart"></i> رسالتنا</h3>
+                <p style="line-height: 1.7; color: var(--jo-dark-gray);">
+                    تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة وآمنة.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. قسم الهيئة الإدارية وقادة الفرق (شبكة الكروت الدائرية) -->
+    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="leadership">
+        <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-red); padding-right: 12px; margin-bottom: 2rem;">
+            الهيئة الإدارية وقادة الفرق
+        </h2>
+        
+        <div class="grid-members">
+            {% for leader in leaders %}
+            <div class="member-card">
+                <div class="member-avatar-wrapper">
+                    <img src="{{ leader.photo_url or url_for('static', filename='images/default-avatar.png') }}" alt="{{ leader.name }}">
+                </div>
+                <div class="member-name">{{ leader.name }}</div>
+                <div class="member-role">{{ leader.position or 'قائد فريق' }}</div>
+                <a href="mailto:{{ leader.email }}" class="btn-outline-card">تواصل معه</a>
+            </div>
+            {% else %}
+            <div class="member-card">
+                <div class="member-avatar-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=رئيس+المبادرة&background=007A3D&color=fff" alt="رئيس المبادرة">
+                </div>
+                <div class="member-name">رئاسة المبادرة</div>
+                <div class="member-role">الهيئة العليا</div>
+                <a href="#contact" class="btn-outline-card">تواصل</a>
+            </div>
+            <div class="member-card">
+                <div class="member-avatar-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=نائب+الرئيس&background=121212&color=fff" alt="نائب الرئيس">
+                </div>
+                <div class="member-name">نائب الرئيس</div>
+                <div class="member-role">إدارة العمليات والتنسيق</div>
+                <a href="#contact" class="btn-outline-card">تواصل</a>
+            </div>
+            <div class="member-card">
+                <div class="member-avatar-wrapper">
+                    <img src="https://ui-avatars.com/api/?name=مسؤول+الميدان&background=CE1126&color=fff" alt="مسؤول الميدان">
+                </div>
+                <div class="member-name">قائد الفريق الميداني</div>
+                <div class="member-role">التنظيم والأنشطة</div>
+                <a href="#contact" class="btn-outline-card">تواصل</a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 6. قسم أحدث الفعاليات والأنشطة -->
+    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="activities">
+        <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-green); padding-right: 12px; margin-bottom: 2rem;">
+            الفعاليات الميدانية القادمة
+        </h2>
+        
+        <div class="events-list">
+            {% for event in events %}
+            <div class="event-item-card">
+                <div class="event-meta">
+                    <span><i class="fa-regular fa-calendar"></i> {{ event.date }}</span>
+                    <span><i class="fa-regular fa-clock"></i> {{ event.time }}</span>
+                    <span><i class="fa-solid fa-location-dot"></i> {{ event.location }}</span>
+                </div>
+                <h3 style="margin-bottom: 8px;">{{ event.title }}</h3>
+                <p class="event-desc">{{ event.description }}</p>
+            </div>
+            {% else %}
+            <div class="event-item-card">
+                <div class="event-meta">
+                    <span><i class="fa-regular fa-calendar"></i> قريباً</span>
+                    <span><i class="fa-solid fa-location-dot"></i> عمان، الأردن</span>
+                </div>
+                <h3 style="margin-bottom: 8px;">حملة بصمة خير الميدانية</h3>
+                <p class="event-desc">يتم الآن تجهيز الجداول الميدانية للفعالية القادمة وسيتم إشعار جميع المتطوعين المعتمدين فور اكتمال الترتيبات.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 7. قسم معرض الصور والفيديوهات (الميزة المسترجعة بالكامل) -->
+    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="gallery">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
+            <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-black); padding-right: 12px;">
+                معرض البصمات والتغطيات
+            </h2>
+            <div class="gallery-filters" style="display: flex; gap: 10px;">
+                <button class="gallery-filter-btn active" onclick="filterGallery('all')" style="padding: 6px 14px; border: 1px solid var(--jo-border); background: var(--jo-green); color: #fff; border-radius: 6px; cursor: pointer; font-weight: 700;">الكل</button>
+                <button class="gallery-filter-btn" onclick="filterGallery('photo')" style="padding: 6px 14px; border: 1px solid var(--jo-border); background: var(--jo-white); color: var(--jo-black); border-radius: 6px; cursor: pointer; font-weight: 700;">الصور</button>
+                <button class="gallery-filter-btn" onclick="filterGallery('video')" style="padding: 6px 14px; border: 1px solid var(--jo-border); background: var(--jo-white); color: var(--jo-black); border-radius: 6px; cursor: pointer; font-weight: 700;">الفيديوهات</button>
+            </div>
+        </div>
+
+        <div class="services-grid" id="gallery-container">
+            {% for item in gallery_items %}
+            <div class="service-card gallery-item" data-type="{{ item.type }}" onclick="openMedia('{{ item.media_url }}', '{{ item.type }}', '{{ item.title }}')">
+                <img src="{{ item.thumbnail_url or item.media_url }}" alt="{{ item.title }}">
+                <div class="service-card-title">
+                    {% if item.type == 'video' %}<i class="fa-solid fa-play" style="display:block; margin-bottom: 6px;"></i>{% endif %}
+                    {{ item.title }}
+                </div>
+            </div>
+            {% else %}
+            <!-- عناصر افتراضية للعرض -->
+            <div class="service-card gallery-item" data-type="photo" onclick="openMedia('https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80', 'photo', 'حملة الشتاء الميدانية')">
+                <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80" alt="تطوع">
+                <div class="service-card-title">حملة الشتاء الميدانية</div>
+            </div>
+            <div class="service-card gallery-item" data-type="photo" onclick="openMedia('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80', 'photo', 'توزيع الحقائب المدرسية')">
+                <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80" alt="تعليم">
+                <div class="service-card-title">توزيع الحقائب المدرسية</div>
+            </div>
+            <div class="service-card gallery-item" data-type="video" onclick="openMedia('https://www.w3schools.com/html/mov_bbb.mp4', 'video', 'التوثيق السنوي لمتنا بصمة')">
+                <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80" alt="لقاء المتطوعين">
+                <div class="service-card-title"><i class="fa-solid fa-play" style="display:block; margin-bottom: 6px;"></i> التوثيق السنوي لمتنا بصمة</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 8. قسم تواصل معنا المباشر (مطابق لنموذج تمبلت المدرسة) -->
+    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="contact">
+        <div style="background: var(--jo-white); border-radius: var(--radius-md); padding: 2.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
+            <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);">نحن جاهزون للإجابة عن استفساراتك</h2>
+            <p style="color: var(--jo-dark-gray); margin-bottom: 1.5rem; line-height: 1.6;">إذا كان لديك أي سؤال حول آلية الانضمام، الشراكات المجتمعية، أو الفعاليات، تواصل معنا وسنرد خلال 24 ساعة.</p>
+            
+            <form action="{{ url_for('contact_submit') if 'contact_submit' in url_map else '#' }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
+                <div>
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الأول</label>
+                    <input type="text" name="first_name" class="custom-input" placeholder="الاسم الأول" required>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">اسم العائلة</label>
+                    <input type="text" name="last_name" class="custom-input" placeholder="اسم العائلة" required>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
+                    <input type="tel" name="phone" class="custom-input" placeholder="079XXXXXXXX" required>
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
+                    <input type="email" name="email" class="custom-input" placeholder="example@mail.com" required>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">موضوع الاستفسار / الرسالة</label>
+                    <textarea name="message" class="custom-input" rows="4" placeholder="اكتب تفاصيل استفسارك هنا..." required style="resize: vertical;"></textarea>
+                </div>
+                <div style="grid-column: 1 / -1;">
+                    <button type="submit" class="btn-primary-block" style="max-width: 200px;">إرسال الاستفسار</button>
                 </div>
             </form>
         </div>
+    </section>
+
+    <!-- 9. نافذة مشغل الوسائط المنبثقة (Lightbox Modal) -->
+    <div id="mediaModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 20px;">
+        <div style="position: relative; max-width: 800px; width: 100%; background: #000; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-lg);">
+            <button onclick="closeMedia()" style="position: absolute; top: 15px; right: 15px; background: var(--jo-red); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; z-index: 10;">&times;</button>
+            <div id="modalContent" style="width: 100%; max-height: 500px; display: flex; justify-content: center; align-items: center;"></div>
+            <div id="modalCaption" style="color: #fff; text-align: center; padding: 12px; font-weight: 700; background: #121212;"></div>
+        </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- 10. الفوتر Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h4>لمتنا بصمة</h4>
+                <p style="color: #a0aec0; line-height: 1.6; font-size: 0.95rem;">
+                    مبادرة شبابية أردنية تهدف إلى ترسيخ مفهوم التطوع الحقيقي وصناعة أثر مستدام في المجتمع.
+                </p>
+            </div>
+            <div class="footer-column">
+                <h4>روابط سريعة</h4>
+                <ul>
+                    <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                    <li><a href="#about">من نحن</a></li>
+                    <li><a href="#leadership">الهيئة الإدارية</a></li>
+                    <li><a href="#gallery">المعرض والتوثيق</a></li>
+                    <li><a href="{{ url_for('register') }}">انضم كمتطوع</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>التواصل المباشر</h4>
+                <ul>
+                    <li><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> عمان - المملكة الأردنية الهاشمية</li>
+                    <li><i class="fa-regular fa-envelope" style="color: var(--jo-green);"></i> info@lametnahbasmeh.org</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 مبادرة لمتنا بصمة. جميع الحقوق محفوظة.
+        </div>
+    </footer>
+
+    <!-- 11. المحرك البرمجي للجافاسكريبت المضمن -->
+    <script>
+        function filterGallery(type) {
+            const items = document.querySelectorAll('.gallery-item');
+            const buttons = document.querySelectorAll('.gallery-filter-btn');
+            
+            buttons.forEach(btn => {
+                btn.style.background = 'var(--jo-white)';
+                btn.style.color = 'var(--jo-black)';
+            });
+            event.target.style.background = 'var(--jo-green)';
+            event.target.style.color = '#fff';
+
+            items.forEach(item => {
+                if (type === 'all' || item.getAttribute('data-type') === type) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function openMedia(url, type, caption) {
+            const modal = document.getElementById('mediaModal');
+            const container = document.getElementById('modalContent');
+            const cap = document.getElementById('modalCaption');
+            
+            cap.innerText = caption;
+            if (type === 'video') {
+                container.innerHTML = `<video controls autoplay style="width: 100%; max-height: 480px;"><source src="${url}" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>`;
+            } else {
+                container.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 480px; object-fit: contain;">`;
+            }
+            modal.style.display = 'flex';
+        }
+
+        function closeMedia() {
+            const modal = document.getElementById('mediaModal');
+            document.getElementById('modalContent').innerHTML = '';
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('mediaModal');
+            if (event.target === modal) {
+                closeMedia();
+            }
+        };
+    </script>
 </body>
 </html>
