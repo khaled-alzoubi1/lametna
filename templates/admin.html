@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة والتحكم الشامل | {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} {{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</title>
+    <title>لوحة التحكم الإدارية | {{ current_admin.name if current_admin else 'إدارة المبادرة' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -22,6 +22,34 @@
             gap: 15px;
             border-bottom: 2px solid var(--jo-border);
             padding-bottom: 1.5rem;
+        }
+        .admin-profile-hero {
+            background: var(--jo-white);
+            border-radius: var(--radius-md);
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--jo-border);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            border-right: 6px solid var(--jo-green);
+        }
+        .admin-profile-meta {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .admin-avatar-lg {
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--jo-green);
+            padding: 2px;
+            background: #fff;
         }
         .admin-section-title {
             font-size: 1.35rem;
@@ -116,10 +144,11 @@
         .btn-step-arrow {
             background: #f1f5f9;
             border: none;
-            padding: 6px 10px;
+            padding: 6px 12px;
             cursor: pointer;
             font-weight: 800;
             color: var(--jo-black);
+            font-size: 0.95rem;
         }
         .btn-step-arrow:hover {
             background: #e2e8f0;
@@ -157,11 +186,50 @@
         .admin-tab-content.active-tab-body {
             display: block;
         }
+        .admin-profile-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .admin-modal-content {
+            background: var(--jo-white);
+            border-radius: var(--radius-md);
+            padding: 2.2rem;
+            width: 100%;
+            max-width: 520px;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            border-top: 5px solid var(--jo-green);
+            animation: modalFadeIn 0.3s ease;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--jo-dark-gray);
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
-    <!-- القائمة العلوية -->
+    <!-- القائمة العلوية Navbar -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
             <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
@@ -172,14 +240,14 @@
         </a>
         <nav>
             <ul class="nav-links">
-                <li><a href="{{ url_for('index') }}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> عرض الموقع المباشر</a></li>
+                <li><a href="{{ url_for('index') }}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> عرض الموقع</a></li>
                 <li><a href="{{ url_for('admin_dashboard') }}" class="active">لوحة التحكم</a></li>
-                <li><a href="{{ url_for('logout') }}" class="btn-danger" style="padding: 6px 14px; text-decoration: none; border-radius: 6px;">خروج</a></li>
+                <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل خروج</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- شريط رسائل وتنبيهات الخادم -->
+    <!-- شريط رسائل النظام -->
     <div class="container" style="max-width: 1250px; margin: 1.5rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -194,14 +262,41 @@
 
     <main class="admin-page-wrapper">
 
+        <!-- واجهة الملف الشخصي الإداري (حسب المسؤول المسجل حالياً: خالد الزعبي أو لين عبدو) -->
+        <div class="admin-profile-hero">
+            <div class="admin-profile-meta">
+                <img src="{{ current_admin.photo_url or url_for('static', filename='logo.png') }}" alt="{{ current_admin.name }}" class="admin-avatar-lg">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap;">
+                        <h2 style="font-size: 1.45rem; font-weight: 900; margin: 0;">{{ current_admin.name }}</h2>
+                        <span style="background: #e0f2fe; color: #0284c7; padding: 3px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 800;">
+                            <i class="fa-solid fa-shield-halved"></i> {{ current_admin.position }}
+                        </span>
+                    </div>
+                    <div style="color: var(--jo-dark-gray); font-size: 0.9rem; display: flex; gap: 12px; flex-wrap: wrap;">
+                        <span><i class="fa-regular fa-envelope"></i> {{ current_admin.email }}</span>
+                        <span><i class="fa-solid fa-phone"></i> {{ current_admin.phone }}</span>
+                    </div>
+                    {% if current_admin.bio %}
+                    <div style="color: #64748b; font-size: 0.88rem; margin-top: 6px;">{{ current_admin.bio }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <button onclick="openAdminModal('adminProfileModal')" class="btn-ctrl-action" style="background: var(--jo-black); color: #fff; padding: 8px 16px;">
+                    <i class="fa-solid fa-user-pen"></i> تعديل بروفايلي وصورتي الشخصية
+                </button>
+            </div>
+        </div>
+
         <div class="admin-top-nav">
             <div>
-                <h1 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 4px;">لوحة الإدارة والتحكم المركزي</h1>
-                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، تخصيص محتوى وروابط الموقع بالكامل (CMS)، تنظيم الفعاليات، وتكليف الفرق الميدانية.</p>
+                <h1 style="font-size: 1.7rem; font-weight: 900; margin-bottom: 4px;">لوحة الإدارة والتحكم المركزي</h1>
+                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، تخصيص مظهر ومحتوى المنصة بالكامل (CMS)، تنظيم الفعاليات، وتكليف الفرق الميدانية.</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <span style="background: #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
-                    إجمالي المسجلين: {{ volunteers|length }}
+                    إجمالي المتطوعين: {{ volunteers|length }}
                 </span>
                 <span style="background: #dcfce7; color: var(--jo-green); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
                     المعتمدين: {{ volunteers|selectattr('status', 'equalto', 'approved')|list|length }}
@@ -209,10 +304,10 @@
             </div>
         </div>
 
-        <!-- أزرار التبديل بين أقسام الإدارة -->
+        <!-- أزرار التبديل بين التبويبات -->
         <div class="tab-btn-bar">
             <button class="admin-tab-btn active-tab-btn" onclick="switchAdminTab('volunteersTab', this)"><i class="fa-solid fa-users"></i> المتطوعين والقيادات</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> إدارة محتوى ومظهر الموقع</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> إدارة محتوى ومظهر الموقع (CMS)</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('eventsTab', this)"><i class="fa-regular fa-calendar-check"></i> الفعاليات الميدانية</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('dutiesTab', this)"><i class="fa-solid fa-list-check"></i> إسناد المهام والتكليفات</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('galleryTab', this)"><i class="fa-solid fa-photo-film"></i> معرض الصور والفيديو</button>
@@ -222,10 +317,10 @@
         <!-- ==================== 1. تبويب المتطوعين والقيادات ==================== -->
         <div id="volunteersTab" class="admin-tab-content active-tab-body">
             
-            <!-- أ. نموذج تعيين القيادات المعتمدين -->
+            <!-- أ. نموذج تعيين القيادات -->
             <div class="admin-box" style="border-top: 4px solid var(--jo-red);">
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1.2rem;">
-                    <i class="fa-solid fa-user-shield" style="color: var(--jo-red);"></i> تعيين وتحديث الهيئة الإدارية وقادة الفرق
+                    <i class="fa-solid fa-user-shield" style="color: var(--jo-red);"></i> تعيين وتحديث الهيئة الإدارية وقادة الفرق الميدانية
                 </h3>
                 <form action="{{ url_for('assign_leader') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 150px; gap: 12px; align-items: flex-end;">
                     <div>
@@ -261,14 +356,13 @@
             <!-- ب. قائمة وسجلات المتطوعين -->
             <div class="admin-box">
                 <div class="admin-section-title">
-                    <i class="fa-solid fa-address-book" style="color: var(--jo-green);"></i> قائمة المسجلين والطلبات الميدانية
+                    <i class="fa-solid fa-address-book" style="color: var(--jo-green);"></i> كشوفات المتطوعين والطلبات الميدانية
                 </div>
 
                 <div class="volunteers-list-container">
                     {% for v in volunteers %}
                     <div class="volunteer-item-row">
                         
-                        <!-- تفاصيل المتطوع -->
                         <div class="volunteer-profile-snippet">
                             <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" alt="{{ v.name }}">
                             <div class="volunteer-text">
@@ -282,7 +376,6 @@
                             </div>
                         </div>
 
-                        <!-- شارات الاعتماد والمناصب القيادية -->
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             {% if v.status == 'approved' %}
                                 <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
@@ -308,11 +401,9 @@
                             {% endif %}
                         </div>
 
-                        <!-- أدوات التحكم والعمليات الحسابية -->
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             
                             {% if v.status != 'approved' %}
-                                <!-- أزرار تظهر فقط قبل الاعتماد وتختفي تلقائياً بعده -->
                                 <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
                                     <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
                                 </form>
@@ -320,7 +411,7 @@
                                     <button type="submit" class="btn-ctrl-action btn-red-reject"><i class="fa-solid fa-xmark"></i> رفض</button>
                                 </form>
                             {% else %}
-                                <!-- عداد الفعاليات (+ / -) -->
+                                <!-- عداد الفعاليات المنجزة (+ / -) -->
                                 <div class="badge-counter-ctrl">
                                     <span class="counter-val-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
                                     <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
@@ -331,26 +422,26 @@
                                     </form>
                                 </div>
 
-                                <!-- عداد الساعات المحدث (+1 / -1) -->
+                                <!-- عداد الساعات المعتمدة (+1 / -1) -->
                                 <div class="badge-counter-ctrl">
                                     <span class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
                                     <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                        <button type="submit" class="btn-step-arrow" title="إضافة ساعة">+</button>
+                                        <button type="submit" class="btn-step-arrow" title="إضافة ساعة واحدة">+</button>
                                     </form>
                                     <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                        <button type="submit" class="btn-step-arrow" title="خصم ساعة">-</button>
+                                        <button type="submit" class="btn-step-arrow" title="خصم ساعة واحدة">-</button>
                                     </form>
                                 </div>
                             {% endif %}
 
-                            <!-- إعادة تعيين كلمة المرور -->
+                            <!-- إعادة تعيين كلمة السر -->
                             <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
                                 <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر إلى 123456">
                                     <i class="fa-solid fa-key"></i>
                                 </button>
                             </form>
 
-                            <!-- مسح حساب المتطوع وسجلاته -->
+                            <!-- حذف حساب المتطوع -->
                             <form action="{{ url_for('delete_volunteer_admin', volunteer_id=v.id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد تماماً من حذف هذا المتطوع وسجلاته نهائياً من قاعدة البيانات؟');" style="margin: 0;">
                                 <button type="submit" class="btn-ctrl-action" style="background: transparent; color: var(--jo-red);" title="حذف نهائي">
                                     <i class="fa-solid fa-trash-can"></i>
@@ -370,10 +461,10 @@
         <div id="cmsTab" class="admin-tab-content">
             <div class="admin-box" style="border-top: 4px solid var(--jo-green);">
                 <div class="admin-section-title">
-                    <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وقنوات التواصل الرسمية
+                    <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وصور الخدمات وقنوات التواصل
                 </div>
                 <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                    أي تعديل تجريه هنا يُحفظ مباشرة في قاعدة البيانات ويظهر فوراً على الواجهة دون الحاجة لإعادة رفع أي كود.
+                    أي تعديل تجريه هنا يُحفظ مباشرة في قاعدة بيانات Neon السحابية ويظهر فوراً على الموقع.
                 </p>
 
                 <form action="{{ url_for('update_settings') }}" method="POST">
@@ -397,7 +488,7 @@
                     <!-- ب. الشعار والبريد -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div class="custom-select-group">
-                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورة الشعار (Logo URL)</label>
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورة الشعار الرئيسي (Logo URL)</label>
                             <input type="url" name="logo_url" class="custom-input" value="{{ settings.logo_url if settings and settings.logo_url else '' }}" placeholder="اتركه فارغاً لاستخدام logo.png الافتراضي">
                         </div>
                         <div class="custom-select-group">
@@ -406,7 +497,7 @@
                         </div>
                     </div>
 
-                    <!-- ج. روابط المنصات الرسمية الحية (CMS) -->
+                    <!-- ج. روابط المنصات الرسمية الحية -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
                         <div class="custom-select-group">
                             <label style="display:block; margin-bottom: 6px; font-weight: 700;"><i class="fa-solid fa-hand-holding-heart" style="color: #0284c7;"></i> رابط حساب منصة نحن (Nahno)</label>
@@ -422,7 +513,34 @@
                         </div>
                     </div>
 
-                    <!-- د. نصوص الواجهة والرسالة والرؤية -->
+                    <!-- د. روابط صور بطاقات الخدمات الخمس في ملف المتطوعين -->
+                    <div style="background: #f1f5f9; padding: 18px; border-radius: var(--radius-sm); margin-bottom: 18px; border: 1px solid var(--jo-border);">
+                        <h4 style="font-weight: 800; margin-bottom: 12px; color: var(--jo-black);"><i class="fa-solid fa-images"></i> صور بطاقات خدمات المتطوعين الـ 5 (تظهر في صفحة الملف الشخصي)</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                            <div class="custom-select-group">
+                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: المهام والتكليفات</label>
+                                <input type="url" name="card_img_duties" class="custom-input" value="{{ settings.card_img_duties if settings and settings.card_img_duties else '' }}" required>
+                            </div>
+                            <div class="custom-select-group">
+                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: سجل الساعات والتقييم</label>
+                                <input type="url" name="card_img_hours" class="custom-input" value="{{ settings.card_img_hours if settings and settings.card_img_hours else '' }}" required>
+                            </div>
+                            <div class="custom-select-group">
+                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: الفعاليات الميدانية</label>
+                                <input type="url" name="card_img_events" class="custom-input" value="{{ settings.card_img_events if settings and settings.card_img_events else '' }}" required>
+                            </div>
+                            <div class="custom-select-group">
+                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: تقديم اعتذار عن فعالية</label>
+                                <input type="url" name="card_img_excuse" class="custom-input" value="{{ settings.card_img_excuse if settings and settings.card_img_excuse else '' }}" required>
+                            </div>
+                            <div class="custom-select-group">
+                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: نقاط التجمع والمواصلات</label>
+                                <input type="url" name="card_img_transport" class="custom-input" value="{{ settings.card_img_transport if settings and settings.card_img_transport else '' }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- هـ. نصوص الواجهة والرسالة والرؤية -->
                     <div class="custom-select-group" style="margin-bottom: 15px;">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (Hero Title - يقبل وسوم HTML)</label>
                         <input type="text" name="hero_title" class="custom-input" value="{{ settings.hero_title if settings else '' }}" required>
@@ -575,7 +693,7 @@
                 <div class="admin-section-title" style="font-size: 1.15rem; border-right-color: var(--jo-black);">
                     العناصر المعروضة حالياً
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                     {% for item in gallery_items %}
                     <div style="background: var(--jo-light-gray); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--jo-border);">
                         <img src="{{ item.thumbnail_url or item.media_url }}" style="width: 100%; height: 120px; object-fit: cover;" alt="{{ item.title }}">
@@ -620,7 +738,34 @@
 
     </main>
 
-    <!-- محرك التبديل التفاعلي بين التبويبات -->
+    <!-- نافذة تعديل بيانات وصورة المسؤول الشخصية (Admin Profile Modal) -->
+    <div id="adminProfileModal" class="admin-profile-modal">
+        <div class="admin-modal-content">
+            <button class="close-modal-btn" onclick="closeAdminModal('adminProfileModal')">&times;</button>
+            <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center;">تعديل ملفي الإداري وصورتي الشخصية</h3>
+            <form action="{{ url_for('update_admin_profile') }}" method="POST">
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الكامل</label>
+                    <input type="text" name="name" class="custom-input" value="{{ current_admin.name }}" required>
+                </div>
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
+                    <input type="tel" name="phone" class="custom-input" value="{{ current_admin.phone }}" required>
+                </div>
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورتي الشخصية (Photo URL)</label>
+                    <input type="url" name="photo_url" class="custom-input" value="{{ current_admin.photo_url or '' }}" placeholder="https://example.com/my-photo.jpg">
+                </div>
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">نبذة عني / مهامي</label>
+                    <textarea name="bio" class="custom-input" rows="3" placeholder="اكتب نبذة شخصية...">{{ current_admin.bio or '' }}</textarea>
+                </div>
+                <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">حفظ بياناتي</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- محرك التبديل التفاعلي -->
     <script>
         function switchAdminTab(tabId, btnElement) {
             const contents = document.querySelectorAll('.admin-tab-content');
@@ -632,6 +777,21 @@
             document.getElementById(tabId).classList.add('active-tab-body');
             btnElement.classList.add('active-tab-btn');
         }
+
+        function openAdminModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeAdminModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        window.onclick = function(e) {
+            const modal = document.getElementById('adminProfileModal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
     </script>
 </body>
 </html>

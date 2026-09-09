@@ -36,11 +36,18 @@ class SiteSetting(db.Model):
     mission_text = db.Column(db.Text, default='تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة، منظمة، وآمنة تضمن استدامة البصمة الإيجابية.')
     contact_email = db.Column(db.String(120), default='info@lametnahbasmeh.org')
     
-    # الروابط الرسمية للقنوات والمنصات
+    # روابط المنصات الرسمية الحية
     whatsapp_url = db.Column(db.String(500), default='https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8')
     instagram_url = db.Column(db.String(500), default='https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw')
     nahno_url = db.Column(db.String(500), default='https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843')
     
+    # صور بطاقات خدمات المتطوعين الخمس في الملف الشخصي (CMS)
+    card_img_duties = db.Column(db.String(500), default='https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80')
+    card_img_hours = db.Column(db.String(500), default='https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80')
+    card_img_events = db.Column(db.String(500), default='https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80')
+    card_img_excuse = db.Column(db.String(500), default='https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80')
+    card_img_transport = db.Column(db.String(500), default='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80')
+
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Volunteer(db.Model):
@@ -63,6 +70,7 @@ class Volunteer(db.Model):
     leader_notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # العلاقات التابعة
     duties = db.relationship('Duty', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     excuses = db.relationship('Excuse', backref='volunteer', lazy=True, cascade="all, delete-orphan")
 
@@ -175,20 +183,46 @@ def login():
         identifier = request.form.get('email', '').strip()
         password = request.form.get('password', '').strip()
 
-        # حسابات الإدارة المعتمدة (معرف admin + الحسابات الشخصية للرئاسة)
+        # بيانات دخول إدارة المبادرة المحددة حصراً
         admin_credentials = {
-            'admin': 'lametna2026',
-            'khaledsalzoubi1352006@gmail.com': 'kh13s5alzoubi2006',
-            'lanooshabdo7@gmail.com': 'lanooshabdo7'
+            'khaledsalzoubi1352006@gmail.com': {
+                'password': 'kh13s5alzoubi2006',
+                'name': 'خالد الزعبي',
+                'position': 'نائب رئيس المبادرة'
+            },
+            'lanooshabdo7@gmail.com': {
+                'password': 'lanooshabdo7',
+                'name': 'لين عبدو',
+                'position': 'رئيسة المبادرة'
+            }
         }
 
-        if identifier in admin_credentials and admin_credentials[identifier] == password:
+        # 1. التحقق من دخول أحد المسؤولين (نائب الرئيس أو الرئيسة)
+        if identifier in admin_credentials and admin_credentials[identifier]['password'] == password:
+            admin_user = Volunteer.query.filter_by(email=identifier).first()
+            if not admin_user:
+                admin_user = Volunteer(
+                    name=admin_credentials[identifier]['name'],
+                    email=identifier,
+                    phone='0793888086' if identifier == 'khaledsalzoubi1352006@gmail.com' else '07XXXXXXXX',
+                    password_hash=generate_password_hash(password),
+                    city='عمان',
+                    team='الهيئة الإدارية العليا',
+                    status='approved',
+                    is_leader=True,
+                    position=admin_credentials[identifier]['position']
+                )
+                db.session.add(admin_user)
+                db.session.commit()
+
             session.clear()
             session['admin_logged_in'] = True
-            flash('تم تسجيل الدخول بنجاح كمسؤول للنظام.', 'success')
+            session['admin_email'] = identifier
+            session['user_id'] = admin_user.id
+            flash(f'أهلاً بك يا {admin_user.name} في لوحة التحكم الإدارية.', 'success')
             return redirect(url_for('admin_dashboard'))
 
-        # حسابات المتطوعين العاديين
+        # 2. التحقق من دخول المتطوعين العاديين
         volunteer = Volunteer.query.filter_by(email=identifier).first()
         if volunteer and check_password_hash(volunteer.password_hash, password):
             session.clear()
@@ -237,9 +271,12 @@ def update_profile():
     user.city = request.form.get('city')
     user.phone = request.form.get('phone')
     user.bio = request.form.get('bio')
+    photo_url = request.form.get('photo_url')
+    if photo_url:
+        user.photo_url = photo_url
     
     db.session.commit()
-    flash('تم تحديث ملفك الشخصي بنجاح.', 'success')
+    flash('تم تحديث ملفك الشخصي وصورتك بنجاح.', 'success')
     return redirect(url_for('profile'))
 
 @app.route('/profile/delete', methods=['POST'])
@@ -278,6 +315,9 @@ def admin_dashboard():
         return redirect(url_for('index'))
 
     settings = get_settings()
+    admin_email = session.get('admin_email')
+    current_admin = Volunteer.query.filter_by(email=admin_email).first()
+    
     volunteers = Volunteer.query.order_by(Volunteer.id.desc()).all()
     events = Event.query.order_by(Event.id.desc()).all()
     gallery_items = GalleryItem.query.order_by(GalleryItem.id.desc()).all()
@@ -286,11 +326,30 @@ def admin_dashboard():
     return render_template(
         'admin.html',
         settings=settings,
+        current_admin=current_admin,
         volunteers=volunteers,
         events=events,
         gallery_items=gallery_items,
         excuses=excuses
     )
+
+@app.route('/admin/profile/update', methods=['POST'])
+def update_admin_profile():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('index'))
+
+    admin_email = session.get('admin_email')
+    admin_user = Volunteer.query.filter_by(email=admin_email).first()
+    if admin_user:
+        admin_user.name = request.form.get('name', admin_user.name)
+        admin_user.phone = request.form.get('phone', admin_user.phone)
+        admin_user.bio = request.form.get('bio', admin_user.bio)
+        photo_url = request.form.get('photo_url')
+        if photo_url:
+            admin_user.photo_url = photo_url
+        db.session.commit()
+        flash('تم تحديث ملفك الشخصي الإداري وصورتك بنجاح.', 'success')
+    return redirect(url_for('admin_dashboard'))
 
 # --- إدارة المتطوعين والقيادات وساعات التطوع ---
 
@@ -459,10 +518,16 @@ def update_settings():
     setting.mission_text = request.form.get('mission_text')
     setting.contact_email = request.form.get('contact_email')
     
-    # تحديث روابط المنصات الرسمية
     setting.whatsapp_url = request.form.get('whatsapp_url')
     setting.instagram_url = request.form.get('instagram_url')
     setting.nahno_url = request.form.get('nahno_url')
+
+    # تحديث روابط صور بطاقات الخدمات الخمس
+    setting.card_img_duties = request.form.get('card_img_duties')
+    setting.card_img_hours = request.form.get('card_img_hours')
+    setting.card_img_events = request.form.get('card_img_events')
+    setting.card_img_excuse = request.form.get('card_img_excuse')
+    setting.card_img_transport = request.form.get('card_img_transport')
 
     db.session.commit()
     flash('تم حفظ وتحديث إعدادات ومحتوى الموقع بنجاح.', 'success')
@@ -472,12 +537,17 @@ def update_settings():
 
 with app.app_context():
     db.create_all()
-    # تحديث تلقائي آمن لقاعدة البيانات السحابية لإضافة الأعمدة الناقصة دون انهيار
+    # تحديث تلقائي آمن لقاعدة البيانات السحابية لإضافة الأعمدة الجديدة دون أخطاء
+    new_cols = [
+        'whatsapp_url', 'instagram_url', 'nahno_url',
+        'card_img_duties', 'card_img_hours', 'card_img_events',
+        'card_img_excuse', 'card_img_transport'
+    ]
     try:
-        for col in ['whatsapp_url', 'instagram_url', 'nahno_url']:
+        for col in new_cols:
             db.session.execute(text(f"ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS {col} VARCHAR(500);"))
         db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
 
     try:

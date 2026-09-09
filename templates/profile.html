@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة المتطوع | فريق لمتنا بصمة</title>
+    <title>بوابة المتطوع | {{ user.name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -89,6 +89,7 @@
             align-items: center;
             gap: 6px;
             font-size: 0.9rem;
+            white-space: nowrap;
         }
         .btn-profile-action:hover {
             background: var(--jo-black);
@@ -132,12 +133,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             z-index: 3000;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(4px);
         }
         .profile-modal-box {
             background: var(--jo-white);
@@ -160,19 +161,22 @@
     <!-- 1. القائمة العلوية Navbar -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
-            <div class="nav-brand-title">فريق لمتنا <span>بصمة</span></div>
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
+            <div class="nav-brand-title">
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+            </div>
         </a>
         <nav>
             <ul class="nav-links">
                 <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
                 <li><a href="{{ url_for('profile') }}" class="active">بوابة المتطوع</a></li>
-                <li><a href="{{ url_for('logout') }}" class="btn-danger" style="padding: 6px 14px; text-decoration: none; border-radius: 6px;">تسجيل خروج</a></li>
+                <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل خروج</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- 2. شريط التنبيهات Flash Messages -->
+    <!-- 2. شريط رسائل النظام Flash Messages -->
     <div class="container" style="max-width: 1200px; margin: 1.5rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -215,12 +219,12 @@
                 </div>
 
                 <p class="profile-bio-text">
-                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي لكتابة نبذة عن مهاراتك واهتماماتك التطوعية.' }}
+                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي لكتابة نبذة عن مهاراتك واهتماماتك التطوعية وإضافة رابط صورتك الشخصية.' }}
                 </p>
 
                 <div class="profile-actions-bar">
                     <button onclick="openProfileModal('editProfileModal')" class="btn-profile-action">
-                        <i class="fa-solid fa-pen-to-square"></i> تعديل بياناتي
+                        <i class="fa-solid fa-pen-to-square"></i> تعديل بياناتي وصورتي
                     </button>
                     <button onclick="openProfileModal('deleteAccountModal')" class="btn-profile-action" style="border-color: var(--jo-red); color: var(--jo-red);">
                         <i class="fa-solid fa-trash-can"></i> حذف حسابي
@@ -229,35 +233,45 @@
             </div>
         </div>
 
-        <!-- 4. شبكة الخدمات والأنشطة (Categories Grid) -->
+        <!-- 4. شبكة الخدمات والأنشطة (مرتبطة ديناميكياً بـ CMS) -->
         <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1.5rem; border-right: 4px solid var(--jo-green); padding-right: 10px;">
             لوحة خدمات ومتابعة المتطوع
         </h3>
 
         <div class="services-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+            
+            <!-- 1. كرت المهام -->
             <div class="service-card" onclick="switchProfileTab('dutiesTab')">
-                <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80" alt="المهام">
+                <img src="{{ settings.card_img_duties if settings and settings.card_img_duties else 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80' }}" alt="المهام">
                 <div class="service-card-title"><i class="fa-solid fa-list-check" style="display:block; margin-bottom: 8px;"></i>المهام والتكليفات ({{ duties|length }})</div>
             </div>
+
+            <!-- 2. كرت الساعات -->
             <div class="service-card" onclick="switchProfileTab('marksTab')">
-                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80" alt="الساعات">
+                <img src="{{ settings.card_img_hours if settings and settings.card_img_hours else 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80' }}" alt="الساعات">
                 <div class="service-card-title"><i class="fa-solid fa-award" style="display:block; margin-bottom: 8px;"></i>سجل الساعات والتقييم</div>
             </div>
+
+            <!-- 3. كرت الفعاليات -->
             <div class="service-card" onclick="switchProfileTab('eventsTab')">
-                <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80" alt="الفعاليات">
+                <img src="{{ settings.card_img_events if settings and settings.card_img_events else 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80' }}" alt="الفعاليات">
                 <div class="service-card-title"><i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>الفعاليات الميدانية</div>
             </div>
+
+            <!-- 4. كرت تقديم اعتذار -->
             <div class="service-card" onclick="switchProfileTab('excuseTab')">
-                <img src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80" alt="عذر">
+                <img src="{{ settings.card_img_excuse if settings and settings.card_img_excuse else 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80' }}" alt="عذر">
                 <div class="service-card-title"><i class="fa-solid fa-file-signature" style="display:block; margin-bottom: 8px;"></i>تقديم اعتذار عن فعالية</div>
             </div>
+
+            <!-- 5. كرت نقاط التجمع والمواصلات -->
             <div class="service-card" onclick="switchProfileTab('transportTab')">
-                <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80" alt="مواصلات">
+                <img src="{{ settings.card_img_transport if settings and settings.card_img_transport else 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80' }}" alt="مواصلات">
                 <div class="service-card-title"><i class="fa-solid fa-bus" style="display:block; margin-bottom: 8px;"></i>نقاط التجمع والمواصلات</div>
             </div>
         </div>
 
-        <!-- 5. الحاويات التفاعلية للأقسام (تبديل فوري) -->
+        <!-- 5. الحاويات التفاعلية للأقسام -->
         <div class="tab-view-container">
             
             <!-- أ. المهام والتكليفات المسندة -->
@@ -375,7 +389,7 @@
         </div>
     </main>
 
-    <!-- 6. نافذة منبثقة: تعديل البيانات الشاملة (Edit Profile Modal) -->
+    <!-- 6. نافذة تعديل البيانات والصورة الشخصية (Edit Profile Modal) -->
     <div id="editProfileModal" class="profile-modal-overlay">
         <div class="profile-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -383,6 +397,10 @@
                 <button onclick="closeProfileModal('editProfileModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
             </div>
             <form action="{{ url_for('update_profile') }}" method="POST">
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورتي الشخصية (Photo URL)</label>
+                    <input type="url" name="photo_url" class="custom-input" value="{{ user.photo_url or '' }}" placeholder="https://example.com/my-photo.jpg">
+                </div>
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
                     <input type="number" name="age" class="custom-input" value="{{ user.age or '' }}" min="14" max="75" required>
@@ -410,7 +428,7 @@
         </div>
     </div>
 
-    <!-- 7. نافذة منبثقة: تأكيد حذف الحساب نهائياً (Delete Account Modal) -->
+    <!-- 7. نافذة تأكيد حذف الحساب (Delete Account Modal) -->
     <div id="deleteAccountModal" class="profile-modal-overlay">
         <div class="profile-modal-box" style="border-top: 5px solid var(--jo-red);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -418,7 +436,7 @@
                 <button onclick="closeProfileModal('deleteAccountModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
             </div>
             <p style="color: #4a5568; line-height: 1.7; margin-bottom: 1.5rem; font-size: 0.95rem;">
-                هل أنت متأكد من رغبتك في حذف حسابك من <strong>فريق لمتنا بصمة</strong>؟ سيؤدي هذا الإجراء إلى مسح كافة بياناتك وساعاتك التطوعية المسجلة نهائياً، ولن يمكن استعادتها لاحقاً.
+                هل أنت متأكد من رغبتك في حذف حسابك من <strong>فريق لمتنا بصمة</strong>؟ سيؤدي هذا الإجراء إلى مسح كافة بياناتك وساعاتك التطوعية المسجلة نهائياً.
             </p>
             <form action="{{ url_for('delete_own_account') }}" method="POST" style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button type="button" onclick="closeProfileModal('deleteAccountModal')" class="btn-profile-action">إلغاء</button>
