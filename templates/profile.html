@@ -6,6 +6,8 @@
     <title>بوابة المتطوع | {{ user.name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبة تحويل العناصر إلى صور لتنزيل الباجة على الهاتف -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         .profile-page-wrapper {
             max-width: 1200px;
@@ -129,6 +131,8 @@
             position: relative;
             box-shadow: var(--shadow-lg);
             animation: modalFadeIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .badge-section-wrapper {
             background: var(--jo-white);
@@ -154,7 +158,7 @@
 </head>
 <body>
 
-    <!-- 1. القائمة العلوية Navbar -->
+    <!-- القائمة العلوية Navbar -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
             <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
@@ -163,8 +167,9 @@
                 <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
             </div>
         </a>
+        <button class="nav-toggle-btn" onclick="toggleMobileNav()"><i class="fa-solid fa-bars"></i></button>
         <nav>
-            <ul class="nav-links">
+            <ul class="nav-links" id="profileNavLinks">
                 <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
                 <li><a href="{{ url_for('profile') }}" class="active">بوابة المتطوع</a></li>
                 <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل خروج</a></li>
@@ -172,7 +177,7 @@
         </nav>
     </header>
 
-    <!-- 2. شريط رسائل وتنبيهات الخادم -->
+    <!-- شريط رسائل الخادم -->
     <div class="container" style="max-width: 1200px; margin: 1.5rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -187,7 +192,7 @@
 
     <main class="profile-page-wrapper">
 
-        <!-- 3. كرت البيانات الشخصية للمتطوع -->
+        <!-- كرت البيانات الشخصية للمتطوع -->
         <div class="profile-header-card">
             <div class="profile-avatar-box">
                 <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
@@ -215,9 +220,9 @@
                     <span><i class="fa-regular fa-envelope" style="color: #0284c7;"></i> {{ user.email }}</span>
                 </div>
 
-                <!-- الأوسمة والشارات الممنوحة يدوياً من الإدارة -->
+                <!-- الأوسمة والشارات الممنوحة يدوياً -->
                 <div style="margin-bottom: 12px;">
-                    <span style="font-weight: 800; font-size: 0.88rem; color: var(--jo-black); margin-left: 6px;">الأوسمة الميدانية:</span>
+                    <span style="font-weight: 800; font-size: 0.88rem; color: var(--jo-black); margin-left: 6px;">الأوسمة التقديرية:</span>
                     {% for badge in user.badges_list %}
                         <span class="volunteer-badge-ribbon"><i class="fa-solid fa-medal" style="color: var(--gold);"></i> {{ badge }}</span>
                     {% else %}
@@ -226,12 +231,12 @@
                 </div>
 
                 <p class="profile-bio-text">
-                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي وصورتي لكتابة مهاراتك الميدانية وإدراج صورتك الشخصية.' }}
+                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي وصورتي لكتابة مهاراتك وإدراج صورتك وتغيير كلمة السر.' }}
                 </p>
 
                 <div class="profile-actions-bar">
                     <button onclick="openProfileModal('editProfileModal')" class="btn-profile-action">
-                        <i class="fa-solid fa-pen-to-square"></i> تعديل بياناتي وصورتي
+                        <i class="fa-solid fa-user-pen"></i> تعديل بياناتي وكلمة المرور
                     </button>
                     <button onclick="openProfileModal('deleteAccountModal')" class="btn-profile-action" style="border-color: var(--jo-red); color: var(--jo-red);">
                         <i class="fa-solid fa-trash-can"></i> حذف حسابي
@@ -240,37 +245,34 @@
             </div>
         </div>
 
-        <!-- 4. الباجة الميدانية الرسمية التفاعلية (مطابقة للباجة المادية - 3D Flip & QR) -->
+        <!-- الباجة الميدانية الرسمية التفاعلية (3D Flip & Save Image) -->
         <div class="badge-section-wrapper printable-badge-area">
             <h3 style="font-size: 1.35rem; font-weight: 900; margin-bottom: 4px; color: var(--jo-black);">
-                بطاقة العضوية الميدانية الرقمية
+                بطاقة العضوية الميدانية الرسمية
             </h3>
             <p style="color: var(--jo-dark-gray); font-size: 0.92rem; margin-bottom: 1.2rem;">
-                انقر على البطاقة لقلبها وفحص رمز التحقق الميداني (QR)، أو استخدم زر الطباعة للنزول الميداني.
+                انقر على البطاقة لقلبها وفحص رمز التحقق (QR)، أو قم بتحميلها كصورة مباشرة على هاتفك للطباعة.
             </p>
 
             <div class="badge-interactive-container">
                 <div class="badge-card-3d" id="volunteerBadgeCard" onclick="toggleBadgeFlip()">
                     
-                    <!-- الوجه الأمامي (Front Face) -->
-                    <div class="badge-face badge-front">
-                        <!-- زخرفة الأقواس الأردنية في الزوايا -->
+                    <!-- الوجه الأمامي -->
+                    <div class="badge-face badge-front" id="badgeFrontFace">
                         <div class="badge-corner-decor decor-top-left"></div>
                         <div class="badge-corner-decor decor-top-right"></div>
                         <div class="badge-corner-decor decor-bottom-left"></div>
                         <div class="badge-corner-decor decor-bottom-right"></div>
 
-                        <!-- العلامة المائية الباهتة للوجو في الخلفية -->
                         <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" class="badge-watermark" alt="watermark">
 
                         <div class="badge-front-content">
-                            <!-- الترويسة العليا واللوجو المزدوج -->
                             <div class="badge-title-block">
                                 <div class="badge-header-logos">
                                     <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="logo">
                                     <div style="text-align: right; line-height: 1.1;">
                                         <div style="font-weight: 900; font-size: 0.92rem; color: var(--jo-black);">لمتنا بصمة</div>
-                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--jo-dark-gray); letter-spacing: -0.2px;">lametna basmeh</div>
+                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--jo-dark-gray);">lametna basmeh</div>
                                     </div>
                                 </div>
                                 <h4>المملكة الأردنية الهاشمية</h4>
@@ -278,12 +280,10 @@
                                 <div class="badge-doc-type">بطاقة عضوية</div>
                             </div>
 
-                            <!-- صورة العضو الشخصية بإطار الرتبة -->
                             <div class="badge-avatar-wrap {% if user.is_leader and ('رئيس' in user.position or 'نائب' in user.position) %}rank-border-presidency{% elif user.is_leader %}rank-border-leader{% else %}rank-border-volunteer{% endif %}">
                                 <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
                             </div>
 
-                            <!-- الاسم والبيانات الميدانية -->
                             <div>
                                 <div class="badge-name">{{ user.name }}</div>
                                 <div class="badge-info-rows">
@@ -294,8 +294,8 @@
                         </div>
                     </div>
 
-                    <!-- الوجه الخلفي (Back Face - QR Code) -->
-                    <div class="badge-face badge-back">
+                    <!-- الوجه الخلفي (QR Code) -->
+                    <div class="badge-face badge-back" id="badgeBackFace">
                         <div class="badge-corner-decor decor-top-left"></div>
                         <div class="badge-corner-decor decor-top-right"></div>
                         <div class="badge-corner-decor decor-bottom-left"></div>
@@ -327,63 +327,81 @@
                 </div>
             </div>
 
-            <!-- أزرار التحكم بالباجة -->
+            <!-- أزرار التحكم وحفظ الباجة كصورة -->
             <div class="badge-ctrl-btn-group">
                 <button type="button" onclick="toggleBadgeFlip()" class="btn-profile-action">
                     <i class="fa-solid fa-arrows-rotate"></i> اقلب الباجة (QR Code)
                 </button>
+                <button type="button" onclick="downloadBadgeAsImage()" class="btn-download-badge">
+                    <i class="fa-solid fa-download"></i> حفظ الباجة كصورة على الجهاز
+                </button>
                 <button type="button" onclick="window.print()" class="btn-profile-action" style="border-color: var(--jo-green); color: var(--jo-green);">
-                    <i class="fa-solid fa-print"></i> طباعة الباجة الميدانية
+                    <i class="fa-solid fa-print"></i> طباعة البطاقة
                 </button>
             </div>
         </div>
 
-        <!-- 5. شبكة كروت الخدمات الخمس (ديناميكية ومصححة برمجياً) -->
+        <!-- شبكة كروت الخدمات الخمس (تظهر الأسماء والصور المعدلة من الـ CMS بدقة) -->
         <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1.5rem; border-right: 4px solid var(--jo-green); padding-right: 10px;">
             لوحة خدمات ومتابعة المتطوع
         </h3>
 
         <div class="services-grid">
             
-            <!-- كرت 1: المهام والتكليفات -->
+            <!-- كرت 1 -->
             <div class="service-card" onclick="switchProfileTab('dutiesTab')">
-                <img src="{{ settings.card_img_duties if settings and settings.card_img_duties else 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80' }}" alt="المهام">
-                <div class="service-card-title"><i class="fa-solid fa-list-check" style="display:block; margin-bottom: 8px;"></i>المهام والتكليفات ({{ duties|length }})</div>
+                <img src="{{ settings.card_img_duties }}" alt="{{ settings.card_title_duties }}">
+                <div class="service-card-title">
+                    <i class="fa-solid fa-list-check" style="display:block; margin-bottom: 8px;"></i>
+                    {{ settings.card_title_duties }} ({{ duties|length }})
+                </div>
             </div>
 
-            <!-- كرت 2: الساعات والتقييم -->
+            <!-- كرت 2 -->
             <div class="service-card" onclick="switchProfileTab('marksTab')">
-                <img src="{{ settings.card_img_hours if settings and settings.card_img_hours else 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80' }}" alt="الساعات">
-                <div class="service-card-title"><i class="fa-solid fa-award" style="display:block; margin-bottom: 8px;"></i>سجل الساعات والتقييم</div>
+                <img src="{{ settings.card_img_hours }}" alt="{{ settings.card_title_hours }}">
+                <div class="service-card-title">
+                    <i class="fa-solid fa-award" style="display:block; margin-bottom: 8px;"></i>
+                    {{ settings.card_title_hours }}
+                </div>
             </div>
 
-            <!-- كرت 3: الفعاليات الميدانية ونظام RSVP -->
+            <!-- كرت 3 -->
             <div class="service-card" onclick="switchProfileTab('eventsTab')">
-                <img src="{{ settings.card_img_events if settings and settings.card_img_events else 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80' }}" alt="الفعاليات">
-                <div class="service-card-title"><i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>الفعاليات والتسجيل الحي</div>
+                <img src="{{ settings.card_img_events }}" alt="{{ settings.card_title_events }}">
+                <div class="service-card-title">
+                    <i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>
+                    {{ settings.card_title_events }}
+                </div>
             </div>
 
-            <!-- كرت 4: تقديم عذر -->
+            <!-- كرت 4 -->
             <div class="service-card" onclick="switchProfileTab('excuseTab')">
-                <img src="{{ settings.card_img_excuse if settings and settings.card_img_excuse else 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80' }}" alt="عذر">
-                <div class="service-card-title"><i class="fa-solid fa-file-signature" style="display:block; margin-bottom: 8px;"></i>تقديم اعتذار عن فعالية</div>
+                <img src="{{ settings.card_img_excuse }}" alt="{{ settings.card_title_excuse }}">
+                <div class="service-card-title">
+                    <i class="fa-solid fa-file-signature" style="display:block; margin-bottom: 8px;"></i>
+                    {{ settings.card_title_excuse }}
+                </div>
             </div>
 
-            <!-- كرت 5: نقاط التجمع والمواصلات -->
+            <!-- كرت 5 -->
             <div class="service-card" onclick="switchProfileTab('transportTab')">
-                <img src="{{ settings.card_img_transport if settings and settings.card_img_transport else 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80' }}" alt="مواصلات">
-                <div class="service-card-title"><i class="fa-solid fa-bus" style="display:block; margin-bottom: 8px;"></i>نقاط التجمع والمواصلات</div>
+                <img src="{{ settings.card_img_transport }}" alt="{{ settings.card_title_transport }}">
+                <div class="service-card-title">
+                    <i class="fa-solid fa-bus" style="display:block; margin-bottom: 8px;"></i>
+                    {{ settings.card_title_transport }}
+                </div>
             </div>
 
         </div>
 
-        <!-- 6. حاويات الأقسام التفاعلية (تبويبات الخدمات) -->
+        <!-- حاويات الأقسام التفاعلية -->
         <div class="tab-view-container" id="profileTabDisplayBox">
             
             <!-- أ. تبويب المهام والتكليفات -->
             <div id="dutiesTab" class="profile-tab-content active-profile-tab">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-list-check" style="color: var(--jo-green);"></i> التكليفات الميدانية المسندة إليك
+                    <i class="fa-solid fa-list-check" style="color: var(--jo-green);"></i> {{ settings.card_title_duties }}
                 </h4>
                 {% if duties %}
                     {% for duty in duties %}
@@ -400,10 +418,10 @@
                 {% endif %}
             </div>
 
-            <!-- ب. تبويب الساعات والتقييم والأوسمة -->
+            <!-- ب. تبويب الساعات والتقييم -->
             <div id="marksTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-award" style="color: var(--jo-green);"></i> السجل التطوعي والتقييم الإداري
+                    <i class="fa-solid fa-award" style="color: var(--jo-green);"></i> {{ settings.card_title_hours }}
                 </h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 2rem;">
                     <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--jo-border);">
@@ -416,7 +434,7 @@
                     </div>
                 </div>
 
-                <h5 style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--jo-black);">الأوسمة والشارات التقديرية الحاصل عليها:</h5>
+                <h5 style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--jo-black);">الأوسمة التقديرية الحاصل عليها:</h5>
                 <div style="background: var(--jo-light-gray); padding: 1.2rem; border-radius: var(--radius-sm); border: 1px solid var(--jo-border); margin-bottom: 1.5rem;">
                     {% for badge in user.badges_list %}
                         <span class="volunteer-badge-ribbon" style="font-size: 0.9rem; padding: 6px 14px; margin: 4px;">
@@ -433,10 +451,10 @@
                 </div>
             </div>
 
-            <!-- ج. تبويب الفعاليات الميدانية مع نظام التسجيل بنقرة واحدة (RSVP) -->
+            <!-- ج. تبويب الفعاليات والتسجيل بنقرة واحدة -->
             <div id="eventsTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> الفعاليات الميدانية وتأكيد المشاركة المباشرة
+                    <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> {{ settings.card_title_events }}
                 </h4>
                 
                 <div class="events-list">
@@ -452,7 +470,6 @@
                             <p class="event-desc">{{ ev.description }}</p>
                         </div>
 
-                        <!-- حالة المقاعد وزر الحجز المباشر بنقرة واحدة -->
                         <div class="rsvp-status-box">
                             <div>
                                 <span style="font-size: 0.85rem; font-weight: 800; color: var(--jo-black);">
@@ -468,7 +485,7 @@
                             <div>
                                 {% if ev.id in registered_event_ids %}
                                     <form action="{{ url_for('cancel_rsvp', event_id=ev.id) }}" method="POST" style="margin:0;">
-                                        <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد وفتحه لمتطوع آخر">
+                                        <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد">
                                             <i class="fa-solid fa-calendar-xmark"></i> إلغاء مشاركتي
                                         </button>
                                     </form>
@@ -494,7 +511,7 @@
             <!-- د. تبويب تقديم اعتذار عن فعالية -->
             <div id="excuseTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-file-signature" style="color: var(--jo-red);"></i> نموذج رفع اعتذار عن عدم الحضور
+                    <i class="fa-solid fa-file-signature" style="color: var(--jo-red);"></i> {{ settings.card_title_excuse }}
                 </h4>
                 <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
                     في حال تأكيد حضورك لنشاط ميداني وطرأ ظرف طارئ، يُرجى تقديم العذر مسبقاً ليتم فتح المقعد لمتطوع بديل وتنظيم حركة الباص.
@@ -522,7 +539,7 @@
             <!-- هـ. تبويب نقاط التجمع والمواصلات -->
             <div id="transportTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-bus" style="color: var(--jo-green);"></i> محطات الانطلاق ومسار النقل الميداني
+                    <i class="fa-solid fa-bus" style="color: var(--jo-green);"></i> {{ settings.card_title_transport }}
                 </h4>
                 <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
                     <p style="font-weight: 800; margin-bottom: 8px; color: var(--jo-black);">
@@ -543,50 +560,64 @@
         </div>
     </main>
 
-    <!-- 7. نافذة تعديل البيانات والصورة الشخصية (Modal) -->
+    <!-- نافذة تعديل البيانات والصورة وكلمة المرور الشخصية -->
     <div id="editProfileModal" class="profile-modal-overlay">
         <div class="profile-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">تعديل بيانات الملف الشخصي</h3>
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">تعديل الملف الشخصي وكلمة المرور</h3>
                 <button onclick="closeProfileModal('editProfileModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
             </div>
             <form action="{{ url_for('update_profile') }}" method="POST">
+                
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورتي الشخصية (Photo URL)</label>
                     <input type="url" name="photo_url" class="custom-input" value="{{ user.photo_url or '' }}" placeholder="https://example.com/my-photo.jpg">
                 </div>
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
-                    <input type="number" name="age" class="custom-input" value="{{ user.age or '' }}" min="14" max="75" required>
+
+                <!-- خيار تغيير كلمة المرور للمتطوع -->
+                <div class="custom-select-group" style="background: #f8fafc; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 800; color: var(--jo-green);"><i class="fa-solid fa-key"></i> تغيير كلمة المرور (اختياري)</label>
+                    <input type="password" name="new_password" class="custom-input" placeholder="اتركه فارغاً إذا كنت لا ترغب بتغييرها">
                 </div>
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة / المدينة</label>
-                    <select name="city" class="custom-input" required>
-                        <option value="عمان" {% if user.city == 'عمان' %}selected{% endif %}>عمان</option>
-                        <option value="الزرقاء" {% if user.city == 'الزرقاء' %}selected{% endif %}>الزرقاء</option>
-                        <option value="إربد" {% if user.city == 'إربد' %}selected{% endif %}>إربد</option>
-                        <option value="البلقاء" {% if user.city == 'البلقاء' %}selected{% endif %}>البلقاء</option>
-                        <option value="أخرى" {% if user.city == 'أخرى' %}selected{% endif %}>محافظة أخرى</option>
-                    </select>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
+                        <input type="number" name="age" class="custom-input" value="{{ user.age or '' }}" min="14" max="75" required>
+                    </div>
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة</label>
+                        <select name="city" class="custom-input" required>
+                            <option value="عمان" {% if user.city == 'عمان' %}selected{% endif %}>عمان</option>
+                            <option value="الزرقاء" {% if user.city == 'الزرقاء' %}selected{% endif %}>الزرقاء</option>
+                            <option value="إربد" {% if user.city == 'إربد' %}selected{% endif %}>إربد</option>
+                            <option value="البلقاء" {% if user.city == 'البلقاء' %}selected{% endif %}>البلقاء</option>
+                            <option value="أخرى" {% if user.city == 'أخرى' %}selected{% endif %}>محافظة أخرى</option>
+                        </select>
+                    </div>
                 </div>
+
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">الفريق الميداني التابع له</label>
                     <input type="text" name="team" class="custom-input" value="{{ user.team or 'عمان' }}" required>
                 </div>
+
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف (الواتساب)</label>
                     <input type="tel" name="phone" class="custom-input" value="{{ user.phone or '' }}" required>
                 </div>
+
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">النبذة الشخصية والمهارات (Bio)</label>
                     <textarea name="bio" class="custom-input" rows="3" placeholder="تحدث باختصار عن شغفك التطوعي أو مهاراتك الميدانية...">{{ user.bio or '' }}</textarea>
                 </div>
+
                 <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">حفظ التغييرات</button>
             </form>
         </div>
     </div>
 
-    <!-- 8. نافذة تأكيد حذف الحساب (Modal) -->
+    <!-- نافذة تأكيد حذف الحساب -->
     <div id="deleteAccountModal" class="profile-modal-overlay">
         <div class="profile-modal-box" style="border-top: 5px solid var(--jo-red);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -603,19 +634,26 @@
         </div>
     </div>
 
-    <!-- 9. الفوتر Footer -->
+    <!-- الفوتر Footer -->
     <footer class="footer">
         <div class="footer-bottom">
             &copy; 2026 فريق لمتنا بصمة. بوابة إدارة شؤون المتطوعين الرسمية.
         </div>
     </footer>
 
-    <!-- 10. محرك التحكم بالجافاسكريبت الموثوق -->
+    <!-- محرك التحكم التفاعلي وحفظ الباجة كصورة -->
     <script>
         function toggleBadgeFlip() {
             const card = document.getElementById('volunteerBadgeCard');
             if (card) {
                 card.classList.toggle('flipped');
+            }
+        }
+
+        function toggleMobileNav() {
+            const nav = document.getElementById('profileNavLinks');
+            if (nav) {
+                nav.classList.toggle('mobile-nav-active');
             }
         }
 
@@ -639,6 +677,37 @@
 
         function closeProfileModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
+        }
+
+        // دالة تنزيل الباجة كصورة عالية الدقة PNG على الهاتف أو الكمبيوتر
+        function downloadBadgeAsImage() {
+            const badgeCard = document.getElementById('volunteerBadgeCard');
+            const wasFlipped = badgeCard.classList.contains('flipped');
+            
+            // التأكد من تصوير الوجه الأمامي أولاً بدون تشويه
+            if (wasFlipped) {
+                badgeCard.classList.remove('flipped');
+            }
+
+            const targetElement = document.getElementById('badgeFrontFace');
+            
+            html2canvas(targetElement, {
+                scale: 3, // دقة عالية جداً للطباعة
+                useCORS: true,
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `باجة_متطوع_${ {{ user.id }} }.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+                if (wasFlipped) {
+                    badgeCard.classList.add('flipped');
+                }
+            }).catch(err => {
+                console.error("فشل حفظ الباجة كصورة:", err);
+                window.print(); // بديل فوري
+            });
         }
 
         window.onclick = function(e) {

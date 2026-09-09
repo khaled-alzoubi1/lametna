@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* النوافذ التفاعلية ومشغل الوسائط */
         .auth-modal, .media-lightbox {
             display: none;
             position: fixed;
@@ -32,6 +31,8 @@
             box-shadow: var(--shadow-lg);
             border-top: 5px solid var(--jo-green);
             animation: modalFadeIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .lightbox-box {
             position: relative;
@@ -83,7 +84,7 @@
 </head>
 <body>
 
-    <!-- 1. القائمة العلوية Navbar -->
+    <!-- القائمة العلوية التجاوبية مع زر الهاتف الذكي -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
             <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار فريق لمتنا بصمة">
@@ -92,8 +93,14 @@
                 <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
             </div>
         </a>
+
+        <!-- زر القائمة المنسدلة للهواتف (Hamburger Button) -->
+        <button class="nav-toggle-btn" onclick="toggleMobileNav()" aria-label="فتح القائمة">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
         <nav>
-         <ul class="nav-links">
+            <ul class="nav-links" id="mainNavLinks">
                 <li><a href="{{ url_for('index') }}" class="active">الرئيسية</a></li>
                 <li><a href="#about">من<br>نحن</a></li>
                 <li><a href="#leadership">الهيئة<br>الإدارية</a></li>
@@ -116,7 +123,7 @@
         </nav>
     </header>
 
-    <!-- 2. شريط التنبيهات والرسائل Flash Messages -->
+    <!-- شريط رسائل النظام -->
     <div class="container" style="max-width: 1250px; margin: 1.2rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -129,7 +136,7 @@
         {% endwith %}
     </div>
 
-    <!-- 3. الواجهة الترحيبية Hero Section -->
+    <!-- الواجهة الترحيبية Hero Section -->
     <main class="hero-section">
         <div class="hero-content">
             <h1 class="hero-title">
@@ -187,7 +194,7 @@
         </div>
     </main>
 
-    <!-- 4. قسم الرؤية والرسالة (من نحن) -->
+    <!-- قسم الرؤية والرسالة -->
     <section class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 5%; width: 100%;" id="about">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;">
             <div style="background: var(--jo-white); padding: 2.2rem; border-radius: var(--radius-md); border-top: 5px solid var(--jo-green); box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
@@ -205,7 +212,7 @@
         </div>
     </section>
 
-    <!-- 5. قسم الهيئة الإدارية وقادة الفرق (مع تحويل Outlook إلى واتساب فوري) -->
+    <!-- قسم الهيئة الإدارية وقادة الفرق (روابط واتساب مباشرة بدون Outlook) -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="leadership">
         <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-red); padding-right: 12px; margin-bottom: 2rem;">
             الهيئة الإدارية وقادة الفرق
@@ -219,7 +226,6 @@
                 </div>
                 <div class="member-name">{{ leader.name }}</div>
                 <div class="member-role">{{ leader.position or 'قائد ميداني' }}</div>
-                <!-- زر تحويل مباشر للواتساب بدلاً من تطبيق Outlook -->
                 <a href="{{ leader.wa_link }}" target="_blank" class="btn-wa-contact" title="مراسلة فورية عبر واتساب">
                     <i class="fa-brands fa-whatsapp"></i> تواصل معه
                 </a>
@@ -245,7 +251,7 @@
         </div>
     </section>
 
-    <!-- 6. لوحة صدارة وتكريم فرسان الأثر (Impact Leaderboard) -->
+    <!-- لوحة صدارة وتكريم فرسان الأثر الميداني -->
     <section class="container" style="max-width: 1200px; margin: 4rem auto; padding: 0 5%; width: 100%;" id="leaderboard">
         <div style="text-align: center; margin-bottom: 2rem;">
             <h2 style="font-size: 2rem; font-weight: 900; color: var(--jo-black); margin-bottom: 6px;">
@@ -318,7 +324,7 @@
         {% endif %}
     </section>
 
-    <!-- 7. قسم الفعاليات الميدانية مع نظام التسجيل بنقرة واحدة (1-Click RSVP) -->
+    <!-- قسم الفعاليات الميدانية مع نظام التسجيل بنقرة واحدة (1-Click RSVP) -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="activities">
         <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-green); padding-right: 12px; margin-bottom: 2rem;">
             الفعاليات الميدانية القادمة
@@ -337,7 +343,6 @@
                     <p class="event-desc">{{ event.description }}</p>
                 </div>
 
-                <!-- شريط المقاعد وحجز المقعد بنقرة واحدة -->
                 <div class="rsvp-status-box">
                     <div>
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--jo-dark-gray);">
@@ -383,7 +388,7 @@
         </div>
     </section>
 
-    <!-- 8. قسم معرض الصور والفيديوهات -->
+    <!-- قسم معرض الصور والفيديوهات -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="gallery">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
             <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-black); padding-right: 12px;">
@@ -422,7 +427,7 @@
         </div>
     </section>
 
-    <!-- 9. قسم قنواتنا وشراكاتنا الرسمية -->
+    <!-- قسم شراكاتنا وقنواتنا الرسمية -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="channels">
         <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-green); padding-right: 12px; margin-bottom: 2rem;">
             شراكاتنا وقنواتنا الرسمية
@@ -459,7 +464,7 @@
         </div>
     </section>
 
-    <!-- 10. قسم تواصل معنا المباشر -->
+    <!-- قسم تواصل معنا المباشر -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="contact">
         <div style="background: var(--jo-white); border-radius: var(--radius-md); padding: 2.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
             <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);">نحن جاهزون للإجابة عن كافة استفساراتك</h2>
@@ -493,7 +498,7 @@
         </div>
     </section>
 
-    <!-- 11. نافذة تسجيل الدخول المنبثقة (Login Modal) -->
+    <!-- نافذة تسجيل الدخول المنبثقة -->
     <div id="loginModal" class="auth-modal">
         <div class="auth-modal-content">
             <button class="close-btn" onclick="closeAuthModal('loginModal')">&times;</button>
@@ -512,7 +517,7 @@
         </div>
     </div>
 
-    <!-- 12. نافذة طلب الانتساب كمتطوع (Register Modal) -->
+    <!-- نافذة طلب الانتساب كمتطوع -->
     <div id="registerModal" class="auth-modal">
         <div class="auth-modal-content" style="max-width: 580px;">
             <button class="close-btn" onclick="closeAuthModal('registerModal')">&times;</button>
@@ -568,7 +573,7 @@
         </div>
     </div>
 
-    <!-- 13. مشغل الوسائط المنبثق Lightbox Modal -->
+    <!-- مشغل الوسائط المنبثق Lightbox Modal -->
     <div id="mediaModal" class="media-lightbox">
         <div class="lightbox-box">
             <button class="close-btn-lightbox" onclick="closeMedia()">&times;</button>
@@ -577,7 +582,7 @@
         </div>
     </div>
 
-    <!-- 14. الفوتر Footer -->
+    <!-- الفوتر Footer -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-column">
@@ -610,8 +615,26 @@
         </div>
     </footer>
 
-    <!-- 15. الجافاسكريبت المضمن -->
+    <!-- محرك الجافاسكريبت التفاعلي -->
     <script>
+        // زر فتح وإغلاق قائمة الهاتف الذكي
+        function toggleMobileNav() {
+            const navLinks = document.getElementById('mainNavLinks');
+            if (navLinks) {
+                navLinks.classList.toggle('mobile-nav-active');
+            }
+        }
+
+        // إغلاق القائمة عند النقر على أي رابط داخلي
+        document.querySelectorAll('.nav-links li a').forEach(link => {
+            link.addEventListener('click', () => {
+                const navLinks = document.getElementById('mainNavLinks');
+                if (navLinks && navLinks.classList.contains('mobile-nav-active')) {
+                    navLinks.classList.remove('mobile-nav-active');
+                }
+            });
+        });
+
         function openAuthModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
         }

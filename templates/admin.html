@@ -79,6 +79,7 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            transition: var(--transition);
         }
         .volunteer-top-info {
             display: flex;
@@ -223,11 +224,13 @@
             border-radius: var(--radius-md);
             padding: 2.2rem;
             width: 100%;
-            max-width: 520px;
+            max-width: 540px;
             position: relative;
             box-shadow: var(--shadow-lg);
             border-top: 5px solid var(--jo-green);
             animation: modalFadeIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .close-modal-btn {
             position: absolute;
@@ -246,17 +249,17 @@
             padding: 14px;
             margin-top: 12px;
         }
-        .roster-volunteer-chip {
-            display: inline-flex;
+        .roster-volunteer-item {
+            display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
             background: #f8fafc;
             border: 1px solid var(--jo-border);
-            border-radius: 20px;
-            padding: 5px 12px;
-            margin: 4px;
-            font-size: 0.85rem;
-            font-weight: 700;
+            border-radius: var(--radius-sm);
+            padding: 8px 14px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         @keyframes modalFadeIn {
             from { opacity: 0; transform: translateY(-20px); }
@@ -299,7 +302,7 @@
 
     <main class="admin-page-wrapper">
 
-        <!-- واجهة البروفايل الإداري المخصص (خالد الزعبي / لين عبده) -->
+        <!-- واجهة البروفايل الإداري والباجة المذهبة للرئاسة -->
         <div class="admin-profile-hero">
             <div class="admin-profile-meta">
                 <img src="{{ current_admin.photo_url or url_for('static', filename='logo.png') }}" alt="{{ current_admin.name }}" class="admin-avatar-lg">
@@ -322,17 +325,21 @@
                     {% endif %}
                 </div>
             </div>
-            <div>
-                <button onclick="openAdminModal('adminProfileModal')" class="btn-ctrl-action" style="background: var(--jo-black); color: #fff; padding: 8px 16px;">
-                    <i class="fa-solid fa-user-pen"></i> تعديل ملفي وصورتي الشخصية
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <!-- زر استعراض وطباعة باجة الإدارة المذهبة -->
+                <button onclick="openAdminModal('adminBadgeModal')" class="btn-ctrl-action" style="background: var(--gold); color: #fff; padding: 9px 18px;">
+                    <i class="fa-solid fa-id-card-clip"></i> باجتي الميدانية الرسمية
+                </button>
+                <button onclick="openAdminModal('adminProfileModal')" class="btn-ctrl-action" style="background: var(--jo-black); color: #fff; padding: 9px 18px;">
+                    <i class="fa-solid fa-user-pen"></i> تعديل ملفي وصورتي
                 </button>
             </div>
         </div>
 
         <div class="admin-top-nav">
             <div>
-                <h1 style="font-size: 1.7rem; font-weight: 900; margin-bottom: 4px;">مركز القيادة والإدارة</h1>
-                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، منح الأوسمة يدوياً، تنظيم سعة وكشوفات الفعاليات الميدانية، وتخصيص الموقع بالكامل.</p>
+                <h1 style="font-size: 1.7rem; font-weight: 900; margin-bottom: 4px;">مركز القيادة والإدارة الميدانية</h1>
+                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، رصد ساعات الفعاليات، التحكم الكامل بالمحتوى، وتوليد بطاقات العضوية.</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <span style="background: #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
@@ -347,9 +354,9 @@
         <!-- أزرار التبديل بين التبويبات الإدارية -->
         <div class="tab-btn-bar">
             <button class="admin-tab-btn active-tab-btn" onclick="switchAdminTab('volunteersTab', this)"><i class="fa-solid fa-users"></i> المتطوعين والقيادات والأوسمة</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('eventsTab', this)"><i class="fa-regular fa-calendar-check"></i> الفعاليات وكشوفات الميدان (RSVP)</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> إدارة محتوى ومظهر الموقع (CMS)</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('dutiesTab', this)"><i class="fa-solid fa-list-check"></i> إسناد التكليفات الميدانية</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('eventsTab', this)"><i class="fa-regular fa-calendar-check"></i> الفعاليات ورصد الساعات الميداني</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> تخصيص الموقع وبطاقات الخدمات الـ 5</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('dutiesTab', this)"><i class="fa-solid fa-list-check"></i> التكليفات الميدانية</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('galleryTab', this)"><i class="fa-solid fa-photo-film"></i> معرض الصور والفيديو</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('excusesTab', this)"><i class="fa-solid fa-file-signature"></i> سجل الأعذار ({{ excuses|length }})</button>
         </div>
@@ -357,7 +364,7 @@
         <!-- ==================== 1. تبويب المتطوعين والقيادات والأوسمة ==================== -->
         <div id="volunteersTab" class="admin-tab-content active-tab-body">
             
-            <!-- أ. نموذج تعيين القيادات -->
+            <!-- نموذج تعيين القيادات -->
             <div class="admin-box" style="border-top: 4px solid var(--jo-red);">
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1.2rem;">
                     <i class="fa-solid fa-user-shield" style="color: var(--jo-red);"></i> تعيين وتحديث الهيئة الإدارية وقادة الفرق
@@ -393,17 +400,23 @@
                 </form>
             </div>
 
-            <!-- ب. كشوفات المتطوعين، منح الأوسمة، والتحكم بالساعات والباجات -->
+            <!-- كشوفات المتطوعين مع محرك البحث الفوري -->
             <div class="admin-box">
                 <div class="admin-section-title">
-                    <i class="fa-solid fa-address-book" style="color: var(--jo-green);"></i> كشوفات المتطوعين ومنح الأوسمة الميدانية
+                    <i class="fa-solid fa-address-book" style="color: var(--jo-green);"></i> كشوفات المتطوعين والأوسمة والتحكم بالساعات
                 </div>
 
-                <div class="volunteers-list-container">
+                <!-- شريط البحث الفوري -->
+                <div class="admin-search-box">
+                    <i class="fa-solid fa-magnifying-glass admin-search-icon"></i>
+                    <input type="text" id="volunteerSearchInput" onkeyup="filterVolunteers()" class="admin-search-input" placeholder="ابحث باسم المتطوع، المحافظة، أو رقم الهاتف للوصول السريع...">
+                </div>
+
+                <div class="volunteers-list-container" id="volunteersContainer">
                     {% for v in volunteers %}
-                    <div class="volunteer-item-row">
+                    <div class="volunteer-item-row" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }}">
                         
-                        <!-- المعلومات الأساسية والأزرار -->
+                        <!-- المعلومات الأساسية -->
                         <div class="volunteer-top-info">
                             <div class="volunteer-profile-snippet">
                                 <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" alt="{{ v.name }}">
@@ -418,7 +431,7 @@
                                 </div>
                             </div>
 
-                            <!-- الحالة والمنصب القيادي -->
+                            <!-- الحالة والمنصب القيادي والباجة -->
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status == 'approved' %}
                                     <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
@@ -443,13 +456,12 @@
                                     </form>
                                 {% endif %}
 
-                                <!-- رابط فحص الباجة ورمز QR للمتطوع -->
-                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}" target="_blank" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="معاينة رمز التحقق الميداني">
+                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}" target="_blank" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
                                     <i class="fa-solid fa-qrcode"></i> فحص الباجة
                                 </a>
                             </div>
 
-                            <!-- أدوات الاعتماد، العدادات، وكلمة المرور -->
+                            <!-- أدوات الاعتماد، العدادات (+ / -)، وكلمة المرور -->
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status != 'approved' %}
                                     <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
@@ -496,7 +508,7 @@
                             </div>
                         </div>
 
-                        <!-- شريط منح وسحب الأوسمة يدوياً (Manual Badges Engine) -->
+                        <!-- إدارة الأوسمة الممنوحة يدوياً -->
                         <div class="badge-manager-bar">
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 <span style="font-size: 0.85rem; font-weight: 800; color: var(--jo-black);">
@@ -507,7 +519,7 @@
                                         {{ badge }}
                                         <form action="{{ url_for('remove_badge', volunteer_id=v.id) }}" method="POST" style="display:inline; margin:0;">
                                             <input type="hidden" name="badge_name" value="{{ badge }}">
-                                            <button type="submit" title="سحب هذا الوسام" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:900; margin-right:4px;">&times;</button>
+                                            <button type="submit" title="سحب الوسام" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:900; margin-right:4px;">&times;</button>
                                         </form>
                                     </span>
                                 {% else %}
@@ -515,7 +527,6 @@
                                 {% endfor %}
                             </div>
 
-                            <!-- نموذج منح وسام جديد يدوياً للمتطوع -->
                             <form action="{{ url_for('assign_badge', volunteer_id=v.id) }}" method="POST" style="display: flex; gap: 8px; align-items: center; margin: 0;">
                                 <select name="badge_name" class="custom-input" style="padding: 4px 8px; font-size: 0.85rem; width: auto;" required>
                                     <option value="">-- امنح وساماً يدوياً --</option>
@@ -536,11 +547,11 @@
             </div>
         </div>
 
-        <!-- ==================== 2. تبويب الفعاليات وكشوفات الميدان (RSVP Roster) ==================== -->
+        <!-- ==================== 2. تبويب الفعاليات ورصد الساعات الميداني ==================== -->
         <div id="eventsTab" class="admin-tab-content">
             <div class="admin-box">
                 <div class="admin-section-title">
-                    <i class="fa-regular fa-calendar-plus" style="color: var(--jo-green);"></i> إضافة فعالية ميدانية وتحديد الطاقة الاستيعابية
+                    <i class="fa-regular fa-calendar-plus" style="color: var(--jo-green);"></i> إضافة فعالية ميدانية وتحديد المقاعد المطلوبة
                 </div>
                 <form action="{{ url_for('add_event') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
                     <div>
@@ -548,7 +559,7 @@
                         <input type="text" name="title" class="custom-input" placeholder="حملة وقف ثريد" required>
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">العدد المطلوب للميدان (Capacity)</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">العدد المطلوب للميدان</label>
                         <input type="number" name="capacity" class="custom-input" min="1" max="200" value="7" required>
                     </div>
                     <div>
@@ -573,7 +584,7 @@
                 </form>
 
                 <div class="admin-section-title" style="font-size: 1.15rem; border-right-color: var(--jo-black);">
-                    كشوفات المتطوعين المسجلين بنقرة واحدة في الفعاليات الحالية
+                    كشوفات المتطوعين المسجلين وأداة التحضير الميداني الآلي
                 </div>
                 
                 <div style="display: grid; gap: 16px;">
@@ -598,25 +609,49 @@
                             </div>
                         </div>
 
-                        <!-- قائمة أسماء المتطوعين المؤكدين للنزول الميداني -->
+                        <!-- كشف الأسماء مع أزرار التحضير والشطب -->
                         <div class="event-roster-box">
-                            <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 8px; color: var(--jo-black);">
-                                <i class="fa-solid fa-users-viewfinder" style="color: var(--jo-green);"></i> فريق الميدان المسجل في هذا النشاط:
+                            <h4 style="font-size: 0.95rem; font-weight: 800; margin-bottom: 10px; color: var(--jo-black);">
+                                <i class="fa-solid fa-users-viewfinder" style="color: var(--jo-green);"></i> فريق الميدان المسجل بنقرة واحدة:
                             </h4>
                             {% if ev.registrations %}
                                 <div>
                                     {% for reg in ev.registrations %}
-                                    <div class="roster-volunteer-chip">
-                                        <img src="{{ reg.volunteer.photo_url or url_for('static', filename='logo.png') }}" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover;">
-                                        <span>{{ reg.volunteer.name }}</span>
-                                        <a href="{{ reg.volunteer.wa_link }}" target="_blank" style="color: #16a34a; text-decoration: none;" title="محادثة واتساب سريعة">
-                                            <i class="fa-brands fa-whatsapp"></i> {{ reg.volunteer.phone }}
-                                        </a>
+                                    <div class="roster-volunteer-item">
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <img src="{{ reg.volunteer.photo_url or url_for('static', filename='logo.png') }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                            <div>
+                                                <span style="font-weight: 800; color: var(--jo-black);">{{ reg.volunteer.name }}</span>
+                                                <div style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ reg.volunteer.team }} | {{ reg.volunteer.phone }}</div>
+                                            </div>
+                                        </div>
+
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <!-- زر التحضير ومنح الساعات المباشر -->
+                                            {% if reg.attended %}
+                                                <span class="btn-checkin checked"><i class="fa-solid fa-circle-check"></i> تم التحضير ومنح الساعات</span>
+                                            {% else %}
+                                                <form action="{{ url_for('checkin_rsvp_volunteer', reg_id=reg.id) }}" method="POST" style="margin: 0; display: flex; gap: 4px; align-items: center;">
+                                                    <input type="number" name="hours" value="3" min="1" max="24" style="width: 50px; padding: 4px; border: 1px solid var(--jo-border); border-radius: 4px; text-align: center; font-weight: 700;" title="عدد الساعات المستحقة للفعالية">
+                                                    <button type="submit" class="btn-checkin" title="اعتماد الحضور وإضافة الساعات فوراً"><i class="fa-solid fa-check"></i> تحضير</button>
+                                                </form>
+                                            {% endif %}
+
+                                            <!-- مراسلة واتساب سريعة -->
+                                            <a href="{{ reg.volunteer.wa_link }}" target="_blank" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a;">
+                                                <i class="fa-brands fa-whatsapp"></i>
+                                            </a>
+
+                                            <!-- زر شطب المسجل لفتح المقعد -->
+                                            <form action="{{ url_for('remove_rsvp_volunteer', reg_id=reg.id) }}" method="POST" onsubmit="return confirm('هل تريد شطب هذا المتطوع من كشف النشاط وفتح مقعده لمتطوع آخر؟');" style="margin: 0;">
+                                                <button type="submit" class="btn-ctrl-action btn-red-reject" title="إلغاء حجز المقعد"><i class="fa-solid fa-user-xmark"></i> شطب</button>
+                                            </form>
+                                        </div>
                                     </div>
                                     {% endfor %}
                                 </div>
                             {% else %}
-                                <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">لم يقم أي متطوع بتأكيد حضوره في هذه الفعالية بعد.</p>
+                                <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">لم يسجل أي متطوع في هذا النشاط بعد.</p>
                             {% endif %}
                         </div>
 
@@ -628,16 +663,16 @@
             </div>
         </div>
 
-        <!-- ==================== 3. تبويب إدارة محتوى ومظهر الموقع (CMS) ==================== -->
+        <!-- ==================== 3. تبويب تخصيص الموقع وبطاقات الخدمات الـ 5 (CMS) ==================== -->
         <div id="cmsTab" class="admin-tab-content">
             <div class="admin-box" style="border-top: 4px solid var(--jo-green);">
                 <div class="admin-section-title">
-                    <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وصور الخدمات وقنوات التواصل
+                    <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وصور وعناوين بطاقات الخدمات
                 </div>
 
                 <form action="{{ url_for('update_settings') }}" method="POST">
                     
-                    <!-- أ. العناوين وهوية العلامة -->
+                    <!-- العناوين وهوية العلامة -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div class="custom-select-group">
                             <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان تبويب المتصفح (Site Title)</label>
@@ -653,7 +688,7 @@
                         </div>
                     </div>
 
-                    <!-- ب. الشعار والبريد -->
+                    <!-- الشعار والبريد -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div class="custom-select-group">
                             <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورة الشعار الرسمي (Logo URL)</label>
@@ -665,7 +700,7 @@
                         </div>
                     </div>
 
-                    <!-- ج. روابط المنصات الرسمية الحية -->
+                    <!-- روابط المنصات الرسمية الحية -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
                         <div class="custom-select-group">
                             <label style="display:block; margin-bottom: 6px; font-weight: 700;"><i class="fa-solid fa-hand-holding-heart" style="color: #0284c7;"></i> رابط حساب منصة نحن (Nahno)</label>
@@ -681,36 +716,54 @@
                         </div>
                     </div>
 
-                    <!-- د. روابط صور بطاقات خدمات المتطوعين الخمس -->
+                    <!-- المحرر المزدوج لبطاقات الخدمات الخمس (تعديل الاسم + الصورة) -->
                     <div style="background: #f1f5f9; padding: 18px; border-radius: var(--radius-sm); margin-bottom: 18px; border: 1px solid var(--jo-border);">
-                        <h4 style="font-weight: 800; margin-bottom: 12px; color: var(--jo-black);"><i class="fa-solid fa-images"></i> صور بطاقات الخدمات الـ 5 في بوابة المتطوع:</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
-                            <div class="custom-select-group">
-                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: المهام والتكليفات</label>
-                                <input type="url" name="card_img_duties" class="custom-input" value="{{ settings.card_img_duties if settings and settings.card_img_duties else '' }}" required>
+                        <h4 style="font-weight: 800; margin-bottom: 14px; color: var(--jo-black);">
+                            <i class="fa-solid fa-images"></i> محرر بطاقات الخدمات الـ 5 (تعديل الاسم والصورة المصغرة):
+                        </h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+                            
+                            <!-- كرت 1 -->
+                            <div class="cms-service-card-editor">
+                                <label style="font-weight: 800; font-size: 0.85rem; color: var(--jo-green);">الكرت 1: المهام والتكليفات</label>
+                                <input type="text" name="card_title_duties" class="custom-input" value="{{ settings.card_title_duties }}" placeholder="عنوان الكرت" required>
+                                <input type="url" name="card_img_duties" class="custom-input" value="{{ settings.card_img_duties }}" placeholder="رابط صورة الكرت" required>
                             </div>
-                            <div class="custom-select-group">
-                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: سجل الساعات والتقييم</label>
-                                <input type="url" name="card_img_hours" class="custom-input" value="{{ settings.card_img_hours if settings and settings.card_img_hours else '' }}" required>
+
+                            <!-- كرت 2 -->
+                            <div class="cms-service-card-editor">
+                                <label style="font-weight: 800; font-size: 0.85rem; color: var(--jo-green);">الكرت 2: سجل الساعات والتقييم</label>
+                                <input type="text" name="card_title_hours" class="custom-input" value="{{ settings.card_title_hours }}" placeholder="عنوان الكرت" required>
+                                <input type="url" name="card_img_hours" class="custom-input" value="{{ settings.card_img_hours }}" placeholder="رابط صورة الكرت" required>
                             </div>
-                            <div class="custom-select-group">
-                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: الفعاليات الميدانية</label>
-                                <input type="url" name="card_img_events" class="custom-input" value="{{ settings.card_img_events if settings and settings.card_img_events else '' }}" required>
+
+                            <!-- كرت 3 -->
+                            <div class="cms-service-card-editor">
+                                <label style="font-weight: 800; font-size: 0.85rem; color: var(--jo-green);">الكرت 3: الفعاليات الميدانية</label>
+                                <input type="text" name="card_title_events" class="custom-input" value="{{ settings.card_title_events }}" placeholder="عنوان الكرت" required>
+                                <input type="url" name="card_img_events" class="custom-input" value="{{ settings.card_img_events }}" placeholder="رابط صورة الكرت" required>
                             </div>
-                            <div class="custom-select-group">
-                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: تقديم اعتذار عن فعالية</label>
-                                <input type="url" name="card_img_excuse" class="custom-input" value="{{ settings.card_img_excuse if settings and settings.card_img_excuse else '' }}" required>
+
+                            <!-- كرت 4 -->
+                            <div class="cms-service-card-editor">
+                                <label style="font-weight: 800; font-size: 0.85rem; color: var(--jo-green);">الكرت 4: تقديم اعتذار عن فعالية</label>
+                                <input type="text" name="card_title_excuse" class="custom-input" value="{{ settings.card_title_excuse }}" placeholder="عنوان الكرت" required>
+                                <input type="url" name="card_img_excuse" class="custom-input" value="{{ settings.card_img_excuse }}" placeholder="رابط صورة الكرت" required>
                             </div>
-                            <div class="custom-select-group">
-                                <label style="display:block; margin-bottom: 4px; font-weight: 700; font-size: 0.85rem;">صورة كرت: نقاط التجمع والمواصلات</label>
-                                <input type="url" name="card_img_transport" class="custom-input" value="{{ settings.card_img_transport if settings and settings.card_img_transport else '' }}" required>
+
+                            <!-- كرت 5 -->
+                            <div class="cms-service-card-editor">
+                                <label style="font-weight: 800; font-size: 0.85rem; color: var(--jo-green);">الكرت 5: نقاط التجمع والمواصلات</label>
+                                <input type="text" name="card_title_transport" class="custom-input" value="{{ settings.card_title_transport }}" placeholder="عنوان الكرت" required>
+                                <input type="url" name="card_img_transport" class="custom-input" value="{{ settings.card_img_transport }}" placeholder="رابط صورة الكرت" required>
                             </div>
+
                         </div>
                     </div>
 
-                    <!-- هـ. نصوص الواجهة والرسالة والرؤية -->
+                    <!-- نصوص الواجهة والرسالة والرؤية -->
                     <div class="custom-select-group" style="margin-bottom: 15px;">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (Hero Title - يقبل وسوم HTML)</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (يقبل وسوم HTML)</label>
                         <input type="text" name="hero_title" class="custom-input" value="{{ settings.hero_title if settings else '' }}" required>
                     </div>
 
@@ -735,7 +788,7 @@
             </div>
         </div>
 
-        <!-- ==================== 4. تبويب إسناد التكليفات الميدانية ==================== -->
+        <!-- ==================== 4. تبويب التكليفات الميدانية ==================== -->
         <div id="dutiesTab" class="admin-tab-content">
             <div class="admin-box">
                 <div class="admin-section-title">
@@ -849,6 +902,97 @@
 
     </main>
 
+    <!-- نافذة باجة الإدارة المذهبة التفاعلية (Admin Badge Modal) -->
+    <div id="adminBadgeModal" class="admin-profile-modal">
+        <div class="admin-modal-content" style="max-width: 440px; text-align: center;">
+            <button class="close-modal-btn" onclick="closeAdminModal('adminBadgeModal')">&times;</button>
+            <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 6px; color: var(--jo-black);">باجة الهيئة الإدارية العليا</h3>
+            <p style="color: var(--jo-dark-gray); font-size: 0.85rem; margin-bottom: 1rem;">انقر لقلب البطاقة ومعاينة رمز الـ QR الرسمي</p>
+
+            <div class="badge-interactive-container" style="margin: 0 auto;">
+                <div class="badge-card-3d" id="adminBadgeCard" onclick="toggleAdminBadgeFlip()">
+                    
+                    <!-- الوجه الأمامي (إطار ذهبي ملكي) -->
+                    <div class="badge-face badge-front">
+                        <div class="badge-corner-decor decor-top-left"></div>
+                        <div class="badge-corner-decor decor-top-right"></div>
+                        <div class="badge-corner-decor decor-bottom-left"></div>
+                        <div class="badge-corner-decor decor-bottom-right"></div>
+
+                        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" class="badge-watermark" alt="watermark">
+
+                        <div class="badge-front-content">
+                            <div class="badge-title-block">
+                                <div class="badge-header-logos">
+                                    <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="logo">
+                                    <div style="text-align: right; line-height: 1.1;">
+                                        <div style="font-weight: 900; font-size: 0.92rem; color: var(--jo-black);">لمتنا بصمة</div>
+                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--jo-dark-gray);">lametna basmeh</div>
+                                    </div>
+                                </div>
+                                <h4>المملكة الأردنية الهاشمية</h4>
+                                <p>فريق لمّتنا بصمة</p>
+                                <div class="badge-doc-type" style="color: var(--gold);">بطاقة عضوية قيادية</div>
+                            </div>
+
+                            <div class="badge-avatar-wrap rank-border-presidency">
+                                <img src="{{ current_admin.photo_url or url_for('static', filename='logo.png') }}" alt="{{ current_admin.name }}">
+                            </div>
+
+                            <div>
+                                <div class="badge-name">{{ current_admin.name }}</div>
+                                <div class="badge-info-rows">
+                                    <div>الصفة : {{ current_admin.position }}</div>
+                                    <div>الفريق : {{ current_admin.team }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الوجه الخلفي (QR Code) -->
+                    <div class="badge-face badge-back">
+                        <div class="badge-corner-decor decor-top-left"></div>
+                        <div class="badge-corner-decor decor-top-right"></div>
+                        <div class="badge-corner-decor decor-bottom-left"></div>
+                        <div class="badge-corner-decor decor-bottom-right"></div>
+
+                        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" class="badge-watermark" alt="watermark">
+
+                        <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; width: 100%;">
+                            <div style="margin-top: 10px;">
+                                <div style="font-weight: 900; font-size: 1rem; color: var(--jo-black);">التحقق القيادي الميداني</div>
+                                <div style="font-size: 0.78rem; color: var(--jo-dark-gray); margin-top: 2px;">رمز التوثيق الإلكتروني الرسمي</div>
+                            </div>
+
+                            <div class="badge-qr-box">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data={{ request.url_root }}verify/{{ current_admin.id }}" alt="QR Verification">
+                            </div>
+
+                            <div>
+                                <div style="font-weight: 900; font-size: 0.9rem; color: var(--gold); margin-bottom: 4px;">
+                                    الرقم القيادي: LB-{{ '%04d' % current_admin.id }}
+                                </div>
+                                <p class="badge-back-rules">
+                                    بطاقة قيادية معتمدة تمنح حاملها صلاحية الإشراف والتنسيق الميداني باسم فريق لمتنا بصمة.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 1.5rem;">
+                <button type="button" onclick="toggleAdminBadgeFlip()" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;">
+                    <i class="fa-solid fa-arrows-rotate"></i> اقلب الباجة
+                </button>
+                <button type="button" onclick="window.print()" class="btn-ctrl-action" style="background: var(--jo-green); color: #fff;">
+                    <i class="fa-solid fa-print"></i> طباعة البطاقة
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- نافذة تعديل بيانات وصورة المسؤول الشخصية (Admin Profile Modal) -->
     <div id="adminProfileModal" class="admin-profile-modal">
         <div class="admin-modal-content">
@@ -880,7 +1024,7 @@
         </div>
     </div>
 
-    <!-- محرك التبديل التفاعلي -->
+    <!-- محرك التبديل والبحث التفاعلي -->
     <script>
         function switchAdminTab(tabId, btnElement) {
             const contents = document.querySelectorAll('.admin-tab-content');
@@ -901,11 +1045,33 @@
             document.getElementById(id).style.display = 'none';
         }
 
-        window.onclick = function(e) {
-            const modal = document.getElementById('adminProfileModal');
-            if (e.target === modal) {
-                modal.style.display = 'none';
+        function toggleAdminBadgeFlip() {
+            const card = document.getElementById('adminBadgeCard');
+            if (card) {
+                card.classList.toggle('flipped');
             }
+        }
+
+        // محرك البحث الفوري في كشوفات المتطوعين
+        function filterVolunteers() {
+            const input = document.getElementById('volunteerSearchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.volunteer-item-row');
+
+            rows.forEach(row => {
+                const searchText = row.getAttribute('data-search-text').toLowerCase();
+                if (searchText.includes(input)) {
+                    row.style.display = 'flex';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        window.onclick = function(e) {
+            const profileModal = document.getElementById('adminProfileModal');
+            const badgeModal = document.getElementById('adminBadgeModal');
+            if (e.target === profileModal) profileModal.style.display = 'none';
+            if (e.target === badgeModal) badgeModal.style.display = 'none';
         };
     </script>
 </body>

@@ -1,7 +1,7 @@
 import os
 import re
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -42,12 +42,19 @@ class SiteSetting(db.Model):
     instagram_url = db.Column(db.String(500), default='https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw')
     nahno_url = db.Column(db.String(500), default='https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843')
     
-    # صور بطاقات خدمات المتطوعين الخمس في الملف الشخصي (CMS)
+    # صور بطاقات خدمات المتطوعين الخمس
     card_img_duties = db.Column(db.String(500), default='https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80')
     card_img_hours = db.Column(db.String(500), default='https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80')
     card_img_events = db.Column(db.String(500), default='https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80')
     card_img_excuse = db.Column(db.String(500), default='https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80')
     card_img_transport = db.Column(db.String(500), default='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80')
+
+    # أسماء وعناوين بطاقات الخدمات الخمس
+    card_title_duties = db.Column(db.String(100), default='المهام والتكليفات')
+    card_title_hours = db.Column(db.String(100), default='سجل الساعات والتقييم')
+    card_title_events = db.Column(db.String(100), default='الفعاليات الميدانية')
+    card_title_excuse = db.Column(db.String(100), default='تقديم اعتذار عن فعالية')
+    card_title_transport = db.Column(db.String(100), default='نقاط التجمع والمواصلات')
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -69,10 +76,10 @@ class Volunteer(db.Model):
     attended_events_count = db.Column(db.Integer, default=0)
     photo_url = db.Column(db.String(500), nullable=True)
     leader_notes = db.Column(db.Text, nullable=True)
-    badges = db.Column(db.Text, default='')  # أوسمة الإدارة مخزنة مفصولة بفواصل
+    badges = db.Column(db.Text, default='')  # تخزين الأوسمة مفصولة بفواصل
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # العلاقات
+    # العلاقات التابعة
     duties = db.relationship('Duty', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     excuses = db.relationship('Excuse', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     registrations = db.relationship('EventRegistration', backref='volunteer', lazy=True, cascade="all, delete-orphan")
@@ -100,7 +107,7 @@ class Event(db.Model):
     date = db.Column(db.String(50), nullable=False)
     time = db.Column(db.String(50), nullable=False)
     location = db.Column(db.String(150), nullable=False)
-    capacity = db.Column(db.Integer, default=10)  # العدد المطلوب للميدان
+    capacity = db.Column(db.Integer, default=10)  # المقاعد المطلوبة للميدان
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     registrations = db.relationship('EventRegistration', backref='event', lazy=True, cascade="all, delete-orphan")
@@ -123,6 +130,7 @@ class EventRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
+    attended = db.Column(db.Boolean, default=False)  # حالة التحضير الميداني
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Duty(db.Model):
@@ -174,7 +182,6 @@ def index():
     events = Event.query.order_by(Event.id.desc()).limit(4).all()
     gallery_items = GalleryItem.query.order_by(GalleryItem.id.desc()).all()
     
-    # لوحة فرسان الأثر: أفضل المتطوعين المعتمدين حسب الساعات
     top_volunteers = Volunteer.query.filter_by(status='approved')\
                                     .order_by(Volunteer.volunteer_hours.desc(), Volunteer.attended_events_count.desc())\
                                     .limit(5).all()
@@ -189,7 +196,6 @@ def index():
         'events_count': events_count
     }
     
-    # قائمة الفعاليات التي سجل فيها المستخدم الحالي إن كان مسجلاً للدخول
     user_registered_event_ids = []
     if 'user_id' in session:
         user_registered_event_ids = [r.event_id for r in EventRegistration.query.filter_by(volunteer_id=session['user_id']).all()]
@@ -236,7 +242,6 @@ def login():
         identifier = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
 
-        # بيانات دخول إدارة المبادرة المعتمدة حصراً
         admin_credentials = {
             'khaledsalzoubi1352006@gmail.com': {
                 'password': 'kh13s5alzoubi2006',
@@ -250,7 +255,6 @@ def login():
             }
         }
 
-        # 1. التحقق من دخول إدارة المبادرة
         if identifier in admin_credentials and admin_credentials[identifier]['password'] == password:
             admin_user = Volunteer.query.filter_by(email=identifier).first()
             if not admin_user:
@@ -275,7 +279,6 @@ def login():
             flash(f'أهلاً بكِ يا {admin_user.name} في لوحة التحكم الإدارية.' if 'lanoosh' in identifier else f'أهلاً بك يا {admin_user.name} في لوحة التحكم الإدارية.', 'success')
             return redirect(url_for('admin_dashboard'))
 
-        # 2. التحقق من دخول المتطوعين
         volunteer = Volunteer.query.filter_by(email=identifier).first()
         if volunteer and check_password_hash(volunteer.password_hash, password):
             session.clear()
@@ -307,7 +310,7 @@ def verify_badge(volunteer_id):
     settings = get_settings()
     return render_template('verify_badge.html', volunteer=volunteer, settings=settings)
 
-# ==================== بوابة المتطوع والتسجيل بنقرة واحدة ====================
+# ==================== بوابة المتطوع والتسجيل وتعديل كلمة المرور ====================
 
 @app.route('/profile')
 def profile():
@@ -346,36 +349,40 @@ def update_profile():
     if photo_url:
         user.photo_url = photo_url
     
+    new_password = request.form.get('new_password', '').strip()
+    if new_password:
+        user.password_hash = generate_password_hash(new_password)
+    
     db.session.commit()
-    flash('تم تحديث ملفك الشخصي وصورتك بنجاح.', 'success')
+    flash('تم تحديث ملفك الشخصي بنجاح.', 'success')
     return redirect(url_for('profile'))
 
 @app.route('/events/rsvp/<int:event_id>', methods=['POST'])
 def rsvp_event(event_id):
     if 'user_id' not in session:
-        flash('يرجى تسجيل الدخول لتأكيد المشاركة.', 'danger')
+        flash('يرجى تسجيل الدخول أولاً.', 'danger')
         return redirect(url_for('index'))
 
     user = Volunteer.query.get_or_404(session['user_id'])
     if user.status != 'approved':
-        flash('يجب أن يكون حسابك معتمداً من الإدارة لتتمكن من حجز مقعد في الفعالية.', 'danger')
+        flash('يجب أن يكون حسابك معتمداً من الإدارة لتأكيد المشاركة.', 'danger')
         return redirect(request.referrer or url_for('profile'))
 
     ev = Event.query.get_or_404(event_id)
     existing_reg = EventRegistration.query.filter_by(volunteer_id=user.id, event_id=ev.id).first()
     if existing_reg:
-        flash('أنت مسجل بالفعل في هذه الفعالية الميدانية.', 'info')
+        flash('أنت مسجل مسبقاً في هذا النشاط الميداني.', 'info')
         return redirect(request.referrer or url_for('profile'))
 
     if ev.is_full:
-        flash('عذراً، اكتمل العدد المطلوب للميدان في هذه الفعالية.', 'danger')
+        flash('اكتمل العدد المطلوب للميدان في هذه الفعالية.', 'danger')
         return redirect(request.referrer or url_for('profile'))
 
     new_reg = EventRegistration(volunteer_id=user.id, event_id=ev.id)
     db.session.add(new_reg)
     db.session.commit()
 
-    flash(f'تم تأكيد حضورك بنجاح في فعالية: {ev.title}. نراك في الميدان!', 'success')
+    flash(f'تم حجز مقعدك بنجاح في: {ev.title}.', 'success')
     return redirect(request.referrer or url_for('profile'))
 
 @app.route('/events/cancel_rsvp/<int:event_id>', methods=['POST'])
@@ -387,7 +394,7 @@ def cancel_rsvp(event_id):
     if reg:
         db.session.delete(reg)
         db.session.commit()
-        flash('تم إلغاء حجز مقعدك وفتح المجال لمتطوع آخر.', 'info')
+        flash('تم إلغاء حجزك في الفعالية وفتح المقعد لمتطوع آخر.', 'info')
     return redirect(request.referrer or url_for('profile'))
 
 @app.route('/profile/delete', methods=['POST'])
@@ -399,7 +406,7 @@ def delete_own_account():
     db.session.delete(user)
     db.session.commit()
     session.clear()
-    flash('تم حذف حسابك وكافة سجلاتك نهائياً من المنصة.', 'info')
+    flash('تم حذف حسابك نهائياً من المنصة.', 'info')
     return redirect(url_for('index'))
 
 @app.route('/submit_excuse', methods=['POST'])
@@ -460,10 +467,33 @@ def update_admin_profile():
         if photo_url:
             admin_user.photo_url = photo_url
         db.session.commit()
-        flash('تم حفظ وتحديث ملفك الإداري وصورتك الشخصية.', 'success')
+        flash('تم حفظ ملفك الإداري وصورتك بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# --- إدارة المتطوعين، القيادات، الأوسمة، والساعات ---
+# --- إدارة المتطوعين، القيادات، الأوسمة، والتحضير الميداني ---
+
+@app.route('/admin/rsvp/checkin/<int:reg_id>', methods=['POST'])
+def checkin_rsvp_volunteer(reg_id):
+    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    reg = EventRegistration.query.get_or_404(reg_id)
+    if not reg.attended:
+        reg.attended = True
+        hours_to_award = request.form.get('hours', type=int) or 3
+        reg.volunteer.volunteer_hours += hours_to_award
+        reg.volunteer.attended_events_count += 1
+        db.session.commit()
+        flash(f'تم تحضير المتطوع {reg.volunteer.name} ومنحه {hours_to_award} ساعات.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/rsvp/remove/<int:reg_id>', methods=['POST'])
+def remove_rsvp_volunteer(reg_id):
+    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    reg = EventRegistration.query.get_or_404(reg_id)
+    v_name = reg.volunteer.name
+    db.session.delete(reg)
+    db.session.commit()
+    flash(f'تم شطب المتطوع {v_name} من الفعالية وفتح المقعد تلقائياً.', 'info')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/approve/<int:volunteer_id>', methods=['POST'])
 def approve_volunteer(volunteer_id):
@@ -642,7 +672,7 @@ def delete_gallery_item(item_id):
     flash('تم حذف العنصر من المعرض.', 'info')
     return redirect(url_for('admin_dashboard'))
 
-# --- إدارة محتوى ومظهر الموقع (Full CMS) ---
+# --- إدارة محتوى ومظهر الموقع (CMS) ---
 
 @app.route('/admin/settings/update', methods=['POST'])
 def update_settings():
@@ -670,8 +700,15 @@ def update_settings():
     setting.card_img_excuse = request.form.get('card_img_excuse')
     setting.card_img_transport = request.form.get('card_img_transport')
 
+    # أسماء وعناوين بطاقات الخدمات الخمس
+    setting.card_title_duties = request.form.get('card_title_duties', setting.card_title_duties)
+    setting.card_title_hours = request.form.get('card_title_hours', setting.card_title_hours)
+    setting.card_title_events = request.form.get('card_title_events', setting.card_title_events)
+    setting.card_title_excuse = request.form.get('card_title_excuse', setting.card_title_excuse)
+    setting.card_title_transport = request.form.get('card_title_transport', setting.card_title_transport)
+
     db.session.commit()
-    flash('تم حفظ وتحديث إعدادات ومحتوى الموقع بنجاح.', 'success')
+    flash('تم حفظ الإعدادات وعناوين وصور البطاقات بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 # ==================== التهيئة والترحيل التلقائي لقاعدة البيانات ====================
@@ -679,7 +716,6 @@ def update_settings():
 with app.app_context():
     db.create_all()
     
-    # إضافة الأعمدة والجداول الجديدة تلقائياً بدون أخطاء
     migrations = [
         ("site_settings", "whatsapp_url", "VARCHAR(500)"),
         ("site_settings", "instagram_url", "VARCHAR(500)"),
@@ -689,8 +725,14 @@ with app.app_context():
         ("site_settings", "card_img_events", "VARCHAR(500)"),
         ("site_settings", "card_img_excuse", "VARCHAR(500)"),
         ("site_settings", "card_img_transport", "VARCHAR(500)"),
+        ("site_settings", "card_title_duties", "VARCHAR(100) DEFAULT 'المهام والتكليفات'"),
+        ("site_settings", "card_title_hours", "VARCHAR(100) DEFAULT 'سجل الساعات والتقييم'"),
+        ("site_settings", "card_title_events", "VARCHAR(100) DEFAULT 'الفعاليات الميدانية'"),
+        ("site_settings", "card_title_excuse", "VARCHAR(100) DEFAULT 'تقديم اعتذار عن فعالية'"),
+        ("site_settings", "card_title_transport", "VARCHAR(100) DEFAULT 'نقاط التجمع والمواصلات'"),
         ("volunteers", "badges", "TEXT DEFAULT ''"),
-        ("events", "capacity", "INTEGER DEFAULT 10")
+        ("events", "capacity", "INTEGER DEFAULT 10"),
+        ("event_registrations", "attended", "BOOLEAN DEFAULT FALSE")
     ]
     for tbl, col, col_type in migrations:
         try:
