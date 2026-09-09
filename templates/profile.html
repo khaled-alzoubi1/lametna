@@ -95,20 +95,6 @@
             background: var(--jo-black);
             color: #fff;
         }
-        .tab-view-container {
-            background: var(--jo-white);
-            border-radius: var(--radius-md);
-            padding: 2.2rem;
-            margin-top: 2rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--jo-border);
-        }
-        .profile-tab-content {
-            display: none;
-        }
-        .profile-tab-content.active-profile-tab {
-            display: block;
-        }
         .badge-volunteer-status {
             padding: 4px 12px;
             border-radius: 20px;
@@ -118,14 +104,8 @@
             align-items: center;
             gap: 5px;
         }
-        .badge-v-approved {
-            background: #dcfce7;
-            color: var(--jo-green);
-        }
-        .badge-v-pending {
-            background: #fef3c7;
-            color: #d97706;
-        }
+        .badge-v-approved { background: #dcfce7; color: var(--jo-green); }
+        .badge-v-pending { background: #fef3c7; color: #d97706; }
         .profile-modal-overlay {
             display: none;
             position: fixed;
@@ -149,6 +129,22 @@
             position: relative;
             box-shadow: var(--shadow-lg);
             animation: modalFadeIn 0.3s ease;
+        }
+        .badge-section-wrapper {
+            background: var(--jo-white);
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-md);
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .badge-ctrl-btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
         }
         @keyframes modalFadeIn {
             from { opacity: 0; transform: translateY(-15px); }
@@ -176,12 +172,12 @@
         </nav>
     </header>
 
-    <!-- 2. شريط رسائل النظام Flash Messages -->
+    <!-- 2. شريط رسائل وتنبيهات الخادم -->
     <div class="container" style="max-width: 1200px; margin: 1.5rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div style="padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 15px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                    <div style="padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 15px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% elif category == 'info' %}#e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -189,8 +185,9 @@
         {% endwith %}
     </div>
 
-    <!-- 3. كرت الملف الشخصي للمتطوع -->
     <main class="profile-page-wrapper">
+
+        <!-- 3. كرت البيانات الشخصية للمتطوع -->
         <div class="profile-header-card">
             <div class="profile-avatar-box">
                 <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
@@ -200,9 +197,9 @@
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
                     <h2 class="profile-user-name">{{ user.name }}</h2>
                     {% if user.status == 'approved' %}
-                        <span class="badge-volunteer-status badge-v-approved"><i class="fa-solid fa-circle-check"></i> متطوع معتمد</span>
+                        <span class="badge-volunteer-status badge-v-approved"><i class="fa-solid fa-circle-check"></i> عضوية معتمدة</span>
                     {% else %}
-                        <span class="badge-volunteer-status badge-v-pending"><i class="fa-solid fa-clock"></i> بانتظار اعتماد الإدارة</span>
+                        <span class="badge-volunteer-status badge-v-pending"><i class="fa-solid fa-clock"></i> قيد المراجعة الإدارية</span>
                     {% endif %}
                     
                     {% if user.is_leader %}
@@ -212,14 +209,24 @@
                 
                 <div class="profile-meta-tags">
                     <span><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> المحافظة: {{ user.city or 'عمان' }}</span>
-                    <span><i class="fa-solid fa-phone" style="color: var(--jo-green);"></i> {{ user.phone }}</span>
-                    <span><i class="fa-solid fa-cake-candles" style="color: #6366f1;"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
-                    <span><i class="fa-solid fa-users" style="color: var(--jo-black);"></i> الفريق: {{ user.team or 'الميداني' }}</span>
+                    <span><i class="fa-solid fa-users" style="color: var(--jo-green);"></i> الفريق: {{ user.team or 'عمان' }}</span>
+                    <span><i class="fa-solid fa-phone" style="color: #6366f1;"></i> {{ user.phone }}</span>
+                    <span><i class="fa-solid fa-cake-candles" style="color: var(--jo-black);"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
                     <span><i class="fa-regular fa-envelope" style="color: #0284c7;"></i> {{ user.email }}</span>
                 </div>
 
+                <!-- الأوسمة والشارات الممنوحة يدوياً من الإدارة -->
+                <div style="margin-bottom: 12px;">
+                    <span style="font-weight: 800; font-size: 0.88rem; color: var(--jo-black); margin-left: 6px;">الأوسمة الميدانية:</span>
+                    {% for badge in user.badges_list %}
+                        <span class="volunteer-badge-ribbon"><i class="fa-solid fa-medal" style="color: var(--gold);"></i> {{ badge }}</span>
+                    {% else %}
+                        <span style="font-size: 0.85rem; color: #94a3b8;">تُمنح الأوسمة التقديرية من الإدارة مع كل إنجاز ميداني.</span>
+                    {% endfor %}
+                </div>
+
                 <p class="profile-bio-text">
-                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي لكتابة نبذة عن مهاراتك واهتماماتك التطوعية وإضافة رابط صورتك الشخصية.' }}
+                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي وصورتي لكتابة مهاراتك الميدانية وإدراج صورتك الشخصية.' }}
                 </p>
 
                 <div class="profile-actions-bar">
@@ -233,48 +240,147 @@
             </div>
         </div>
 
-        <!-- 4. شبكة الخدمات والأنشطة (مرتبطة ديناميكياً بـ CMS) -->
+        <!-- 4. الباجة الميدانية الرسمية التفاعلية (مطابقة للباجة المادية - 3D Flip & QR) -->
+        <div class="badge-section-wrapper printable-badge-area">
+            <h3 style="font-size: 1.35rem; font-weight: 900; margin-bottom: 4px; color: var(--jo-black);">
+                بطاقة العضوية الميدانية الرقمية
+            </h3>
+            <p style="color: var(--jo-dark-gray); font-size: 0.92rem; margin-bottom: 1.2rem;">
+                انقر على البطاقة لقلبها وفحص رمز التحقق الميداني (QR)، أو استخدم زر الطباعة للنزول الميداني.
+            </p>
+
+            <div class="badge-interactive-container">
+                <div class="badge-card-3d" id="volunteerBadgeCard" onclick="toggleBadgeFlip()">
+                    
+                    <!-- الوجه الأمامي (Front Face) -->
+                    <div class="badge-face badge-front">
+                        <!-- زخرفة الأقواس الأردنية في الزوايا -->
+                        <div class="badge-corner-decor decor-top-left"></div>
+                        <div class="badge-corner-decor decor-top-right"></div>
+                        <div class="badge-corner-decor decor-bottom-left"></div>
+                        <div class="badge-corner-decor decor-bottom-right"></div>
+
+                        <!-- العلامة المائية الباهتة للوجو في الخلفية -->
+                        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" class="badge-watermark" alt="watermark">
+
+                        <div class="badge-front-content">
+                            <!-- الترويسة العليا واللوجو المزدوج -->
+                            <div class="badge-title-block">
+                                <div class="badge-header-logos">
+                                    <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="logo">
+                                    <div style="text-align: right; line-height: 1.1;">
+                                        <div style="font-weight: 900; font-size: 0.92rem; color: var(--jo-black);">لمتنا بصمة</div>
+                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--jo-dark-gray); letter-spacing: -0.2px;">lametna basmeh</div>
+                                    </div>
+                                </div>
+                                <h4>المملكة الأردنية الهاشمية</h4>
+                                <p>فريق لمّتنا بصمة</p>
+                                <div class="badge-doc-type">بطاقة عضوية</div>
+                            </div>
+
+                            <!-- صورة العضو الشخصية بإطار الرتبة -->
+                            <div class="badge-avatar-wrap {% if user.is_leader and ('رئيس' in user.position or 'نائب' in user.position) %}rank-border-presidency{% elif user.is_leader %}rank-border-leader{% else %}rank-border-volunteer{% endif %}">
+                                <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
+                            </div>
+
+                            <!-- الاسم والبيانات الميدانية -->
+                            <div>
+                                <div class="badge-name">{{ user.name }}</div>
+                                <div class="badge-info-rows">
+                                    <div>الصفة : {{ user.position or ('متطوع معتمد' if user.status == 'approved' else 'متطوع مسجل') }}</div>
+                                    <div>الفريق : {{ user.team or 'عمان' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الوجه الخلفي (Back Face - QR Code) -->
+                    <div class="badge-face badge-back">
+                        <div class="badge-corner-decor decor-top-left"></div>
+                        <div class="badge-corner-decor decor-top-right"></div>
+                        <div class="badge-corner-decor decor-bottom-left"></div>
+                        <div class="badge-corner-decor decor-bottom-right"></div>
+
+                        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" class="badge-watermark" alt="watermark">
+
+                        <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; width: 100%;">
+                            <div style="margin-top: 10px;">
+                                <div style="font-weight: 900; font-size: 1rem; color: var(--jo-black);">فحص وتوثيق العضوية الميدانية</div>
+                                <div style="font-size: 0.78rem; color: var(--jo-dark-gray); margin-top: 2px;">امسح الرمز للتحقق الفوري عبر المنصة</div>
+                            </div>
+
+                            <div class="badge-qr-box">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data={{ request.url_root }}verify/{{ user.id }}" alt="QR Verification">
+                            </div>
+
+                            <div>
+                                <div style="font-weight: 900; font-size: 0.9rem; color: var(--jo-black); margin-bottom: 4px;">
+                                    الرقم الميداني: LB-{{ '%04d' % user.id }}
+                                </div>
+                                <p class="badge-back-rules">
+                                    هذه البطاقة وثيقة تطوعية معتمدة صادرة عن إدارة فريق لمتنا بصمة. يُمنع استخدامها لغير الأغراض التطوعية الميدانية المقررة.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- أزرار التحكم بالباجة -->
+            <div class="badge-ctrl-btn-group">
+                <button type="button" onclick="toggleBadgeFlip()" class="btn-profile-action">
+                    <i class="fa-solid fa-arrows-rotate"></i> اقلب الباجة (QR Code)
+                </button>
+                <button type="button" onclick="window.print()" class="btn-profile-action" style="border-color: var(--jo-green); color: var(--jo-green);">
+                    <i class="fa-solid fa-print"></i> طباعة الباجة الميدانية
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. شبكة كروت الخدمات الخمس (ديناميكية ومصححة برمجياً) -->
         <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1.5rem; border-right: 4px solid var(--jo-green); padding-right: 10px;">
             لوحة خدمات ومتابعة المتطوع
         </h3>
 
-        <div class="services-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+        <div class="services-grid">
             
-            <!-- 1. كرت المهام -->
+            <!-- كرت 1: المهام والتكليفات -->
             <div class="service-card" onclick="switchProfileTab('dutiesTab')">
                 <img src="{{ settings.card_img_duties if settings and settings.card_img_duties else 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80' }}" alt="المهام">
                 <div class="service-card-title"><i class="fa-solid fa-list-check" style="display:block; margin-bottom: 8px;"></i>المهام والتكليفات ({{ duties|length }})</div>
             </div>
 
-            <!-- 2. كرت الساعات -->
+            <!-- كرت 2: الساعات والتقييم -->
             <div class="service-card" onclick="switchProfileTab('marksTab')">
                 <img src="{{ settings.card_img_hours if settings and settings.card_img_hours else 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80' }}" alt="الساعات">
                 <div class="service-card-title"><i class="fa-solid fa-award" style="display:block; margin-bottom: 8px;"></i>سجل الساعات والتقييم</div>
             </div>
 
-            <!-- 3. كرت الفعاليات -->
+            <!-- كرت 3: الفعاليات الميدانية ونظام RSVP -->
             <div class="service-card" onclick="switchProfileTab('eventsTab')">
                 <img src="{{ settings.card_img_events if settings and settings.card_img_events else 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80' }}" alt="الفعاليات">
-                <div class="service-card-title"><i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>الفعاليات الميدانية</div>
+                <div class="service-card-title"><i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>الفعاليات والتسجيل الحي</div>
             </div>
 
-            <!-- 4. كرت تقديم اعتذار -->
+            <!-- كرت 4: تقديم عذر -->
             <div class="service-card" onclick="switchProfileTab('excuseTab')">
                 <img src="{{ settings.card_img_excuse if settings and settings.card_img_excuse else 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80' }}" alt="عذر">
                 <div class="service-card-title"><i class="fa-solid fa-file-signature" style="display:block; margin-bottom: 8px;"></i>تقديم اعتذار عن فعالية</div>
             </div>
 
-            <!-- 5. كرت نقاط التجمع والمواصلات -->
+            <!-- كرت 5: نقاط التجمع والمواصلات -->
             <div class="service-card" onclick="switchProfileTab('transportTab')">
                 <img src="{{ settings.card_img_transport if settings and settings.card_img_transport else 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80' }}" alt="مواصلات">
                 <div class="service-card-title"><i class="fa-solid fa-bus" style="display:block; margin-bottom: 8px;"></i>نقاط التجمع والمواصلات</div>
             </div>
+
         </div>
 
-        <!-- 5. الحاويات التفاعلية للأقسام -->
-        <div class="tab-view-container">
+        <!-- 6. حاويات الأقسام التفاعلية (تبويبات الخدمات) -->
+        <div class="tab-view-container" id="profileTabDisplayBox">
             
-            <!-- أ. المهام والتكليفات المسندة -->
+            <!-- أ. تبويب المهام والتكليفات -->
             <div id="dutiesTab" class="profile-tab-content active-profile-tab">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
                     <i class="fa-solid fa-list-check" style="color: var(--jo-green);"></i> التكليفات الميدانية المسندة إليك
@@ -282,7 +388,7 @@
                 {% if duties %}
                     {% for duty in duties %}
                     <div style="padding: 1.2rem; border-right: 4px solid var(--jo-green); background: var(--jo-light-gray); border-radius: 4px; margin-bottom: 12px; border: 1px solid var(--jo-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
                             <span style="font-weight: 800; font-size: 1.05rem; color: var(--jo-black);">{{ duty.title }}</span>
                             <span style="font-size: 0.85rem; color: var(--jo-red); font-weight: 700;"><i class="fa-regular fa-clock"></i> موعد الإنجاز: {{ duty.due_date }}</span>
                         </div>
@@ -290,64 +396,112 @@
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد تكليفات ميدانية معلقة مسندة إليك حالياً.</p>
+                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد مهام ميدانية معلقة مسندة إليك حالياً.</p>
                 {% endif %}
             </div>
 
-            <!-- ب. سجل الساعات والتقييم -->
+            <!-- ب. تبويب الساعات والتقييم والأوسمة -->
             <div id="marksTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--jo-black);">
                     <i class="fa-solid fa-award" style="color: var(--jo-green);"></i> السجل التطوعي والتقييم الإداري
                 </h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 2rem;">
                     <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--jo-border);">
-                        <span style="font-size: 2.2rem; font-weight: 900; color: var(--jo-green);">{{ user.volunteer_hours|default(0) }}</span>
+                        <span style="font-size: 2.4rem; font-weight: 900; color: var(--jo-green);">{{ user.volunteer_hours|default(0) }}</span>
                         <p style="font-weight: 700; margin-top: 6px; color: var(--jo-black);">إجمالي الساعات المعتمدة</p>
                     </div>
                     <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--jo-border);">
-                        <span style="font-size: 2.2rem; font-weight: 900; color: var(--jo-red);">{{ user.attended_events_count|default(0) }}</span>
-                        <p style="font-weight: 700; margin-top: 6px; color: var(--jo-black);">الفعاليات المنجزة</p>
+                        <span style="font-size: 2.4rem; font-weight: 900; color: var(--jo-red);">{{ user.attended_events_count|default(0) }}</span>
+                        <p style="font-weight: 700; margin-top: 6px; color: var(--jo-black);">الفعاليات المنجزة في الميدان</p>
                     </div>
                 </div>
+
+                <h5 style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--jo-black);">الأوسمة والشارات التقديرية الحاصل عليها:</h5>
+                <div style="background: var(--jo-light-gray); padding: 1.2rem; border-radius: var(--radius-sm); border: 1px solid var(--jo-border); margin-bottom: 1.5rem;">
+                    {% for badge in user.badges_list %}
+                        <span class="volunteer-badge-ribbon" style="font-size: 0.9rem; padding: 6px 14px; margin: 4px;">
+                            <i class="fa-solid fa-medal" style="color: var(--gold);"></i> {{ badge }}
+                        </span>
+                    {% else %}
+                        <p style="color: var(--jo-dark-gray); margin: 0; font-size: 0.9rem;">تمنح الأوسمة يدوياً بقرار قادة الفرق مع كل تميز والتزام ميداني.</p>
+                    {% endfor %}
+                </div>
+
                 <h5 style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--jo-black);">ملاحظات وتقييمات قادة الفرق:</h5>
                 <div style="background: var(--jo-light-gray); padding: 1.2rem; border-radius: var(--radius-sm); font-size: 0.95rem; color: #4a5568; border: 1px solid var(--jo-border); line-height: 1.7;">
-                    {{ user.leader_notes or 'التقييم مستمر بناءً على التزامك وحضورك في الأنشطة الميدانية القادمة.' }}
+                    {{ user.leader_notes or 'سجلك نظيف ومثالي، والتقييم مستمر بناءً على التزامك وحضورك في الأنشطة الميدانية القادمة.' }}
                 </div>
             </div>
 
-            <!-- ج. فعاليات المبادرة الميدانية -->
+            <!-- ج. تبويب الفعاليات الميدانية مع نظام التسجيل بنقرة واحدة (RSVP) -->
             <div id="eventsTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> الفعاليات والأنشطة الميدانية المتاحة
+                    <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> الفعاليات الميدانية وتأكيد المشاركة المباشرة
                 </h4>
-                {% if user_events %}
+                
+                <div class="events-list">
                     {% for ev in user_events %}
-                    <div class="event-item-card" style="margin-bottom: 15px;">
-                        <div class="event-meta">
-                            <span><i class="fa-regular fa-calendar"></i> {{ ev.date }}</span>
-                            <span><i class="fa-regular fa-clock"></i> {{ ev.time }}</span>
-                            <span><i class="fa-solid fa-location-dot"></i> {{ ev.location }}</span>
+                    <div class="event-item-card">
+                        <div>
+                            <div class="event-meta">
+                                <span><i class="fa-regular fa-calendar"></i> {{ ev.date }}</span>
+                                <span><i class="fa-regular fa-clock"></i> {{ ev.time }}</span>
+                                <span><i class="fa-solid fa-location-dot"></i> {{ ev.location }}</span>
+                            </div>
+                            <h3 style="margin-bottom: 6px;">{{ ev.title }}</h3>
+                            <p class="event-desc">{{ ev.description }}</p>
                         </div>
-                        <h3 style="margin-bottom: 6px;">{{ ev.title }}</h3>
-                        <p style="color: var(--jo-dark-gray); line-height: 1.6; font-size: 0.95rem;">{{ ev.description }}</p>
+
+                        <!-- حالة المقاعد وزر الحجز المباشر بنقرة واحدة -->
+                        <div class="rsvp-status-box">
+                            <div>
+                                <span style="font-size: 0.85rem; font-weight: 800; color: var(--jo-black);">
+                                    المطلوب للميدان: {{ ev.capacity }} متطوعين
+                                </span>
+                                {% if ev.is_full %}
+                                    <span class="rsvp-pill rsvp-pill-full"><i class="fa-solid fa-lock"></i> اكتمل الفريق</span>
+                                {% else %}
+                                    <span class="rsvp-pill rsvp-pill-active"><i class="fa-solid fa-user-check"></i> متبقي {{ ev.remaining_seats }} مقاعد</span>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                {% if ev.id in registered_event_ids %}
+                                    <form action="{{ url_for('cancel_rsvp', event_id=ev.id) }}" method="POST" style="margin:0;">
+                                        <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد وفتحه لمتطوع آخر">
+                                            <i class="fa-solid fa-calendar-xmark"></i> إلغاء مشاركتي
+                                        </button>
+                                    </form>
+                                {% elif ev.is_full %}
+                                    <button class="btn-rsvp-join" disabled style="opacity: 0.5; cursor: not-allowed;">اكتمل العدد المطلوب</button>
+                                {% else %}
+                                    <form action="{{ url_for('rsvp_event', event_id=ev.id) }}" method="POST" style="margin:0;">
+                                        <button type="submit" class="btn-rsvp-join">
+                                            <i class="fa-solid fa-check"></i> تأكيد حضوري للنشاط
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+
                     </div>
-                    {% endfor %}
-                {% else %}
+                    {% else %}
                     <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد فعاليات مجدولة حالياً.</p>
-                {% endif %}
+                    {% endfor %}
+                </div>
             </div>
 
-            <!-- د. تقديم عذر غياب -->
+            <!-- د. تبويب تقديم اعتذار عن فعالية -->
             <div id="excuseTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-file-signature" style="color: var(--jo-red);"></i> نموذج تقديم اعتذار عن عدم الحضور
+                    <i class="fa-solid fa-file-signature" style="color: var(--jo-red);"></i> نموذج رفع اعتذار عن عدم الحضور
                 </h4>
                 <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                    في حال تعذر حضورك لنشاط ميداني بعد تثبيت اسمك، يرجى تقديم العذر مسبقاً لتنظيم الكشوفات اللوجستية.
+                    في حال تأكيد حضورك لنشاط ميداني وطرأ ظرف طارئ، يُرجى تقديم العذر مسبقاً ليتم فتح المقعد لمتطوع بديل وتنظيم حركة الباص.
                 </p>
                 <form action="{{ url_for('submit_excuse') }}" method="POST" style="max-width: 650px;">
                     <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">حدد الفعالية المعنية</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">حدد الفعالية المعتذر عنها</label>
                         <select name="event_id" class="custom-input" required>
                             <option value="">-- اختر الفعالية من القائمة --</option>
                             {% for ev in user_events %}
@@ -359,13 +513,13 @@
                     </div>
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">سبب عدم التمكن من المشاركة</label>
-                        <textarea name="reason" class="custom-input" rows="4" placeholder="يرجى توضيح سبب الاعتذار والظرف الطارئ بدقة..." required></textarea>
+                        <textarea name="reason" class="custom-input" rows="4" placeholder="يرجى توضيح الظرف الطارئ بدقة لقادة الفريق..." required></textarea>
                     </div>
                     <button type="submit" class="btn-primary-block" style="max-width: 220px;">إرسال العذر للإدارة</button>
                 </form>
             </div>
 
-            <!-- هـ. نقاط التجمع والمواصلات -->
+            <!-- هـ. تبويب نقاط التجمع والمواصلات -->
             <div id="transportTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
                     <i class="fa-solid fa-bus" style="color: var(--jo-green);"></i> محطات الانطلاق ومسار النقل الميداني
@@ -381,7 +535,7 @@
                         <i class="fa-solid fa-clock" style="color: var(--jo-green);"></i> موعد ومسار الانطلاق:
                     </p>
                     <p style="color: var(--jo-dark-gray); line-height: 1.7; font-size: 0.95rem;">
-                        يتحرك باص المتطوعين قبل موعد أي نشاط ميداني بساعة ونصف تماماً. نرجو التواجد قبل موعد الحركة بـ 15 دقيقة لتسجيل الحضور وتوزيع الشارات الرسمية مع مسؤول اللوجستيات.
+                        يتحرك باص المتطوعين قبل موعد أي نشاط ميداني بساعة ونصف تماماً. نرجو التواجد قبل موعد الحركة بـ 15 دقيقة لتسجيل الحضور مع قائد الفريق الميداني وتثبيت الباجة الرسمية.
                     </p>
                 </div>
             </div>
@@ -389,7 +543,7 @@
         </div>
     </main>
 
-    <!-- 6. نافذة تعديل البيانات والصورة الشخصية (Edit Profile Modal) -->
+    <!-- 7. نافذة تعديل البيانات والصورة الشخصية (Modal) -->
     <div id="editProfileModal" class="profile-modal-overlay">
         <div class="profile-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -416,7 +570,11 @@
                     </select>
                 </div>
                 <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">الفريق الميداني التابع له</label>
+                    <input type="text" name="team" class="custom-input" value="{{ user.team or 'عمان' }}" required>
+                </div>
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف (الواتساب)</label>
                     <input type="tel" name="phone" class="custom-input" value="{{ user.phone or '' }}" required>
                 </div>
                 <div class="custom-select-group">
@@ -428,7 +586,7 @@
         </div>
     </div>
 
-    <!-- 7. نافذة تأكيد حذف الحساب (Delete Account Modal) -->
+    <!-- 8. نافذة تأكيد حذف الحساب (Modal) -->
     <div id="deleteAccountModal" class="profile-modal-overlay">
         <div class="profile-modal-box" style="border-top: 5px solid var(--jo-red);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -436,7 +594,7 @@
                 <button onclick="closeProfileModal('deleteAccountModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
             </div>
             <p style="color: #4a5568; line-height: 1.7; margin-bottom: 1.5rem; font-size: 0.95rem;">
-                هل أنت متأكد من رغبتك في حذف حسابك من <strong>فريق لمتنا بصمة</strong>؟ سيؤدي هذا الإجراء إلى مسح كافة بياناتك وساعاتك التطوعية المسجلة نهائياً.
+                هل أنت متأكد من رغبتك في حذف حسابك من <strong>فريق لمتنا بصمة</strong>؟ سيؤدي هذا الإجراء إلى مسح كافة بياناتك وساعاتك التطوعية المسجلة نهائياً من النظام.
             </p>
             <form action="{{ url_for('delete_own_account') }}" method="POST" style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button type="button" onclick="closeProfileModal('deleteAccountModal')" class="btn-profile-action">إلغاء</button>
@@ -445,19 +603,34 @@
         </div>
     </div>
 
-    <!-- 8. الفوتر Footer -->
+    <!-- 9. الفوتر Footer -->
     <footer class="footer">
         <div class="footer-bottom">
-            &copy; 2026 فريق لمتنا بصمة. بوابة إدارة شؤون المتطوعين.
+            &copy; 2026 فريق لمتنا بصمة. بوابة إدارة شؤون المتطوعين الرسمية.
         </div>
     </footer>
 
-    <!-- 9. الجافاسكريبت للتحكم التفاعلي -->
+    <!-- 10. محرك التحكم بالجافاسكريبت الموثوق -->
     <script>
+        function toggleBadgeFlip() {
+            const card = document.getElementById('volunteerBadgeCard');
+            if (card) {
+                card.classList.toggle('flipped');
+            }
+        }
+
         function switchProfileTab(tabId) {
             const tabs = document.querySelectorAll('.profile-tab-content');
             tabs.forEach(tab => tab.classList.remove('active-profile-tab'));
-            document.getElementById(tabId).classList.add('active-profile-tab');
+            
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active-profile-tab');
+                const displayBox = document.getElementById('profileTabDisplayBox');
+                if (displayBox) {
+                    displayBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
         }
 
         function openProfileModal(modalId) {

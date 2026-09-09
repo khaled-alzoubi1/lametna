@@ -1,6 +1,7 @@
 import os
+import re
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -59,7 +60,7 @@ class Volunteer(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     city = db.Column(db.String(50), default='عمان')
     age = db.Column(db.Integer, nullable=True)
-    team = db.Column(db.String(50), default='الميداني')
+    team = db.Column(db.String(50), default='عمان')
     bio = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     is_leader = db.Column(db.Boolean, default=False)
@@ -68,11 +69,28 @@ class Volunteer(db.Model):
     attended_events_count = db.Column(db.Integer, default=0)
     photo_url = db.Column(db.String(500), nullable=True)
     leader_notes = db.Column(db.Text, nullable=True)
+    badges = db.Column(db.Text, default='')  # أوسمة الإدارة مخزنة مفصولة بفواصل
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # العلاقات التابعة
+    # العلاقات
     duties = db.relationship('Duty', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     excuses = db.relationship('Excuse', backref='volunteer', lazy=True, cascade="all, delete-orphan")
+    registrations = db.relationship('EventRegistration', backref='volunteer', lazy=True, cascade="all, delete-orphan")
+
+    @property
+    def badges_list(self):
+        if not self.badges:
+            return []
+        return [b.strip() for b in self.badges.split(',') if b.strip()]
+
+    @property
+    def wa_link(self):
+        raw_phone = re.sub(r'\D', '', self.phone or '')
+        if raw_phone.startswith('0'):
+            return f"https://wa.me/962{raw_phone[1:]}"
+        elif raw_phone.startswith('962'):
+            return f"https://wa.me/{raw_phone}"
+        return f"https://wa.me/{raw_phone}"
 
 class Event(db.Model):
     __tablename__ = 'events'
@@ -82,6 +100,29 @@ class Event(db.Model):
     date = db.Column(db.String(50), nullable=False)
     time = db.Column(db.String(50), nullable=False)
     location = db.Column(db.String(150), nullable=False)
+    capacity = db.Column(db.Integer, default=10)  # العدد المطلوب للميدان
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    registrations = db.relationship('EventRegistration', backref='event', lazy=True, cascade="all, delete-orphan")
+
+    @property
+    def registered_count(self):
+        return len(self.registrations)
+
+    @property
+    def remaining_seats(self):
+        rem = self.capacity - self.registered_count
+        return rem if rem > 0 else 0
+
+    @property
+    def is_full(self):
+        return self.registered_count >= self.capacity
+
+class EventRegistration(db.Model):
+    __tablename__ = 'event_registrations'
+    id = db.Column(db.Integer, primary_key=True)
+    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Duty(db.Model):
@@ -133,6 +174,11 @@ def index():
     events = Event.query.order_by(Event.id.desc()).limit(4).all()
     gallery_items = GalleryItem.query.order_by(GalleryItem.id.desc()).all()
     
+    # لوحة فرسان الأثر: أفضل المتطوعين المعتمدين حسب الساعات
+    top_volunteers = Volunteer.query.filter_by(status='approved')\
+                                    .order_by(Volunteer.volunteer_hours.desc(), Volunteer.attended_events_count.desc())\
+                                    .limit(5).all()
+
     volunteers_count = Volunteer.query.filter_by(status='approved').count()
     hours_count = db.session.query(db.func.sum(Volunteer.volunteer_hours)).scalar() or 0
     events_count = Event.query.count()
@@ -143,19 +189,26 @@ def index():
         'events_count': events_count
     }
     
+    # قائمة الفعاليات التي سجل فيها المستخدم الحالي إن كان مسجلاً للدخول
+    user_registered_event_ids = []
+    if 'user_id' in session:
+        user_registered_event_ids = [r.event_id for r in EventRegistration.query.filter_by(volunteer_id=session['user_id']).all()]
+
     return render_template(
         'index.html',
         settings=settings,
         leaders=leaders,
         events=events,
         gallery_items=gallery_items,
-        stats=stats
+        top_volunteers=top_volunteers,
+        stats=stats,
+        user_registered_event_ids=user_registered_event_ids
     )
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         if Volunteer.query.filter_by(email=email).first():
             flash('البريد الإلكتروني مسجل مسبقاً في المنصة.', 'danger')
             return redirect(url_for('index'))
@@ -166,7 +219,7 @@ def register():
             phone=request.form.get('phone', '').strip(),
             password_hash=generate_password_hash(request.form.get('password', '').strip()),
             city=request.form.get('city', 'عمان'),
-            team=request.form.get('team', 'الميداني'),
+            team=request.form.get('team', 'عمان'),
             age=int(request.form.get('age')) if request.form.get('age') else None,
             status='pending'
         )
@@ -180,14 +233,14 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        identifier = request.form.get('email', '').strip()
+        identifier = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
 
-        # بيانات دخول إدارة المبادرة المحددة حصراً
+        # بيانات دخول إدارة المبادرة المعتمدة حصراً
         admin_credentials = {
             'khaledsalzoubi1352006@gmail.com': {
                 'password': 'kh13s5alzoubi2006',
-                'name': 'خالد الزعبي',
+                'name': 'خالد سمير الزعبي',
                 'position': 'نائب رئيس المبادرة'
             },
             'lanooshabdo7@gmail.com': {
@@ -197,17 +250,17 @@ def login():
             }
         }
 
-        # 1. التحقق من دخول أحد المسؤولين (نائب الرئيس أو الرئيسة)
+        # 1. التحقق من دخول إدارة المبادرة
         if identifier in admin_credentials and admin_credentials[identifier]['password'] == password:
             admin_user = Volunteer.query.filter_by(email=identifier).first()
             if not admin_user:
                 admin_user = Volunteer(
                     name=admin_credentials[identifier]['name'],
                     email=identifier,
-                    phone='0793888086' if identifier == 'khaledsalzoubi1352006@gmail.com' else '07XXXXXXXX',
+                    phone='0793888086' if 'khaled' in identifier else '0796425003',
                     password_hash=generate_password_hash(password),
                     city='عمان',
-                    team='الهيئة الإدارية العليا',
+                    team='عمان',
                     status='approved',
                     is_leader=True,
                     position=admin_credentials[identifier]['position']
@@ -219,10 +272,10 @@ def login():
             session['admin_logged_in'] = True
             session['admin_email'] = identifier
             session['user_id'] = admin_user.id
-            flash(f'أهلاً بك يا {admin_user.name} في لوحة التحكم الإدارية.', 'success')
+            flash(f'أهلاً بكِ يا {admin_user.name} في لوحة التحكم الإدارية.' if 'lanoosh' in identifier else f'أهلاً بك يا {admin_user.name} في لوحة التحكم الإدارية.', 'success')
             return redirect(url_for('admin_dashboard'))
 
-        # 2. التحقق من دخول المتطوعين العاديين
+        # 2. التحقق من دخول المتطوعين
         volunteer = Volunteer.query.filter_by(email=identifier).first()
         if volunteer and check_password_hash(volunteer.password_hash, password):
             session.clear()
@@ -246,7 +299,15 @@ def contact_submit():
     flash('شكراً لتواصلك معنا، تم استلام استفسارك وسنقوم بالرد عليك في أقرب وقت.', 'success')
     return redirect(url_for('index'))
 
-# ==================== بوابة المتطوع ====================
+# ==================== بوابة التحقق الميداني من الباجة عبر QR ====================
+
+@app.route('/verify/<int:volunteer_id>')
+def verify_badge(volunteer_id):
+    volunteer = Volunteer.query.get_or_404(volunteer_id)
+    settings = get_settings()
+    return render_template('verify_badge.html', volunteer=volunteer, settings=settings)
+
+# ==================== بوابة المتطوع والتسجيل بنقرة واحدة ====================
 
 @app.route('/profile')
 def profile():
@@ -258,8 +319,17 @@ def profile():
     user = Volunteer.query.get_or_404(session['user_id'])
     user_events = Event.query.order_by(Event.id.desc()).all()
     duties = Duty.query.filter_by(volunteer_id=user.id).order_by(Duty.due_date.asc()).all()
+    user_registrations = EventRegistration.query.filter_by(volunteer_id=user.id).all()
+    registered_event_ids = [r.event_id for r in user_registrations]
     
-    return render_template('profile.html', user=user, user_events=user_events, duties=duties, settings=settings)
+    return render_template(
+        'profile.html',
+        user=user,
+        user_events=user_events,
+        duties=duties,
+        settings=settings,
+        registered_event_ids=registered_event_ids
+    )
 
 @app.route('/profile/update', methods=['POST'])
 def update_profile():
@@ -269,6 +339,7 @@ def update_profile():
     user = Volunteer.query.get_or_404(session['user_id'])
     user.age = request.form.get('age', type=int)
     user.city = request.form.get('city')
+    user.team = request.form.get('team', user.team)
     user.phone = request.form.get('phone')
     user.bio = request.form.get('bio')
     photo_url = request.form.get('photo_url')
@@ -278,6 +349,46 @@ def update_profile():
     db.session.commit()
     flash('تم تحديث ملفك الشخصي وصورتك بنجاح.', 'success')
     return redirect(url_for('profile'))
+
+@app.route('/events/rsvp/<int:event_id>', methods=['POST'])
+def rsvp_event(event_id):
+    if 'user_id' not in session:
+        flash('يرجى تسجيل الدخول لتأكيد المشاركة.', 'danger')
+        return redirect(url_for('index'))
+
+    user = Volunteer.query.get_or_404(session['user_id'])
+    if user.status != 'approved':
+        flash('يجب أن يكون حسابك معتمداً من الإدارة لتتمكن من حجز مقعد في الفعالية.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
+    ev = Event.query.get_or_404(event_id)
+    existing_reg = EventRegistration.query.filter_by(volunteer_id=user.id, event_id=ev.id).first()
+    if existing_reg:
+        flash('أنت مسجل بالفعل في هذه الفعالية الميدانية.', 'info')
+        return redirect(request.referrer or url_for('profile'))
+
+    if ev.is_full:
+        flash('عذراً، اكتمل العدد المطلوب للميدان في هذه الفعالية.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
+    new_reg = EventRegistration(volunteer_id=user.id, event_id=ev.id)
+    db.session.add(new_reg)
+    db.session.commit()
+
+    flash(f'تم تأكيد حضورك بنجاح في فعالية: {ev.title}. نراك في الميدان!', 'success')
+    return redirect(request.referrer or url_for('profile'))
+
+@app.route('/events/cancel_rsvp/<int:event_id>', methods=['POST'])
+def cancel_rsvp(event_id):
+    if 'user_id' not in session:
+        return redirect(url_for('index'))
+
+    reg = EventRegistration.query.filter_by(volunteer_id=session['user_id'], event_id=event_id).first()
+    if reg:
+        db.session.delete(reg)
+        db.session.commit()
+        flash('تم إلغاء حجز مقعدك وفتح المجال لمتطوع آخر.', 'info')
+    return redirect(request.referrer or url_for('profile'))
 
 @app.route('/profile/delete', methods=['POST'])
 def delete_own_account():
@@ -343,15 +454,16 @@ def update_admin_profile():
     if admin_user:
         admin_user.name = request.form.get('name', admin_user.name)
         admin_user.phone = request.form.get('phone', admin_user.phone)
+        admin_user.team = request.form.get('team', admin_user.team)
         admin_user.bio = request.form.get('bio', admin_user.bio)
         photo_url = request.form.get('photo_url')
         if photo_url:
             admin_user.photo_url = photo_url
         db.session.commit()
-        flash('تم تحديث ملفك الشخصي الإداري وصورتك بنجاح.', 'success')
+        flash('تم حفظ وتحديث ملفك الإداري وصورتك الشخصية.', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# --- إدارة المتطوعين والقيادات وساعات التطوع ---
+# --- إدارة المتطوعين، القيادات، الأوسمة، والساعات ---
 
 @app.route('/admin/approve/<int:volunteer_id>', methods=['POST'])
 def approve_volunteer(volunteer_id):
@@ -396,6 +508,33 @@ def remove_leader(volunteer_id):
     v.position = None
     db.session.commit()
     flash(f'تم إعفاء {v.name} من المنصب القيادي.', 'info')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/badge/assign/<int:volunteer_id>', methods=['POST'])
+def assign_badge(volunteer_id):
+    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    v = Volunteer.query.get_or_404(volunteer_id)
+    badge_name = request.form.get('badge_name', '').strip()
+    if badge_name:
+        current_badges = v.badges_list
+        if badge_name not in current_badges:
+            current_badges.append(badge_name)
+            v.badges = ','.join(current_badges)
+            db.session.commit()
+            flash(f'تم منح {v.name}: {badge_name}', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/badge/remove/<int:volunteer_id>', methods=['POST'])
+def remove_badge(volunteer_id):
+    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    v = Volunteer.query.get_or_404(volunteer_id)
+    badge_name = request.form.get('badge_name', '').strip()
+    current_badges = v.badges_list
+    if badge_name in current_badges:
+        current_badges.remove(badge_name)
+        v.badges = ','.join(current_badges)
+        db.session.commit()
+        flash(f'تم سحب وسام {badge_name} من المتطوع.', 'info')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/adjust_events/<int:volunteer_id>/<action>', methods=['POST'])
@@ -443,16 +582,18 @@ def delete_volunteer_admin(volunteer_id):
 @app.route('/admin/event/add', methods=['POST'])
 def add_event():
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    capacity = request.form.get('capacity', type=int) or 10
     new_event = Event(
         title=request.form.get('title'),
         description=request.form.get('description'),
         date=request.form.get('date'),
         time=request.form.get('time'),
-        location=request.form.get('location')
+        location=request.form.get('location'),
+        capacity=capacity
     )
     db.session.add(new_event)
     db.session.commit()
-    flash('تمت إضافة الفعالية بنجاح.', 'success')
+    flash('تمت إضافة الفعالية الميدانية بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/event/delete/<int:event_id>', methods=['POST'])
@@ -522,7 +663,7 @@ def update_settings():
     setting.instagram_url = request.form.get('instagram_url')
     setting.nahno_url = request.form.get('nahno_url')
 
-    # تحديث روابط صور بطاقات الخدمات الخمس
+    # صور بطاقات خدمات المتطوعين الخمس
     setting.card_img_duties = request.form.get('card_img_duties')
     setting.card_img_hours = request.form.get('card_img_hours')
     setting.card_img_events = request.form.get('card_img_events')
@@ -533,22 +674,30 @@ def update_settings():
     flash('تم حفظ وتحديث إعدادات ومحتوى الموقع بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# ==================== التهيئة ومعالجة الأعمدة وتشغيل المنفذ ====================
+# ==================== التهيئة والترحيل التلقائي لقاعدة البيانات ====================
 
 with app.app_context():
     db.create_all()
-    # تحديث تلقائي آمن لقاعدة البيانات السحابية لإضافة الأعمدة الجديدة دون أخطاء
-    new_cols = [
-        'whatsapp_url', 'instagram_url', 'nahno_url',
-        'card_img_duties', 'card_img_hours', 'card_img_events',
-        'card_img_excuse', 'card_img_transport'
+    
+    # إضافة الأعمدة والجداول الجديدة تلقائياً بدون أخطاء
+    migrations = [
+        ("site_settings", "whatsapp_url", "VARCHAR(500)"),
+        ("site_settings", "instagram_url", "VARCHAR(500)"),
+        ("site_settings", "nahno_url", "VARCHAR(500)"),
+        ("site_settings", "card_img_duties", "VARCHAR(500)"),
+        ("site_settings", "card_img_hours", "VARCHAR(500)"),
+        ("site_settings", "card_img_events", "VARCHAR(500)"),
+        ("site_settings", "card_img_excuse", "VARCHAR(500)"),
+        ("site_settings", "card_img_transport", "VARCHAR(500)"),
+        ("volunteers", "badges", "TEXT DEFAULT ''"),
+        ("events", "capacity", "INTEGER DEFAULT 10")
     ]
-    try:
-        for col in new_cols:
-            db.session.execute(text(f"ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS {col} VARCHAR(500);"))
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+    for tbl, col, col_type in migrations:
+        try:
+            db.session.execute(text(f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {col_type};"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
 
     try:
         if not SiteSetting.query.first():
