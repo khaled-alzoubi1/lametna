@@ -102,6 +102,20 @@ body {
     color: var(--jo-green);
 }
 
+.btn-nav-action, .btn-danger {
+    display: inline-block !important;
+    text-align: center !important;
+    padding: 8px 16px !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.3 !important;
+    cursor: pointer !important;
+    border: none !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+}
+
 .btn-nav-action {
     background: var(--jo-green) !important;
     color: var(--jo-white) !important;
@@ -112,18 +126,12 @@ body {
 }
 
 .btn-danger {
-    background: var(--jo-red);
-    color: var(--jo-white);
-    border: none;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    font-weight: 700;
-    cursor: pointer;
-    transition: var(--transition);
+    background: var(--jo-red) !important;
+    color: var(--jo-white) !important;
 }
 
 .btn-danger:hover {
-    background: var(--jo-red-hover);
+    background: var(--jo-red-hover) !important;
 }
 
 /* ==================== الواجهة الترحيبية (Hero Section) ==================== */
