@@ -50,10 +50,15 @@ body {
 }
 
 /* ==================== شريط التنقل العلوي (Navbar) ==================== */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
 .navbar {
     background: var(--jo-white);
     border-bottom: 2px solid var(--jo-border);
-    padding: 0.8rem 5%;
+    padding: 0.5rem 2%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -61,27 +66,31 @@ body {
     top: 0;
     z-index: 1000;
     box-shadow: var(--shadow-sm);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     text-decoration: none;
     color: var(--jo-black);
+    flex-shrink: 0; /* يمنع انضغاط اللوجو واسم الفريق نهائياً */
 }
 
 .nav-brand img {
-    height: 44px;
+    height: 42px;
     width: auto;
     object-fit: contain;
     border-radius: var(--radius-sm);
 }
 
 .nav-brand-title {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
     font-weight: 900;
-    letter-spacing: -0.5px;
+    white-space: nowrap;
+    line-height: 1.2;
 }
 
 .nav-brand-title span {
@@ -92,28 +101,77 @@ body {
     list-style: none;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 6px; /* مسافة مدمجة ومدروسة لتناسب شاشات اللابتوب */
+    margin: 0;
+    padding: 0;
 }
 
 .nav-links li {
     display: flex;
     align-items: center;
+    justify-content: center;
 }
 
+/* الكبسات العادية: الكلمتين فوق بعض بشكل متناسق ومضغوط */
 .nav-links li a {
     text-decoration: none;
     color: var(--jo-black);
     font-weight: 700;
-    font-size: 0.95rem;
-    transition: var(--transition);
-    padding: 8px 12px;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    text-align: center;
+    padding: 4px 6px;
     border-radius: var(--radius-sm);
-    white-space: nowrap;
+    display: inline-block;
+    white-space: normal !important;
+    max-width: 68px; /* يُلزم الكلمة الثانية بالنزول أسفل الكلمة الأولى فوراً */
+    transition: var(--transition);
+    box-sizing: border-box;
 }
 
 .nav-links li a:hover,
 .nav-links li a.active {
     color: var(--jo-green);
+}
+
+/* الأزرار (انضم كمتطوع / تسجيل خروج): بلوك محكم ومستطيل مصمت حول الكلمتين */
+.btn-nav-action, .btn-danger {
+    display: inline-flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 6px 12px !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 800 !important;
+    font-size: 0.82rem !important;
+    line-height: 1.2 !important;
+    cursor: pointer !important;
+    border: none !important;
+    text-decoration: none !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    min-width: 68px !important;
+    max-width: 82px !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.btn-nav-action {
+    background: var(--jo-green) !important;
+    color: var(--jo-white) !important;
+}
+
+.btn-nav-action:hover {
+    background: var(--jo-green-hover) !important;
+}
+
+.btn-danger {
+    background: var(--jo-red) !important;
+    color: var(--jo-white) !important;
+}
+
+.btn-danger:hover {
+    background: var(--jo-red-hover) !important;
 }
 
 /* معالجة الأزرار العلوية لمنع التعرج والتكسر */

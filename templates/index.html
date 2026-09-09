@@ -93,24 +93,24 @@
             </div>
         </a>
         <nav>
-            <ul class="nav-links">
+         <ul class="nav-links">
                 <li><a href="{{ url_for('index') }}" class="active">الرئيسية</a></li>
-                <li><a href="#about">من نحن</a></li>
-                <li><a href="#leadership">الهيئة الإدارية</a></li>
-                <li><a href="#leaderboard">فرسان الأثر</a></li>
-                <li><a href="#activities">الفعاليات الميدانية</a></li>
+                <li><a href="#about">من<br>نحن</a></li>
+                <li><a href="#leadership">الهيئة<br>الإدارية</a></li>
+                <li><a href="#leaderboard">فرسان<br>الأثر</a></li>
+                <li><a href="#activities">الفعاليات<br>الميدانية</a></li>
                 <li><a href="#gallery">المعرض</a></li>
-                <li><a href="#channels">قنواتنا وشراكاتنا</a></li>
-                <li><a href="#contact">تواصل معنا</a></li>
+                <li><a href="#channels">قنواتنا<br>وشراكاتنا</a></li>
+                <li><a href="#contact">تواصل<br>معنا</a></li>
                 {% if session.get('admin_logged_in') %}
-                    <li><a href="{{ url_for('admin_dashboard') }}" class="btn-nav-action">لوحة التحكم</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn-danger">خروج</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="btn-nav-action">لوحة<br>التحكم</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل<br>خروج</a></li>
                 {% elif session.get('user_id') %}
-                    <li><a href="{{ url_for('profile') }}" class="btn-nav-action">بوابة المتطوع</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn-danger">خروج</a></li>
+                    <li><a href="{{ url_for('profile') }}" class="btn-nav-action">بوابة<br>المتطوع</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل<br>خروج</a></li>
                 {% else %}
-                    <li><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">تسجيل الدخول</a></li>
-                    <li><a href="javascript:void(0)" onclick="openAuthModal('registerModal')" class="btn-nav-action">انضم كمتطوع</a></li>
+                    <li><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">تسجيل<br>الدخول</a></li>
+                    <li><a href="javascript:void(0)" onclick="openAuthModal('registerModal')" class="btn-nav-action">انضم<br>كمتطوع</a></li>
                 {% endif %}
             </ul>
         </nav>
