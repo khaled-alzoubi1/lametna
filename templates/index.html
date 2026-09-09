@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* أنماط النوافذ المنبثقة ومشغل الوسائط لضمان استقرار العرض */
+        /* النوافذ التفاعلية ومشغل الوسائط */
         .auth-modal, .media-lightbox {
             display: none;
             position: fixed;
@@ -99,6 +99,7 @@
                 <li><a href="#leadership">الهيئة الإدارية</a></li>
                 <li><a href="#activities">الفعاليات</a></li>
                 <li><a href="#gallery">المعرض</a></li>
+                <li><a href="#channels">شراكاتنا وقنواتنا</a></li>
                 <li><a href="#contact">تواصل معنا</a></li>
                 {% if session.get('user_id') %}
                     <li><a href="{{ url_for('profile') }}">ملفي الشخصي</a></li>
@@ -141,7 +142,6 @@
                 {{ settings.hero_desc if settings and settings.hero_desc else 'مبادرة شبابية أردنية تأسست لنثبت أن التغيير الحقيقي يبدأ بجمع طاقتنا معاً. نؤمن أن العمل التطوعي ليس مجرد ساعات نقدّمها، بل أثر ملموس ومستدام نتركه في حياة الناس والمجتمع؛ لأن كل لقاء يجمعنا هو خطوة لصناعة أمل، وكل جهد نبذله يترك وراءه بصمة لا تُمحى.' }}
             </p>
             
-            <!-- شريط الإحصائيات التراكمية -->
             <div class="stats-container">
                 <div class="stat-box">
                     <span class="stat-number">+{{ stats.volunteers_count|default(150) }}</span>
@@ -158,7 +158,6 @@
             </div>
         </div>
 
-        <!-- بطاقة الانضمام والتسجيل السريع -->
         <div class="selector-card">
             <h3 class="selector-title">انضم لمجتمع لمتنا بصمة</h3>
             <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem; text-align: center; line-height: 1.6;">
@@ -249,7 +248,7 @@
         </div>
     </section>
 
-    <!-- 6. قسم أحدث الفعاليات والأنشطة الميدانية -->
+    <!-- 6. قسم أحدث الفعاليات الميدانية -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="activities">
         <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-green); padding-right: 12px; margin-bottom: 2rem;">
             الفعاليات الميدانية القادمة
@@ -279,7 +278,7 @@
         </div>
     </section>
 
-    <!-- 7. قسم معرض الصور والفيديوهات (مع الفلاتر ومشغل الوسائط الكامل) -->
+    <!-- 7. قسم معرض الصور والفيديوهات -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="gallery">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
             <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-black); padding-right: 12px;">
@@ -318,11 +317,51 @@
         </div>
     </section>
 
-    <!-- 8. قسم تواصل معنا المباشر (النموذج الكامل) -->
+    <!-- 8. قسم قنواتنا وشراكاتنا الرسمية (الروابط الحية المباشرة) -->
+    <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="channels">
+        <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-green); padding-right: 12px; margin-bottom: 2rem;">
+            شراكاتنا وقنواتنا الرسمية
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+            
+            <!-- أ. بطاقة منصة نحن الرسمية -->
+            <a href="{{ settings.nahno_url if settings and settings.nahno_url else 'https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843' }}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; background: var(--jo-white); border: 1px solid var(--jo-border); border-radius: var(--radius-md); padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: var(--shadow-sm); transition: transform 0.25s, border-color 0.25s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#0284c7';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--jo-border)';">
+                <div style="width: 65px; height: 65px; border-radius: 14px; background: #e0f2fe; display: flex; align-items: center; justify-content: center; color: #0284c7; font-size: 2.2rem;">
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                </div>
+                <div style="font-weight: 800; font-size: 1.2rem; color: var(--jo-black);">منصة نَحْنُ (Nahno)</div>
+                <div style="font-size: 0.88rem; color: var(--jo-dark-gray); text-align: center; line-height: 1.6;">الملف الرسمي لتوثيق واعتماد ساعات العمل التطوعي الجامعي والمجتمعي.</div>
+                <span style="font-size: 0.85rem; font-weight: 700; color: #0284c7; margin-top: 5px;">زيارة صفحة الفريق &larr;</span>
+            </a>
+
+            <!-- ب. بطاقة صفحة الإنستغرام -->
+            <a href="{{ settings.instagram_url if settings and settings.instagram_url else 'https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw' }}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; background: var(--jo-white); border: 1px solid var(--jo-border); border-radius: var(--radius-md); padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: var(--shadow-sm); transition: transform 0.25s, border-color 0.25s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#e1306c';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--jo-border)';">
+                <div style="width: 65px; height: 65px; border-radius: 14px; background: #fce7f3; display: flex; align-items: center; justify-content: center; color: #e1306c; font-size: 2.2rem;">
+                    <i class="fa-brands fa-instagram"></i>
+                </div>
+                <div style="font-weight: 800; font-size: 1.2rem; color: var(--jo-black);">صفحة الإنستغرام</div>
+                <div style="font-size: 0.88rem; color: var(--jo-dark-gray); text-align: center; line-height: 1.6;">متابعة التغطيات الحية، الصور الميدانية، والأنشطة الشبابية فور حدوثها.</div>
+                <span style="font-size: 0.85rem; font-weight: 700; color: #e1306c; margin-top: 5px;">متابعة الحساب &larr;</span>
+            </a>
+
+            <!-- ج. بطاقة مجتمع الواتساب التنسيقي -->
+            <a href="{{ settings.whatsapp_url if settings and settings.whatsapp_url else 'https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8' }}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; background: var(--jo-white); border: 1px solid var(--jo-border); border-radius: var(--radius-md); padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; box-shadow: var(--shadow-sm); transition: transform 0.25s, border-color 0.25s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#16a34a';" onmouseout="this.style.transform='none'; this.style.borderColor='var(--jo-border)';">
+                <div style="width: 65px; height: 65px; border-radius: 14px; background: #dcfce7; display: flex; align-items: center; justify-content: center; color: #16a34a; font-size: 2.2rem;">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+                <div style="font-weight: 800; font-size: 1.2rem; color: var(--jo-black);">مجموعة الواتساب الرسمية</div>
+                <div style="font-size: 0.88rem; color: var(--jo-dark-gray); text-align: center; line-height: 1.6;">قناة الإعلانات العاجلة وتنسيق التجمعات الميدانية مع قادة الفرق.</div>
+                <span style="font-size: 0.85rem; font-weight: 700; color: #16a34a; margin-top: 5px;">الانضمام للمجموعة &larr;</span>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- 9. قسم تواصل معنا المباشر -->
     <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="contact">
         <div style="background: var(--jo-white); border-radius: var(--radius-md); padding: 2.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
             <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);">نحن جاهزون للإجابة عن استفساراتك</h2>
-            <p style="color: var(--jo-dark-gray); margin-bottom: 2rem; line-height: 1.6;">إذا كان لديك أي سؤال حول آلية الانضمام، الشراكات المجتمعية، أو الفعاليات، تواصل معنا وسنرد خلال 24 ساعة.</p>
+            <p style="color: var(--jo-dark-gray); margin-bottom: 2rem; line-height: 1.6;">إذا كان لديك أي سؤال حول آلية الانضمام، الشراكات المجتمعية، أو الفعاليات، تواصل معنا وسنرد عليك بأقرب وقت.</p>
             
             <form action="{{ url_for('contact_submit') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
                 <div>
@@ -352,14 +391,14 @@
         </div>
     </section>
 
-    <!-- 9. نافذة تسجيل الدخول المنبثقة (Login Modal) -->
+    <!-- 10. نافذة تسجيل الدخول المنبثقة (Login Modal) -->
     <div id="loginModal" class="auth-modal">
         <div class="auth-modal-content">
             <button class="close-btn" onclick="closeAuthModal('loginModal')">&times;</button>
             <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; color: var(--jo-black);">تسجيل الدخول</h3>
             <form action="{{ url_for('login') }}" method="POST">
                 <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني (أو اسم المشرف admin)</label>
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني (أو admin)</label>
                     <input type="text" name="email" class="custom-input" placeholder="example@mail.com" required>
                 </div>
                 <div class="custom-select-group">
@@ -371,7 +410,7 @@
         </div>
     </div>
 
-    <!-- 10. نافذة طلب الانتساب كمتطوع المنبثقة (Register Modal) -->
+    <!-- 11. نافذة طلب الانتساب كمتطوع المنبثقة (Register Modal) -->
     <div id="registerModal" class="auth-modal">
         <div class="auth-modal-content" style="max-width: 580px;">
             <button class="close-btn" onclick="closeAuthModal('registerModal')">&times;</button>
@@ -426,7 +465,7 @@
         </div>
     </div>
 
-    <!-- 11. مشغل الوسائط المنبثق للصور والفيديوهات Lightbox Modal -->
+    <!-- 12. مشغل الوسائط المنبثق للصور والفيديوهات Lightbox Modal -->
     <div id="mediaModal" class="media-lightbox">
         <div class="lightbox-box">
             <button class="close-btn-lightbox" onclick="closeMedia()">&times;</button>
@@ -435,7 +474,7 @@
         </div>
     </div>
 
-    <!-- 12. الفوتر السفلي Footer -->
+    <!-- 13. الفوتر السفلي Footer -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-column">
@@ -451,6 +490,7 @@
                     <li><a href="#about">من نحن</a></li>
                     <li><a href="#leadership">الهيئة الإدارية</a></li>
                     <li><a href="#gallery">معرض التغطيات</a></li>
+                    <li><a href="#channels">قنواتنا وشراكاتنا</a></li>
                     <li><a href="javascript:void(0)" onclick="openAuthModal('registerModal')">انضم كمتطوع</a></li>
                 </ul>
             </div>
@@ -467,7 +507,7 @@
         </div>
     </footer>
 
-    <!-- 13. محرك الجافاسكريبت المضمن -->
+    <!-- 14. محرك الجافاسكريبت المضمن -->
     <script>
         function openAuthModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';

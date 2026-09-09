@@ -34,6 +34,12 @@ class SiteSetting(db.Model):
     vision_text = db.Column(db.Text, default='الوصول إلى مجتمع شبابي ريادي يقود المبادرات المجتمعية بأعلى معايير التنظيم، وتوسيع مظلة الأثر التطوعي لتغطي كافة محافظات ومناطق المملكة الأردنية الهاشمية.')
     mission_text = db.Column(db.Text, default='تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة، منظمة، وآمنة تضمن استدامة البصمة الإيجابية.')
     contact_email = db.Column(db.String(120), default='info@lametnahbasmeh.org')
+    
+    # الروابط الرسمية التفاعلية
+    whatsapp_url = db.Column(db.String(500), default='https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8')
+    instagram_url = db.Column(db.String(500), default='https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw')
+    nahno_url = db.Column(db.String(500), default='https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843')
+    
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class Volunteer(db.Model):
@@ -56,7 +62,6 @@ class Volunteer(db.Model):
     leader_notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # العلاقات المرتبطة
     duties = db.relationship('Duty', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     excuses = db.relationship('Excuse', backref='volunteer', lazy=True, cascade="all, delete-orphan")
 
@@ -96,7 +101,7 @@ class GalleryItem(db.Model):
     thumbnail_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ==================== دالة مساعدة لجلب الإعدادات ====================
+# ==================== دالة جلب الإعدادات المساعدة ====================
 
 def get_settings():
     setting = SiteSetting.query.first()
@@ -137,16 +142,16 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form.get('email')
+        email = request.form.get('email', '').strip()
         if Volunteer.query.filter_by(email=email).first():
             flash('البريد الإلكتروني مسجل مسبقاً في المنصة.', 'danger')
             return redirect(url_for('index'))
 
         new_volunteer = Volunteer(
-            name=request.form.get('name'),
+            name=request.form.get('name', '').strip(),
             email=email,
-            phone=request.form.get('phone'),
-            password_hash=generate_password_hash(request.form.get('password')),
+            phone=request.form.get('phone', '').strip(),
+            password_hash=generate_password_hash(request.form.get('password', '').strip()),
             city=request.form.get('city', 'عمان'),
             team=request.form.get('team', 'الميداني'),
             age=int(request.form.get('age')) if request.form.get('age') else None,
@@ -162,17 +167,23 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        identifier = request.form.get('email')
-        password = request.form.get('password')
+        identifier = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
 
-        # التحقق من دخول مدير النظام (Admin)
-        if identifier == 'admin' and password == 'lametna2026':
+        # حسابات الإدارة المعتمدة (معرف admin + الحسابات الشخصية للرئاسة)
+        admin_credentials = {
+            'admin': 'lametna2026',
+            'khaledsalzoubi1352006@gmail.com': 'kh13s5alzoubi2006',
+            'lanooshabdo7@gmail.com': 'lanooshabdo7'
+        }
+
+        if identifier in admin_credentials and admin_credentials[identifier] == password:
             session.clear()
             session['admin_logged_in'] = True
             flash('تم تسجيل الدخول بنجاح كمسؤول للنظام.', 'success')
             return redirect(url_for('admin_dashboard'))
 
-        # التحقق من دخول المتطوع
+        # حسابات المتطوعين العاديين
         volunteer = Volunteer.query.filter_by(email=identifier).first()
         if volunteer and check_password_hash(volunteer.password_hash, password):
             session.clear()
@@ -193,7 +204,7 @@ def logout():
 
 @app.route('/contact', methods=['POST'])
 def contact_submit():
-    flash('شكراً لتواصلك معنا، تم استلام استفسارك بنجاح وسنقوم بالرد قريباً.', 'success')
+    flash('شكراً لتواصلك معنا، تم استلام استفسارك وسنقوم بالرد عليك في أقرب وقت.', 'success')
     return redirect(url_for('index'))
 
 # ==================== بوابة المتطوع ====================
@@ -204,11 +215,12 @@ def profile():
         flash('يرجى تسجيل الدخول أولاً.', 'danger')
         return redirect(url_for('index'))
 
+    settings = get_settings()
     user = Volunteer.query.get_or_404(session['user_id'])
     user_events = Event.query.order_by(Event.id.desc()).all()
     duties = Duty.query.filter_by(volunteer_id=user.id).order_by(Duty.due_date.asc()).all()
     
-    return render_template('profile.html', user=user, user_events=user_events, duties=duties)
+    return render_template('profile.html', user=user, user_events=user_events, duties=duties, settings=settings)
 
 @app.route('/profile/update', methods=['POST'])
 def update_profile():
@@ -275,7 +287,7 @@ def admin_dashboard():
         excuses=excuses
     )
 
-# --- إدارة المتطوعين والقيادات ---
+# --- إدارة المتطوعين والقيادات وساعات التطوع ---
 
 @app.route('/admin/approve/<int:volunteer_id>', methods=['POST'])
 def approve_volunteer(volunteer_id):
@@ -338,9 +350,9 @@ def adjust_hours(volunteer_id, action):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
     if action == 'increment':
-        v.volunteer_hours += 2
-    elif action == 'decrement' and v.volunteer_hours >= 2:
-        v.volunteer_hours -= 2
+        v.volunteer_hours += 1
+    elif action == 'decrement' and v.volunteer_hours >= 1:
+        v.volunteer_hours -= 1
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
@@ -425,7 +437,7 @@ def delete_gallery_item(item_id):
     flash('تم حذف العنصر من المعرض.', 'info')
     return redirect(url_for('admin_dashboard'))
 
-# --- إدارة محتوى ومظهر الموقع (Full CMS Update) ---
+# --- إدارة محتوى ومظهر الموقع (Full CMS) ---
 
 @app.route('/admin/settings/update', methods=['POST'])
 def update_settings():
@@ -441,6 +453,11 @@ def update_settings():
     setting.vision_text = request.form.get('vision_text')
     setting.mission_text = request.form.get('mission_text')
     setting.contact_email = request.form.get('contact_email')
+    
+    # تحديث روابط المنصات الرسمية
+    setting.whatsapp_url = request.form.get('whatsapp_url')
+    setting.instagram_url = request.form.get('instagram_url')
+    setting.nahno_url = request.form.get('nahno_url')
 
     db.session.commit()
     flash('تم حفظ وتحديث إعدادات ومحتوى الموقع بنجاح.', 'success')
@@ -450,7 +467,6 @@ def update_settings():
 
 with app.app_context():
     db.create_all()
-    # التأكد من وجود سطر الإعدادات
     if not SiteSetting.query.first():
         db.session.add(SiteSetting())
         db.session.commit()

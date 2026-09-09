@@ -172,14 +172,14 @@
         </a>
         <nav>
             <ul class="nav-links">
-                <li><a href="{{ url_for('index') }}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> عرض الموقع</a></li>
+                <li><a href="{{ url_for('index') }}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> عرض الموقع المباشر</a></li>
                 <li><a href="{{ url_for('admin_dashboard') }}" class="active">لوحة التحكم</a></li>
                 <li><a href="{{ url_for('logout') }}" class="btn-danger" style="padding: 6px 14px; text-decoration: none; border-radius: 6px;">خروج</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- شريط رسائل النظام -->
+    <!-- شريط رسائل وتنبيهات الخادم -->
     <div class="container" style="max-width: 1250px; margin: 1.5rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -197,7 +197,7 @@
         <div class="admin-top-nav">
             <div>
                 <h1 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 4px;">لوحة الإدارة والتحكم المركزي</h1>
-                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، تخصيص محتوى الموقع بالكامل (CMS)، تنظيم الفعاليات، ومتابعة العمليات الميدانية.</p>
+                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، تخصيص محتوى وروابط الموقع بالكامل (CMS)، تنظيم الفعاليات، وتكليف الفرق الميدانية.</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <span style="background: #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
@@ -222,7 +222,7 @@
         <!-- ==================== 1. تبويب المتطوعين والقيادات ==================== -->
         <div id="volunteersTab" class="admin-tab-content active-tab-body">
             
-            <!-- أ. نموذج تعيين القيادات الذكي بدون إدخال ID -->
+            <!-- أ. نموذج تعيين القيادات المعتمدين -->
             <div class="admin-box" style="border-top: 4px solid var(--jo-red);">
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1.2rem;">
                     <i class="fa-solid fa-user-shield" style="color: var(--jo-red);"></i> تعيين وتحديث الهيئة الإدارية وقادة الفرق
@@ -268,7 +268,7 @@
                     {% for v in volunteers %}
                     <div class="volunteer-item-row">
                         
-                        <!-- معلومات المتطوع الشخصية -->
+                        <!-- تفاصيل المتطوع -->
                         <div class="volunteer-profile-snippet">
                             <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" alt="{{ v.name }}">
                             <div class="volunteer-text">
@@ -308,11 +308,11 @@
                             {% endif %}
                         </div>
 
-                        <!-- أدوات التحكم والعمليات -->
+                        <!-- أدوات التحكم والعمليات الحسابية -->
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                             
                             {% if v.status != 'approved' %}
-                                <!-- أزرار تظهر فقط قبل القبول وتختفي بعده -->
+                                <!-- أزرار تظهر فقط قبل الاعتماد وتختفي تلقائياً بعده -->
                                 <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
                                     <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
                                 </form>
@@ -331,26 +331,26 @@
                                     </form>
                                 </div>
 
-                                <!-- عداد الساعات (+2 / -2) -->
+                                <!-- عداد الساعات المحدث (+1 / -1) -->
                                 <div class="badge-counter-ctrl">
                                     <span class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
                                     <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                        <button type="submit" class="btn-step-arrow" title="إضافة ساعتين">+2</button>
+                                        <button type="submit" class="btn-step-arrow" title="إضافة ساعة">+</button>
                                     </form>
                                     <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                        <button type="submit" class="btn-step-arrow" title="خصم ساعتين">-2</button>
+                                        <button type="submit" class="btn-step-arrow" title="خصم ساعة">-</button>
                                     </form>
                                 </div>
                             {% endif %}
 
-                            <!-- إعادة تعيين كلمة السر -->
+                            <!-- إعادة تعيين كلمة المرور -->
                             <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة المرور إلى 123456">
+                                <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر إلى 123456">
                                     <i class="fa-solid fa-key"></i>
                                 </button>
                             </form>
 
-                            <!-- حذف حساب المتطوع نهائياً -->
+                            <!-- مسح حساب المتطوع وسجلاته -->
                             <form action="{{ url_for('delete_volunteer_admin', volunteer_id=v.id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد تماماً من حذف هذا المتطوع وسجلاته نهائياً من قاعدة البيانات؟');" style="margin: 0;">
                                 <button type="submit" class="btn-ctrl-action" style="background: transparent; color: var(--jo-red);" title="حذف نهائي">
                                     <i class="fa-solid fa-trash-can"></i>
@@ -370,16 +370,18 @@
         <div id="cmsTab" class="admin-tab-content">
             <div class="admin-box" style="border-top: 4px solid var(--jo-green);">
                 <div class="admin-section-title">
-                    <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وهوية المبادرة
+                    <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وقنوات التواصل الرسمية
                 </div>
                 <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                    أي تعديل تقوم به هنا يتم حفظه فوراً في قاعدة البيانات ويظهر مباشرة على الصفحة الرئيسية دون الحاجة لتعديل أي كود.
+                    أي تعديل تجريه هنا يُحفظ مباشرة في قاعدة البيانات ويظهر فوراً على الواجهة دون الحاجة لإعادة رفع أي كود.
                 </p>
 
                 <form action="{{ url_for('update_settings') }}" method="POST">
+                    
+                    <!-- أ. العناوين وهوية العلامة -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div class="custom-select-group">
-                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الصفحة في المتصفح (Site Title)</label>
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان تبويب المتصفح (Site Title)</label>
                             <input type="text" name="site_name" class="custom-input" value="{{ settings.site_name if settings else '' }}" required>
                         </div>
                         <div class="custom-select-group">
@@ -392,19 +394,37 @@
                         </div>
                     </div>
 
+                    <!-- ب. الشعار والبريد -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div class="custom-select-group">
                             <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورة الشعار (Logo URL)</label>
                             <input type="url" name="logo_url" class="custom-input" value="{{ settings.logo_url if settings and settings.logo_url else '' }}" placeholder="اتركه فارغاً لاستخدام logo.png الافتراضي">
                         </div>
                         <div class="custom-select-group">
-                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني الرسمي للتواصل</label>
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني الرسمي للاستفسارات</label>
                             <input type="email" name="contact_email" class="custom-input" value="{{ settings.contact_email if settings else 'info@lametnahbasmeh.org' }}" required>
                         </div>
                     </div>
 
+                    <!-- ج. روابط المنصات الرسمية الحية (CMS) -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px; background: #f8fafc; padding: 15px; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;"><i class="fa-solid fa-hand-holding-heart" style="color: #0284c7;"></i> رابط حساب منصة نحن (Nahno)</label>
+                            <input type="url" name="nahno_url" class="custom-input" value="{{ settings.nahno_url if settings and settings.nahno_url else 'https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843' }}" required>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;"><i class="fa-brands fa-instagram" style="color: #e1306c;"></i> رابط صفحة الإنستغرام</label>
+                            <input type="url" name="instagram_url" class="custom-input" value="{{ settings.instagram_url if settings and settings.instagram_url else 'https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw' }}" required>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;"><i class="fa-brands fa-whatsapp" style="color: #16a34a;"></i> رابط مجموعة مجتمع الواتساب</label>
+                            <input type="url" name="whatsapp_url" class="custom-input" value="{{ settings.whatsapp_url if settings and settings.whatsapp_url else 'https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8' }}" required>
+                        </div>
+                    </div>
+
+                    <!-- د. نصوص الواجهة والرسالة والرؤية -->
                     <div class="custom-select-group" style="margin-bottom: 15px;">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (Hero Title - يقبل وسوم HTML مثل &lt;span&gt;)</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (Hero Title - يقبل وسوم HTML)</label>
                         <input type="text" name="hero_title" class="custom-input" value="{{ settings.hero_title if settings else '' }}" required>
                     </div>
 
@@ -555,7 +575,7 @@
                 <div class="admin-section-title" style="font-size: 1.15rem; border-right-color: var(--jo-black);">
                     العناصر المعروضة حالياً
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
                     {% for item in gallery_items %}
                     <div style="background: var(--jo-light-gray); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--jo-border);">
                         <img src="{{ item.thumbnail_url or item.media_url }}" style="width: 100%; height: 120px; object-fit: cover;" alt="{{ item.title }}">
