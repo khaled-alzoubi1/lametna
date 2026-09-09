@@ -3,31 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة المتطوع | لمتنا بصمة</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='/style.css') }}">
+    <title>بوابة المتطوع | فريق لمتنا بصمة</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        .profile-page-wrapper {
+            max-width: 1200px;
+            margin: 2rem auto 4rem;
+            padding: 0 5%;
+            width: 100%;
+        }
         .profile-header-card {
             background: var(--jo-white);
             border-radius: var(--radius-md);
-            padding: 2.5rem;
-            margin: 2rem auto;
-            max-width: 1200px;
+            padding: 2.2rem;
+            margin-bottom: 2.5rem;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--jo-border);
             display: flex;
             align-items: center;
-            gap: 30px;
+            gap: 28px;
             flex-wrap: wrap;
         }
         .profile-avatar-box {
             position: relative;
-            width: 130px;
-            height: 130px;
+            width: 125px;
+            height: 125px;
             border-radius: 50%;
             border: 4px solid var(--jo-green);
             padding: 3px;
             flex-shrink: 0;
+            background: var(--jo-white);
         }
         .profile-avatar-box img {
             width: 100%;
@@ -35,40 +41,41 @@
             border-radius: 50%;
             object-fit: cover;
         }
-        .profile-info {
+        .profile-details-area {
             flex-grow: 1;
         }
-        .profile-name {
+        .profile-user-name {
             font-size: 1.8rem;
-            font-weight: 800;
+            font-weight: 900;
             color: var(--jo-black);
             margin-bottom: 6px;
         }
-        .profile-meta {
+        .profile-meta-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
             color: var(--jo-dark-gray);
             font-size: 0.95rem;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
-        .profile-meta span {
+        .profile-meta-tags span {
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
-        .profile-bio {
+        .profile-bio-text {
             color: #4a5568;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            max-width: 750px;
+            line-height: 1.7;
+            margin-bottom: 16px;
+            max-width: 800px;
+            font-size: 0.95rem;
         }
-        .profile-actions {
+        .profile-actions-bar {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-        .btn-action-outline {
+        .btn-profile-action {
             padding: 8px 16px;
             border: 1.5px solid var(--jo-dark-gray);
             border-radius: var(--radius-sm);
@@ -81,52 +88,70 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            font-size: 0.9rem;
         }
-        .btn-action-outline:hover {
+        .btn-profile-action:hover {
             background: var(--jo-black);
             color: #fff;
         }
-        .tab-content {
+        .tab-view-container {
+            background: var(--jo-white);
+            border-radius: var(--radius-md);
+            padding: 2.2rem;
+            margin-top: 2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--jo-border);
+        }
+        .profile-tab-content {
             display: none;
         }
-        .tab-content.active-tab {
+        .profile-tab-content.active-profile-tab {
             display: block;
         }
-        .badge-status {
-            padding: 4px 10px;
+        .badge-volunteer-status {
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
-            font-weight: 700;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
-        .badge-approved {
+        .badge-v-approved {
             background: #dcfce7;
             color: var(--jo-green);
         }
-        .badge-pending {
+        .badge-v-pending {
             background: #fef3c7;
             color: #d97706;
         }
-        .modal-overlay {
+        .profile-modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 2000;
+            background: rgba(0,0,0,0.7);
+            z-index: 3000;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            backdrop-filter: blur(3px);
         }
-        .modal-box {
+        .profile-modal-box {
             background: var(--jo-white);
             border-radius: var(--radius-md);
-            max-width: 550px;
+            max-width: 540px;
             width: 100%;
             padding: 2rem;
             position: relative;
             box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -135,7 +160,8 @@
     <!-- 1. القائمة العلوية Navbar -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
-            <div class="nav-brand-title">لمتنا <span>بصمة</span></div>
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
+            <div class="nav-brand-title">فريق لمتنا <span>بصمة</span></div>
         </a>
         <nav>
             <ul class="nav-links">
@@ -147,11 +173,11 @@
     </header>
 
     <!-- 2. شريط التنبيهات Flash Messages -->
-    <div class="container" style="max-width: 1200px; margin: 1rem auto 0; padding: 0 5%;">
+    <div class="container" style="max-width: 1200px; margin: 1.5rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div style="padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                    <div style="padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 15px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -159,143 +185,157 @@
         {% endwith %}
     </div>
 
-    <!-- 3. كرت الملف الشخصي للمتطوع (مطابق لترويسة التمبلت) -->
-    <section class="container" style="padding: 0 5%;">
+    <!-- 3. كرت الملف الشخصي للمتطوع -->
+    <main class="profile-page-wrapper">
         <div class="profile-header-card">
             <div class="profile-avatar-box">
-                <img src="{{ user.photo_url or url_for('static', filename='images/default-avatar.png') }}" alt="{{ user.name }}">
+                <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
             </div>
-            <div class="profile-info">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap;">
-                    <h2 class="profile-name">{{ user.name }}</h2>
+            
+            <div class="profile-details-area">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
+                    <h2 class="profile-user-name">{{ user.name }}</h2>
                     {% if user.status == 'approved' %}
-                        <span class="badge-status badge-approved"><i class="fa-solid fa-circle-check"></i> متطوع معتمد</span>
+                        <span class="badge-volunteer-status badge-v-approved"><i class="fa-solid fa-circle-check"></i> متطوع معتمد</span>
                     {% else %}
-                        <span class="badge-status badge-pending"><i class="fa-solid fa-clock"></i> بانتظار الاعتماد</span>
+                        <span class="badge-volunteer-status badge-v-pending"><i class="fa-solid fa-clock"></i> بانتظار اعتماد الإدارة</span>
                     {% endif %}
+                    
                     {% if user.is_leader %}
-                        <span class="badge-status" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-star"></i> {{ user.position or 'قائد فريق' }}</span>
+                        <span class="badge-volunteer-status" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-star"></i> {{ user.position or 'قائد فريق' }}</span>
                     {% endif %}
                 </div>
                 
-                <div class="profile-meta">
-                    <span><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> {{ user.city or 'الأردن' }}</span>
+                <div class="profile-meta-tags">
+                    <span><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> المحافظة: {{ user.city or 'عمان' }}</span>
                     <span><i class="fa-solid fa-phone" style="color: var(--jo-green);"></i> {{ user.phone }}</span>
                     <span><i class="fa-solid fa-cake-candles" style="color: #6366f1;"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
-                    <span><i class="fa-solid fa-users" style="color: var(--jo-black);"></i> الفريق: {{ user.team or 'العام' }}</span>
+                    <span><i class="fa-solid fa-users" style="color: var(--jo-black);"></i> الفريق: {{ user.team or 'الميداني' }}</span>
+                    <span><i class="fa-regular fa-envelope" style="color: #0284c7;"></i> {{ user.email }}</span>
                 </div>
 
-                <p class="profile-bio">
-                    {{ user.bio or 'لم يقم المتطوع بإضافة نبذة شخصية بعد. انقر على زر تعديل البيانات لكتابة نبذتك وخبراتك.' }}
+                <p class="profile-bio-text">
+                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي لكتابة نبذة عن مهاراتك واهتماماتك التطوعية.' }}
                 </p>
 
-                <div class="profile-actions">
-                    <button onclick="openModal('editProfileModal')" class="btn-action-outline">
+                <div class="profile-actions-bar">
+                    <button onclick="openProfileModal('editProfileModal')" class="btn-profile-action">
                         <i class="fa-solid fa-pen-to-square"></i> تعديل بياناتي
                     </button>
-                    <button onclick="openModal('deleteAccountModal')" class="btn-action-outline" style="border-color: var(--jo-red); color: var(--jo-red);">
+                    <button onclick="openProfileModal('deleteAccountModal')" class="btn-profile-action" style="border-color: var(--jo-red); color: var(--jo-red);">
                         <i class="fa-solid fa-trash-can"></i> حذف حسابي
                     </button>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- 4. شبكة بوابات وخدمات المتطوع (Categories Grid المأخوذة من التمبلت) -->
-    <main class="container" style="max-width: 1200px; margin: 1rem auto 3rem; padding: 0 5%; width: 100%;">
-        <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; border-right: 4px solid var(--jo-green); padding-right: 10px;">
-            لوحة الخدمات والأنشطة
+        <!-- 4. شبكة الخدمات والأنشطة (Categories Grid) -->
+        <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1.5rem; border-right: 4px solid var(--jo-green); padding-right: 10px;">
+            لوحة خدمات ومتابعة المتطوع
         </h3>
 
-        <!-- أزرار الأقسام الدائرية/المربعة للخدمات -->
-        <div class="services-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-            <div class="service-card" onclick="showTab('dutiesTab')">
+        <div class="services-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+            <div class="service-card" onclick="switchProfileTab('dutiesTab')">
                 <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80" alt="المهام">
-                <div class="service-card-title"><i class="fa-solid fa-list-check" style="display:block; margin-bottom: 8px;"></i>المهام والتكليفات</div>
+                <div class="service-card-title"><i class="fa-solid fa-list-check" style="display:block; margin-bottom: 8px;"></i>المهام والتكليفات ({{ duties|length }})</div>
             </div>
-            <div class="service-card" onclick="showTab('marksTab')">
+            <div class="service-card" onclick="switchProfileTab('marksTab')">
                 <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80" alt="الساعات">
                 <div class="service-card-title"><i class="fa-solid fa-award" style="display:block; margin-bottom: 8px;"></i>سجل الساعات والتقييم</div>
             </div>
-            <div class="service-card" onclick="showTab('eventsTab')">
+            <div class="service-card" onclick="switchProfileTab('eventsTab')">
                 <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80" alt="الفعاليات">
-                <div class="service-card-title"><i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>فعالياتي الميدانية</div>
+                <div class="service-card-title"><i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>الفعاليات الميدانية</div>
             </div>
-            <div class="service-card" onclick="showTab('excuseTab')">
+            <div class="service-card" onclick="switchProfileTab('excuseTab')">
                 <img src="https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80" alt="عذر">
                 <div class="service-card-title"><i class="fa-solid fa-file-signature" style="display:block; margin-bottom: 8px;"></i>تقديم اعتذار عن فعالية</div>
             </div>
-            <div class="service-card" onclick="showTab('transportTab')">
+            <div class="service-card" onclick="switchProfileTab('transportTab')">
                 <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=600&q=80" alt="مواصلات">
                 <div class="service-card-title"><i class="fa-solid fa-bus" style="display:block; margin-bottom: 8px;"></i>نقاط التجمع والمواصلات</div>
             </div>
         </div>
 
-        <!-- 5. الحاويات التفاعلية للأقسام (تتبدل بنقرة زر بدون إعادة تحميل) -->
-        <div style="background: var(--jo-white); border-radius: var(--radius-md); padding: 2rem; margin-top: 2rem; box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
+        <!-- 5. الحاويات التفاعلية للأقسام (تبديل فوري) -->
+        <div class="tab-view-container">
             
-            <!-- أ. المهام والتكليفات (Duties & Exams المقابلة بالتمبلت) -->
-            <div id="dutiesTab" class="tab-content active-tab">
-                <h4 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);"><i class="fa-solid fa-list-check" style="color: var(--jo-green);"></i> التكليفات الميدانية المسندة إليك</h4>
+            <!-- أ. المهام والتكليفات المسندة -->
+            <div id="dutiesTab" class="profile-tab-content active-profile-tab">
+                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
+                    <i class="fa-solid fa-list-check" style="color: var(--jo-green);"></i> التكليفات الميدانية المسندة إليك
+                </h4>
                 {% if duties %}
                     {% for duty in duties %}
-                    <div style="padding: 1rem; border-right: 4px solid var(--jo-green); background: var(--jo-light-gray); border-radius: 4px; margin-bottom: 12px;">
-                        <div style="font-weight: 700;">{{ duty.title }}</div>
-                        <div style="color: var(--jo-dark-gray); font-size: 0.9rem; margin-top: 4px;">{{ duty.description }}</div>
-                        <div style="font-size: 0.8rem; color: var(--jo-red); margin-top: 6px;">تاريخ التسليم / التنفيذ: {{ duty.due_date }}</div>
+                    <div style="padding: 1.2rem; border-right: 4px solid var(--jo-green); background: var(--jo-light-gray); border-radius: 4px; margin-bottom: 12px; border: 1px solid var(--jo-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-weight: 800; font-size: 1.05rem; color: var(--jo-black);">{{ duty.title }}</span>
+                            <span style="font-size: 0.85rem; color: var(--jo-red); font-weight: 700;"><i class="fa-regular fa-clock"></i> موعد الإنجاز: {{ duty.due_date }}</span>
+                        </div>
+                        <div style="color: #4a5568; font-size: 0.95rem; line-height: 1.6;">{{ duty.description }}</div>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p style="color: #718096;">لا توجد تكليفات ميدانية معلقة مسندة إليك في الوقت الحالي.</p>
+                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد تكليفات ميدانية معلقة مسندة إليك حالياً.</p>
                 {% endif %}
             </div>
 
-            <!-- ب. سجل الساعات والتقييم (Marks & Notes المقابلة بالتمبلت) -->
-            <div id="marksTab" class="tab-content">
-                <h4 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--jo-black);"><i class="fa-solid fa-award" style="color: var(--jo-green);"></i> السجل التطوعي والتقييمات</h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 2rem;">
-                    <div style="background: var(--jo-light-gray); padding: 1.5rem; border-radius: var(--radius-sm); text-align: center;">
-                        <span style="font-size: 2rem; font-weight: 900; color: var(--jo-green);">{{ user.volunteer_hours|default(0) }}</span>
-                        <p style="font-weight: 700; margin-top: 4px;">إجمالي الساعات المعتمدة</p>
+            <!-- ب. سجل الساعات والتقييم -->
+            <div id="marksTab" class="profile-tab-content">
+                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--jo-black);">
+                    <i class="fa-solid fa-award" style="color: var(--jo-green);"></i> السجل التطوعي والتقييم الإداري
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 2rem;">
+                    <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--jo-border);">
+                        <span style="font-size: 2.2rem; font-weight: 900; color: var(--jo-green);">{{ user.volunteer_hours|default(0) }}</span>
+                        <p style="font-weight: 700; margin-top: 6px; color: var(--jo-black);">إجمالي الساعات المعتمدة</p>
                     </div>
-                    <div style="background: var(--jo-light-gray); padding: 1.5rem; border-radius: var(--radius-sm); text-align: center;">
-                        <span style="font-size: 2rem; font-weight: 900; color: var(--jo-red);">{{ user.attended_events_count|default(0) }}</span>
-                        <p style="font-weight: 700; margin-top: 4px;">الفعاليات المنجزة</p>
+                    <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--jo-border);">
+                        <span style="font-size: 2.2rem; font-weight: 900; color: var(--jo-red);">{{ user.attended_events_count|default(0) }}</span>
+                        <p style="font-weight: 700; margin-top: 6px; color: var(--jo-black);">الفعاليات المنجزة</p>
                     </div>
                 </div>
-                <h5 style="font-weight: 800; margin-bottom: 10px;">ملاحظات وتقييمات قادة الفرق:</h5>
-                <div style="background: var(--jo-light-gray); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; color: var(--jo-dark-gray);">
+                <h5 style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--jo-black);">ملاحظات وتقييمات قادة الفرق:</h5>
+                <div style="background: var(--jo-light-gray); padding: 1.2rem; border-radius: var(--radius-sm); font-size: 0.95rem; color: #4a5568; border: 1px solid var(--jo-border); line-height: 1.7;">
                     {{ user.leader_notes or 'التقييم مستمر بناءً على التزامك وحضورك في الأنشطة الميدانية القادمة.' }}
                 </div>
             </div>
 
-            <!-- ج. فعالياتي المسجلة (Events) -->
-            <div id="eventsTab" class="tab-content">
-                <h4 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);"><i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> الفعاليات التي تم تسجيلك بها</h4>
+            <!-- ج. فعاليات المبادرة الميدانية -->
+            <div id="eventsTab" class="profile-tab-content">
+                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
+                    <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> الفعاليات والأنشطة الميدانية المتاحة
+                </h4>
                 {% if user_events %}
-                    {% for u_event in user_events %}
-                    <div class="event-item-card">
+                    {% for ev in user_events %}
+                    <div class="event-item-card" style="margin-bottom: 15px;">
                         <div class="event-meta">
-                            <span><i class="fa-regular fa-calendar"></i> {{ u_event.date }}</span>
-                            <span><i class="fa-regular fa-clock"></i> {{ u_event.time }}</span>
-                            <span><i class="fa-solid fa-location-dot"></i> {{ u_event.location }}</span>
+                            <span><i class="fa-regular fa-calendar"></i> {{ ev.date }}</span>
+                            <span><i class="fa-regular fa-clock"></i> {{ ev.time }}</span>
+                            <span><i class="fa-solid fa-location-dot"></i> {{ ev.location }}</span>
                         </div>
-                        <h3>{{ u_event.title }}</h3>
+                        <h3 style="margin-bottom: 6px;">{{ ev.title }}</h3>
+                        <p style="color: var(--jo-dark-gray); line-height: 1.6; font-size: 0.95rem;">{{ ev.description }}</p>
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p style="color: #718096;">أنت غير مدرج في أي فعالية قادمة حتى الآن.</p>
+                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد فعاليات مجدولة حالياً.</p>
                 {% endif %}
             </div>
 
-            <!-- د. تقديم عذر غياب (Providing an Excuse) -->
-            <div id="excuseTab" class="tab-content">
-                <h4 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);"><i class="fa-solid fa-file-signature" style="color: var(--jo-red);"></i> نموذج تقديم اعتذار عن عدم الحضور</h4>
-                <form action="{{ url_for('submit_excuse') if 'submit_excuse' in url_map else '#' }}" method="POST">
+            <!-- د. تقديم عذر غياب -->
+            <div id="excuseTab" class="profile-tab-content">
+                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
+                    <i class="fa-solid fa-file-signature" style="color: var(--jo-red);"></i> نموذج تقديم اعتذار عن عدم الحضور
+                </h4>
+                <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                    في حال تعذر حضورك لنشاط ميداني بعد تثبيت اسمك، يرجى تقديم العذر مسبقاً لتنظيم الكشوفات اللوجستية.
+                </p>
+                <form action="{{ url_for('submit_excuse') }}" method="POST" style="max-width: 650px;">
                     <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">حدد الفعالية</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">حدد الفعالية المعنية</label>
                         <select name="event_id" class="custom-input" required>
-                            <option value="">-- اختر الفعالية --</option>
+                            <option value="">-- اختر الفعالية من القائمة --</option>
                             {% for ev in user_events %}
                                 <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.date }})</option>
                             {% else %}
@@ -304,42 +344,52 @@
                         </select>
                     </div>
                     <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">سبب الاعتذار</label>
-                        <textarea name="reason" class="custom-input" rows="4" placeholder="يرجى توضيح سبب عدم التمكن من المشاركة..." required></textarea>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">سبب عدم التمكن من المشاركة</label>
+                        <textarea name="reason" class="custom-input" rows="4" placeholder="يرجى توضيح سبب الاعتذار والظرف الطارئ بدقة..." required></textarea>
                     </div>
-                    <button type="submit" class="btn-primary-block" style="max-width: 200px;">إرسال العذر للإدارة</button>
+                    <button type="submit" class="btn-primary-block" style="max-width: 220px;">إرسال العذر للإدارة</button>
                 </form>
             </div>
 
-            <!-- هـ. نقاط التجمع والمواصلات (Bus Information / Transport) -->
-            <div id="transportTab" class="tab-content">
-                <h4 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);"><i class="fa-solid fa-bus" style="color: var(--jo-green);"></i> محطات الانطلاق ومسار الباصات الميدانية</h4>
-                <div style="background: var(--jo-light-gray); padding: 1.5rem; border-radius: var(--radius-sm);">
-                    <p style="font-weight: 700; margin-bottom: 8px;"><i class="fa-solid fa-map-pin" style="color: var(--jo-red);"></i> نقطة التجمع المركزية:</p>
-                    <p style="color: var(--jo-dark-gray); margin-bottom: 15px;">عمان - مجمع بنك الإسكان / الشميساني (أمام البوابة الرئيسية).</p>
-                    <p style="font-weight: 700; margin-bottom: 8px;"><i class="fa-solid fa-clock" style="color: var(--jo-green);"></i> موعد الانطلاق:</p>
-                    <p style="color: var(--jo-dark-gray);">قبل موعد أي نشاط ميداني بساعة واحدة تماماً. يرجى التواجد قبل الوقت بـ 15 دقيقة لتأكيد الحضور مع مسؤول اللوجستيات.</p>
+            <!-- هـ. نقاط التجمع والمواصلات -->
+            <div id="transportTab" class="profile-tab-content">
+                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
+                    <i class="fa-solid fa-bus" style="color: var(--jo-green);"></i> محطات الانطلاق ومسار النقل الميداني
+                </h4>
+                <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
+                    <p style="font-weight: 800; margin-bottom: 8px; color: var(--jo-black);">
+                        <i class="fa-solid fa-map-pin" style="color: var(--jo-red);"></i> نقطة التجمع المركزية:
+                    </p>
+                    <p style="color: var(--jo-dark-gray); margin-bottom: 18px; font-size: 1rem;">
+                        عمان - مجمع بنك الإسكان / الشميساني (أمام البوابة الرئيسية للمجمع).
+                    </p>
+                    <p style="font-weight: 800; margin-bottom: 8px; color: var(--jo-black);">
+                        <i class="fa-solid fa-clock" style="color: var(--jo-green);"></i> موعد ومسار الانطلاق:
+                    </p>
+                    <p style="color: var(--jo-dark-gray); line-height: 1.7; font-size: 0.95rem;">
+                        يتحرك باص المتطوعين قبل موعد أي نشاط ميداني بساعة ونصف تماماً. نرجو التواجد قبل موعد الحركة بـ 15 دقيقة لتسجيل الحضور وتوزيع الشارات الرسمية مع مسؤول اللوجستيات.
+                    </p>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <!-- 6. نافذة منبثقة: تعديل البيانات الشامل (Edit Profile Modal) -->
-    <div id="editProfileModal" class="modal-overlay">
-        <div class="modal-box">
+    <!-- 6. نافذة منبثقة: تعديل البيانات الشاملة (Edit Profile Modal) -->
+    <div id="editProfileModal" class="profile-modal-overlay">
+        <div class="profile-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1.3rem; font-weight: 800;">تعديل بيانات الملف الشخصي</h3>
-                <button onclick="closeModal('editProfileModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">تعديل بيانات الملف الشخصي</h3>
+                <button onclick="closeProfileModal('editProfileModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
             </div>
             <form action="{{ url_for('update_profile') }}" method="POST">
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
-                    <input type="number" name="age" class="custom-input" value="{{ user.age or '' }}" min="14" max="80" required>
+                    <input type="number" name="age" class="custom-input" value="{{ user.age or '' }}" min="14" max="75" required>
                 </div>
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة / المدينة</label>
-                    <select name="city" class="custom-input">
+                    <select name="city" class="custom-input" required>
                         <option value="عمان" {% if user.city == 'عمان' %}selected{% endif %}>عمان</option>
                         <option value="الزرقاء" {% if user.city == 'الزرقاء' %}selected{% endif %}>الزرقاء</option>
                         <option value="إربد" {% if user.city == 'إربد' %}selected{% endif %}>إربد</option>
@@ -352,26 +402,26 @@
                     <input type="tel" name="phone" class="custom-input" value="{{ user.phone or '' }}" required>
                 </div>
                 <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">نبذة عنك (Bio / المهارات والاهتمامات)</label>
-                    <textarea name="bio" class="custom-input" rows="3" placeholder="اكتب نبذة مختصرة عن شغفك التطوعي أو مهاراتك...">{{ user.bio or '' }}</textarea>
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">النبذة الشخصية والمهارات (Bio)</label>
+                    <textarea name="bio" class="custom-input" rows="3" placeholder="تحدث باختصار عن شغفك التطوعي أو مهاراتك الميدانية...">{{ user.bio or '' }}</textarea>
                 </div>
-                <button type="submit" class="btn-primary-block">حفظ التغييرات</button>
+                <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">حفظ التغييرات</button>
             </form>
         </div>
     </div>
 
-    <!-- 7. نافذة منبثقة: تأكيد تدمير وحذف الحساب ذاتياً (Delete Account Modal) -->
-    <div id="deleteAccountModal" class="modal-overlay">
-        <div class="modal-box" style="border-top: 5px solid var(--jo-red);">
+    <!-- 7. نافذة منبثقة: تأكيد حذف الحساب نهائياً (Delete Account Modal) -->
+    <div id="deleteAccountModal" class="profile-modal-overlay">
+        <div class="profile-modal-box" style="border-top: 5px solid var(--jo-red);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-red);">تأكيد حذف الحساب نهائياً</h3>
-                <button onclick="closeModal('deleteAccountModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+                <button onclick="closeProfileModal('deleteAccountModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
             </div>
-            <p style="color: var(--jo-dark-gray); line-height: 1.6; margin-bottom: 1.5rem;">
-                هل أنت متأكد من رغبتك في حذف حسابك من مبادرة <strong>لمتنا بصمة</strong>؟ سيؤدي هذا الإجراء إلى مسح كافة بياناتك وساعاتك التطوعية المسجلة نهائياً من النظام، ولن تتمكن من استرجاعها.
+            <p style="color: #4a5568; line-height: 1.7; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                هل أنت متأكد من رغبتك في حذف حسابك من <strong>فريق لمتنا بصمة</strong>؟ سيؤدي هذا الإجراء إلى مسح كافة بياناتك وساعاتك التطوعية المسجلة نهائياً، ولن يمكن استعادتها لاحقاً.
             </p>
             <form action="{{ url_for('delete_own_account') }}" method="POST" style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="closeModal('deleteAccountModal')" class="btn-action-outline">إلغاء</button>
+                <button type="button" onclick="closeProfileModal('deleteAccountModal')" class="btn-profile-action">إلغاء</button>
                 <button type="submit" class="btn-danger">نعم، احذف حسابي</button>
             </form>
         </div>
@@ -379,29 +429,29 @@
 
     <!-- 8. الفوتر Footer -->
     <footer class="footer">
-        <div class="footer-bottom" style="padding: 0;">
-            &copy; 2026 مبادرة لمتنا بصمة. بوابة إدارة المتطوعين.
+        <div class="footer-bottom">
+            &copy; 2026 فريق لمتنا بصمة. بوابة إدارة شؤون المتطوعين.
         </div>
     </footer>
 
     <!-- 9. الجافاسكريبت للتحكم التفاعلي -->
     <script>
-        function showTab(tabId) {
-            const tabs = document.querySelectorAll('.tab-content');
-            tabs.forEach(tab => tab.classList.remove('active-tab'));
-            document.getElementById(tabId).classList.add('active-tab');
+        function switchProfileTab(tabId) {
+            const tabs = document.querySelectorAll('.profile-tab-content');
+            tabs.forEach(tab => tab.classList.remove('active-profile-tab'));
+            document.getElementById(tabId).classList.add('active-profile-tab');
         }
 
-        function openModal(modalId) {
+        function openProfileModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
         }
 
-        function closeModal(modalId) {
+        function closeProfileModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
 
         window.onclick = function(e) {
-            if (e.target.classList.contains('modal-overlay')) {
+            if (e.target.classList.contains('profile-modal-overlay')) {
                 e.target.style.display = 'none';
             }
         };

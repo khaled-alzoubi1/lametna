@@ -1,28 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
-
+/* ==================== متغيرات النظام والهوية البصرية ==================== */
 :root {
     --jo-green: #007A3D;
-    --jo-green-hover: #005f2f;
+    --jo-green-hover: #005a2d;
     --jo-red: #CE1126;
-    --jo-red-hover: #a80d1e;
+    --jo-red-hover: #a50d1e;
     --jo-black: #121212;
-    --jo-dark-gray: #2d3748;
+    --jo-dark-gray: #4a5568;
     --jo-light-gray: #f8fafc;
     --jo-border: #e2e8f0;
     --jo-white: #ffffff;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-    --radius-sm: 8px;
-    --radius-md: 14px;
-    --radius-lg: 24px;
+    
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    
+    --transition: all 0.25s ease-in-out;
 }
 
+/* ==================== إعادة الضبط والأساسيات ==================== */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Tajawal', sans-serif;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
@@ -30,22 +38,21 @@ body {
     color: var(--jo-black);
     direction: rtl;
     text-align: right;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    line-height: 1.6;
 }
 
-/* ==================== 1. القائمة العلوية (Navbar) ==================== */
+/* ==================== شريط التنقل العلوي (Navbar) ==================== */
 .navbar {
     background: var(--jo-white);
-    padding: 1rem 5%;
+    border-bottom: 2px solid var(--jo-border);
+    padding: 0.8rem 5%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--jo-border);
     position: sticky;
     top: 0;
     z-index: 1000;
+    box-shadow: var(--shadow-sm);
 }
 
 .nav-brand {
@@ -53,72 +60,88 @@ body {
     align-items: center;
     gap: 12px;
     text-decoration: none;
+    color: var(--jo-black);
 }
 
 .nav-brand img {
-    height: 48px;
+    height: 44px;
+    width: auto;
+    object-fit: contain;
     border-radius: var(--radius-sm);
 }
 
 .nav-brand-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--jo-black);
+    font-size: 1.35rem;
+    font-weight: 900;
+    letter-spacing: -0.5px;
 }
 
 .nav-brand-title span {
-    color: var(--jo-red);
+    color: var(--jo-green);
 }
 
 .nav-links {
+    list-style: none;
     display: flex;
     align-items: center;
-    gap: 24px;
-    list-style: none;
+    gap: 20px;
 }
 
-.nav-links a {
+.nav-links li a {
     text-decoration: none;
-    color: var(--jo-dark-gray);
+    color: var(--jo-black);
     font-weight: 700;
-    font-size: 1rem;
-    transition: color 0.2s;
+    font-size: 0.95rem;
+    transition: var(--transition);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
 }
 
-.nav-links a:hover,
-.nav-links a.active {
+.nav-links li a:hover,
+.nav-links li a.active {
     color: var(--jo-green);
 }
 
 .btn-nav-action {
-    background-color: var(--jo-green);
+    background: var(--jo-green) !important;
     color: var(--jo-white) !important;
-    padding: 8px 20px;
-    border-radius: var(--radius-sm);
-    transition: background 0.2s;
 }
 
 .btn-nav-action:hover {
-    background-color: var(--jo-green-hover);
+    background: var(--jo-green-hover) !important;
 }
 
-/* ==================== 2. الواجهة الرئيسية (Hero & Stats) ==================== */
+.btn-danger {
+    background: var(--jo-red);
+    color: var(--jo-white);
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-danger:hover {
+    background: var(--jo-red-hover);
+}
+
+/* ==================== الواجهة الترحيبية (Hero Section) ==================== */
 .hero-section {
-    padding: 4rem 5% 2rem;
+    max-width: 1250px;
+    margin: 2rem auto;
+    padding: 2.5rem 5%;
     display: grid;
-    grid-template-columns: 1.2fr 1fr;
+    grid-template-columns: 1.2fr 0.8fr;
     gap: 40px;
     align-items: center;
-    max-width: 1300px;
-    margin: 0 auto;
-    width: 100%;
 }
 
 .hero-title {
-    font-size: 3rem;
+    font-size: 2.8rem;
     font-weight: 900;
     line-height: 1.2;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
     color: var(--jo-black);
 }
 
@@ -127,160 +150,164 @@ body {
 }
 
 .hero-desc {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     color: var(--jo-dark-gray);
-    line-height: 1.8;
     margin-bottom: 2rem;
+    text-align: justify;
+    line-height: 1.8;
 }
 
-/* شريط الإحصائيات (Stats Counter) مثل التمبلت */
 .stats-container {
-    display: flex;
-    gap: 30px;
-    padding-top: 1.5rem;
-    border-top: 2px solid var(--jo-border);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 1.5rem;
 }
 
 .stat-box {
-    display: flex;
-    flex-direction: column;
+    background: var(--jo-white);
+    padding: 1.2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--jo-border);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    border-bottom: 4px solid var(--jo-green);
 }
 
 .stat-number {
-    font-size: 2.2rem;
+    display: block;
+    font-size: 1.8rem;
     font-weight: 900;
-    color: var(--jo-red);
+    color: var(--jo-black);
 }
 
 .stat-label {
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 0.85rem;
     color: var(--jo-dark-gray);
+    font-weight: 700;
 }
 
-/* ==================== 3. نافذة التحديد (City / Team Selection Modal Box) ==================== */
+/* بطاقة الاختيار والتسجيل السريع */
 .selector-card {
     background: var(--jo-white);
-    border: 1px solid var(--jo-border);
+    padding: 2.2rem;
     border-radius: var(--radius-md);
-    padding: 2.5rem;
-    box-shadow: var(--shadow-lg);
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
+    border: 1px solid var(--jo-border);
+    box-shadow: var(--shadow-md);
+    border-top: 5px solid var(--jo-red);
 }
 
 .selector-title {
     font-size: 1.3rem;
     font-weight: 800;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.8rem;
     text-align: center;
 }
 
+/* ==================== عناصر الإدخال والأزرار ==================== */
 .custom-select-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 14px;
 }
 
-.custom-select-group select,
 .custom-input {
     width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--jo-border);
+    padding: 10px 14px;
+    border: 1px solid var(--jo-border);
     border-radius: var(--radius-sm);
-    font-size: 1rem;
-    background: var(--jo-light-gray);
+    font-size: 0.95rem;
+    background: var(--jo-white);
+    color: var(--jo-black);
     outline: none;
-    transition: border-color 0.2s;
+    transition: var(--transition);
 }
 
-.custom-select-group select:focus,
 .custom-input:focus {
     border-color: var(--jo-green);
-    background: var(--jo-white);
+    box-shadow: 0 0 0 3px rgba(0, 122, 61, 0.15);
 }
 
 .btn-primary-block {
     width: 100%;
-    padding: 14px;
     background: var(--jo-green);
     color: var(--jo-white);
     border: none;
+    padding: 12px;
     border-radius: var(--radius-sm);
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 800;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: var(--transition);
+    text-align: center;
+    display: inline-block;
 }
 
 .btn-primary-block:hover {
     background: var(--jo-green-hover);
 }
 
-/* ==================== 4. كروت المتطوعين والقيادات (Member Cards) ==================== */
+/* ==================== بطاقات القيادات (Leadership) ==================== */
 .grid-members {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 25px;
-    margin: 2rem 0;
+    gap: 20px;
 }
 
 .member-card {
     background: var(--jo-white);
     border: 1px solid var(--jo-border);
     border-radius: var(--radius-md);
-    padding: 2rem 1rem;
+    padding: 1.8rem 1.2rem;
     text-align: center;
     box-shadow: var(--shadow-sm);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: var(--transition);
 }
 
 .member-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-md);
+    border-color: var(--jo-green);
 }
 
 .member-avatar-wrapper {
-    width: 110px;
-    height: 110px;
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 1rem;
     border-radius: 50%;
-    margin: 0 auto 1.2rem;
     border: 3px solid var(--jo-green);
-    padding: 3px;
-    overflow: hidden;
+    padding: 2px;
 }
 
 .member-avatar-wrapper img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 .member-name {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 800;
     color: var(--jo-black);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .member-role {
-    font-size: 0.9rem;
-    font-weight: 700;
+    font-size: 0.85rem;
     color: var(--jo-red);
-    margin-bottom: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
 }
 
 .btn-outline-card {
     display: inline-block;
-    width: 85%;
-    padding: 8px 0;
-    border: 1.5px solid var(--jo-dark-gray);
+    padding: 6px 16px;
+    border: 1px solid var(--jo-border);
     border-radius: var(--radius-sm);
     text-decoration: none;
     color: var(--jo-black);
     font-weight: 700;
-    font-size: 0.95rem;
-    transition: all 0.2s;
+    font-size: 0.85rem;
+    transition: var(--transition);
 }
 
 .btn-outline-card:hover {
@@ -288,137 +315,97 @@ body {
     color: var(--jo-white);
 }
 
-/* ==================== 5. شبكة الخدمات والمربعات (Category Boxes) ==================== */
-.services-grid {
+/* ==================== بطاقات الفعاليات (Events) ==================== */
+.events-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: 20px;
-    padding: 2rem 0;
 }
 
-.service-card {
-    position: relative;
-    height: 160px;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    cursor: pointer;
-    box-shadow: var(--shadow-sm);
-}
-
-.service-card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    filter: brightness(0.45);
-    transition: filter 0.3s, transform 0.3s;
-}
-
-.service-card:hover img {
-    filter: brightness(0.35);
-    transform: scale(1.03);
-}
-
-.service-card-title {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: var(--jo-white);
-    font-size: 1.3rem;
-    font-weight: 800;
-    text-align: center;
-    width: 90%;
-    pointer-events: none;
-}
-
-/* ==================== 6. بطاقات الفعاليات والمهام (Events & Duties) ==================== */
 .event-item-card {
     background: var(--jo-white);
-    border-right: 5px solid var(--jo-green);
-    border-radius: var(--radius-sm);
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+    border: 1px solid var(--jo-border);
+    border-radius: var(--radius-md);
+    padding: 1.6rem;
     box-shadow: var(--shadow-sm);
+    border-right: 4px solid var(--jo-green);
 }
 
 .event-meta {
     display: flex;
     gap: 15px;
     font-size: 0.85rem;
+    color: var(--jo-dark-gray);
     font-weight: 700;
-    color: var(--jo-red);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
 }
 
 .event-desc {
     color: var(--jo-dark-gray);
-    line-height: 1.6;
+    font-size: 0.95rem;
+    line-height: 1.7;
 }
 
-/* ==================== 7. أزرار الحذف وإدارة الفعاليات ==================== */
-.btn-danger {
-    background: var(--jo-red);
-    color: var(--jo-white);
-    border: none;
-    padding: 10px 18px;
-    border-radius: var(--radius-sm);
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s;
+/* ==================== شبكة المعرض والخدمات ==================== */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
 }
 
-.btn-danger:hover {
-    background: var(--jo-red-hover);
-}
-
-.counter-btn-group {
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid var(--jo-border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.counter-btn {
-    background: var(--jo-light-gray);
-    border: none;
-    padding: 6px 14px;
-    cursor: pointer;
-    font-weight: 800;
-}
-
-.counter-btn:hover {
-    background: var(--jo-border);
-}
-
-.counter-value {
-    padding: 6px 14px;
+.service-card {
     background: var(--jo-white);
-    font-weight: 800;
+    border: 1px solid var(--jo-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
 }
 
-/* ==================== 8. الفوتر السفلي (Footer) ==================== */
+.service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.service-card img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+}
+
+.service-card-title {
+    padding: 1rem;
+    font-weight: 800;
+    font-size: 1rem;
+    text-align: center;
+    color: var(--jo-black);
+}
+
+/* ==================== التذييل (Footer) ==================== */
 .footer {
     background: var(--jo-black);
     color: var(--jo-white);
     padding: 3rem 5% 1.5rem;
-    margin-top: auto;
+    margin-top: 4rem;
 }
 
 .footer-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 30px;
     max-width: 1200px;
     margin: 0 auto;
-    border-bottom: 1px solid #333;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr;
+    gap: 30px;
     padding-bottom: 2rem;
+    border-bottom: 1px solid #2d3748;
 }
 
 .footer-column h4 {
-    color: var(--jo-green);
-    font-size: 1.1rem;
+    color: var(--jo-white);
     margin-bottom: 1rem;
+    font-size: 1.15rem;
+    font-weight: 800;
 }
 
 .footer-column ul {
@@ -432,37 +419,45 @@ body {
 .footer-column ul li a {
     color: #a0aec0;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: var(--transition);
 }
 
 .footer-column ul li a:hover {
-    color: var(--jo-white);
+    color: var(--jo-green);
 }
 
 .footer-bottom {
     text-align: center;
     padding-top: 1.5rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: #718096;
 }
 
-/* ==================== شاشات الهاتف (Responsive) ==================== */
-@media (max-width: 768px) {
+/* ==================== التجاوب مع مختلف الشاشات ==================== */
+@media (max-width: 900px) {
     .hero-section {
         grid-template-columns: 1fr;
-        padding: 2rem 5%;
+        padding-top: 1rem;
     }
-    
+    .footer-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 650px) {
+    .navbar {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
     .hero-title {
         font-size: 2.1rem;
     }
-    
-    .navbar {
-        flex-direction: column;
-        gap: 15px;
-    }
-    
     .stats-container {
-        justify-content: space-between;
+        grid-template-columns: 1fr;
     }
 }

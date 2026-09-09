@@ -3,16 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لمتنا بصمة | المنصة التطوعية الرسمية</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='/style.css') }}">
+    <title>{{ settings.site_name if settings and settings.site_name else 'فريق لمتنا بصمة | المنصة التطوعية الرسمية' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* أنماط النوافذ المنبثقة ومشغل الوسائط لضمان استقرار العرض */
+        .auth-modal, .media-lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+        .auth-modal-content {
+            background: var(--jo-white);
+            border-radius: var(--radius-md);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 520px;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            border-top: 5px solid var(--jo-green);
+            animation: modalFadeIn 0.3s ease;
+        }
+        .lightbox-box {
+            position: relative;
+            max-width: 850px;
+            width: 100%;
+            background: #000;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.3s ease;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            cursor: pointer;
+            color: var(--jo-dark-gray);
+            transition: color 0.2s;
+            z-index: 10;
+        }
+        .close-btn:hover {
+            color: var(--jo-red);
+        }
+        .close-btn-lightbox {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--jo-red);
+            color: #fff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
 
     <!-- 1. القائمة العلوية التفاعلية Navbar -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
-            <div class="nav-brand-title">لمتنا <span>بصمة</span></div>
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار فريق لمتنا بصمة">
+            <div class="nav-brand-title">
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+            </div>
         </a>
         <nav>
             <ul class="nav-links">
@@ -29,19 +107,19 @@
                     <li><a href="{{ url_for('admin_dashboard') }}" class="btn-nav-action">لوحة التحكم</a></li>
                     <li><a href="{{ url_for('logout') }}" class="btn-danger" style="padding: 6px 14px; text-decoration: none; border-radius: 6px;">تسجيل خروج</a></li>
                 {% else %}
-                    <li><a href="{{ url_for('login') }}">تسجيل الدخول</a></li>
-                    <li><a href="{{ url_for('register') }}" class="btn-nav-action">انضم كمتطوع</a></li>
+                    <li><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">تسجيل الدخول</a></li>
+                    <li><a href="javascript:void(0)" onclick="openAuthModal('registerModal')" class="btn-nav-action">انضم كمتطوع</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
 
-    <!-- 2. شريط رسائل النظام (Flash Messages) -->
+    <!-- 2. شريط رسائل النظام وتنبيهات الخادم Flash Messages -->
     <div class="container" style="max-width: 1200px; margin: 1rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}" style="padding: 12px 20px; border-radius: 8px; margin-bottom: 10px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                    <div style="padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 12px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -49,14 +127,21 @@
         {% endwith %}
     </div>
 
-    <!-- 3. الواجهة الترحيبية والإحصائيات والتسجيل السريع -->
+    <!-- 3. الواجهة الرئيسية الترحيبية Hero Section -->
     <main class="hero-section">
         <div class="hero-content">
-            <h1 class="hero-title">الشباب والمجتمع،<br><span>أثرٌ يتصل.</span></h1>
+            <h1 class="hero-title">
+                {% if settings and settings.hero_title %}
+                    {{ settings.hero_title|safe }}
+                {% else %}
+                    الشباب والمجتمع،<br><span>أثرٌ يتصل.</span>
+                {% endif %}
+            </h1>
             <p class="hero-desc">
-                مبادرة شبابية أردنية تأسست لنثبت أن التغيير الحقيقي يبدأ بجمع طاقتنا معاً. نؤمن أن العمل التطوعي ليس مجرد ساعات نقدّمها، بل أثر ملموس ومستدام نتركه في حياة الناس والمجتمع؛ لأن كل لقاء يجمعنا هو خطوة لصناعة أمل، وكل جهد نبذله يترك وراءه بصمة لا تُمحى.
+                {{ settings.hero_desc if settings and settings.hero_desc else 'مبادرة شبابية أردنية تأسست لنثبت أن التغيير الحقيقي يبدأ بجمع طاقتنا معاً. نؤمن أن العمل التطوعي ليس مجرد ساعات نقدّمها، بل أثر ملموس ومستدام نتركه في حياة الناس والمجتمع؛ لأن كل لقاء يجمعنا هو خطوة لصناعة أمل، وكل جهد نبذله يترك وراءه بصمة لا تُمحى.' }}
             </p>
             
+            <!-- شريط الإحصائيات التراكمية -->
             <div class="stats-container">
                 <div class="stat-box">
                     <span class="stat-number">+{{ stats.volunteers_count|default(150) }}</span>
@@ -73,52 +158,54 @@
             </div>
         </div>
 
+        <!-- بطاقة الانضمام والتسجيل السريع -->
         <div class="selector-card">
             <h3 class="selector-title">انضم لمجتمع لمتنا بصمة</h3>
-            <form action="{{ url_for('register') }}" method="GET">
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 8px; font-weight: 700;">المحافظة</label>
-                    <select name="city" required>
-                        <option value="عمان">العاصمة عمان</option>
-                        <option value="الزرقاء">الزرقاء</option>
-                        <option value="إربد">إربد</option>
-                        <option value="البلقاء">البلقاء</option>
-                        <option value="أخرى">محافظة أخرى</option>
-                    </select>
-                </div>
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 8px; font-weight: 700;">اللجنة الميدانية المفضلة</label>
-                    <select name="team" required>
-                        <option value="الميداني">الفريق الميداني واللوجستي</option>
-                        <option value="الإعلامي">الفريق الإعلامي والتوثيق</option>
-                        <option value="التنظيم">لجنة التنظيم والتخطيط</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary-block">متابعة التسجيل</button>
-            </form>
+            <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem; text-align: center; line-height: 1.6;">
+                كن جزءاً من الفرق الميدانية والإعلامية، واصنع فارقاً حقيقياً في مجتمعك.
+            </p>
+            <div class="custom-select-group">
+                <label style="display:block; margin-bottom: 8px; font-weight: 700;">المحافظة الرئيسية</label>
+                <select id="quickCitySelect" class="custom-input">
+                    <option value="عمان">العاصمة عمان</option>
+                    <option value="الزرقاء">الزرقاء</option>
+                    <option value="إربد">إربد</option>
+                    <option value="البلقاء">البلقاء</option>
+                    <option value="أخرى">محافظة أخرى</option>
+                </select>
+            </div>
+            <div class="custom-select-group">
+                <label style="display:block; margin-bottom: 8px; font-weight: 700;">اللجنة أو الفريق المفضل</label>
+                <select id="quickTeamSelect" class="custom-input">
+                    <option value="الميداني">الفريق الميداني واللوجستي</option>
+                    <option value="الإعلامي">الفريق الإعلامي وصناع المحتوى</option>
+                    <option value="التنظيم">لجنة التنظيم والتخطيط</option>
+                </select>
+            </div>
+            <button type="button" onclick="forwardToRegisterModal()" class="btn-primary-block">متابعة طلب الانتساب</button>
         </div>
     </main>
 
-    <!-- 4. قسم الرؤية والرسالة (مستوحى من تمبلت EduLine) -->
+    <!-- 4. قسم الرؤية والرسالة (من نحن) -->
     <section class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 5%; width: 100%;" id="about">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
-            <div style="background: var(--jo-white); padding: 2rem; border-radius: var(--radius-md); border-top: 4px solid var(--jo-green); box-shadow: var(--shadow-sm);">
-                <h3 style="color: var(--jo-green); margin-bottom: 1rem; font-size: 1.3rem;"><i class="fa-solid fa-bullseye"></i> رؤيتنا</h3>
-                <p style="line-height: 1.7; color: var(--jo-dark-gray);">
-                    الوصول إلى مجتمع شبابي ريادي يقود المبادرات المجتمعية بأعلى معايير التنظيم، وتوسيع مظلة الأثر التطوعي لتغطي كافة محافظات المملكة.
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;">
+            <div style="background: var(--jo-white); padding: 2.2rem; border-radius: var(--radius-md); border-top: 5px solid var(--jo-green); box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
+                <h3 style="color: var(--jo-green); margin-bottom: 1rem; font-size: 1.35rem;"><i class="fa-solid fa-bullseye"></i> رؤيتنا</h3>
+                <p style="line-height: 1.8; color: var(--jo-dark-gray); font-size: 1rem;">
+                    {{ settings.vision_text if settings and settings.vision_text else 'الوصول إلى مجتمع شبابي ريادي يقود المبادرات المجتمعية بأعلى معايير التنظيم، وتوسيع مظلة الأثر التطوعي لتغطي كافة محافظات ومناطق المملكة الأردنية الهاشمية.' }}
                 </p>
             </div>
-            <div style="background: var(--jo-white); padding: 2rem; border-radius: var(--radius-md); border-top: 4px solid var(--jo-red); box-shadow: var(--shadow-sm);">
-                <h3 style="color: var(--jo-red); margin-bottom: 1rem; font-size: 1.3rem;"><i class="fa-solid fa-hand-holding-heart"></i> رسالتنا</h3>
-                <p style="line-height: 1.7; color: var(--jo-dark-gray);">
-                    تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة وآمنة.
+            <div style="background: var(--jo-white); padding: 2.2rem; border-radius: var(--radius-md); border-top: 5px solid var(--jo-red); box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
+                <h3 style="color: var(--jo-red); margin-bottom: 1rem; font-size: 1.35rem;"><i class="fa-solid fa-hand-holding-heart"></i> رسالتنا</h3>
+                <p style="line-height: 1.8; color: var(--jo-dark-gray); font-size: 1rem;">
+                    {{ settings.mission_text if settings and settings.mission_text else 'تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة، منظمة، وآمنة تضمن استدامة البصمة الإيجابية.' }}
                 </p>
             </div>
         </div>
     </section>
 
-    <!-- 5. قسم الهيئة الإدارية وقادة الفرق (شبكة الكروت الدائرية) -->
-    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="leadership">
+    <!-- 5. قسم الهيئة الإدارية وقادة الفرق -->
+    <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="leadership">
         <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-red); padding-right: 12px; margin-bottom: 2rem;">
             الهيئة الإدارية وقادة الفرق
         </h2>
@@ -127,7 +214,7 @@
             {% for leader in leaders %}
             <div class="member-card">
                 <div class="member-avatar-wrapper">
-                    <img src="{{ leader.photo_url or url_for('static', filename='images/default-avatar.png') }}" alt="{{ leader.name }}">
+                    <img src="{{ leader.photo_url or url_for('static', filename='logo.png') }}" alt="{{ leader.name }}">
                 </div>
                 <div class="member-name">{{ leader.name }}</div>
                 <div class="member-role">{{ leader.position or 'قائد فريق' }}</div>
@@ -136,34 +223,34 @@
             {% else %}
             <div class="member-card">
                 <div class="member-avatar-wrapper">
-                    <img src="https://ui-avatars.com/api/?name=رئيس+المبادرة&background=007A3D&color=fff" alt="رئيس المبادرة">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="رئيس المبادرة">
                 </div>
                 <div class="member-name">رئاسة المبادرة</div>
-                <div class="member-role">الهيئة العليا</div>
+                <div class="member-role">الهيئة العليا والتخطيط</div>
                 <a href="#contact" class="btn-outline-card">تواصل</a>
             </div>
             <div class="member-card">
                 <div class="member-avatar-wrapper">
-                    <img src="https://ui-avatars.com/api/?name=نائب+الرئيس&background=121212&color=fff" alt="نائب الرئيس">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="نائب الرئيس">
                 </div>
                 <div class="member-name">نائب الرئيس</div>
-                <div class="member-role">إدارة العمليات والتنسيق</div>
+                <div class="member-role">إدارة العمليات والتنسيق الميداني</div>
                 <a href="#contact" class="btn-outline-card">تواصل</a>
             </div>
             <div class="member-card">
                 <div class="member-avatar-wrapper">
-                    <img src="https://ui-avatars.com/api/?name=مسؤول+الميدان&background=CE1126&color=fff" alt="مسؤول الميدان">
+                    <img src="{{ url_for('static', filename='logo.png') }}" alt="مسؤول الميدان">
                 </div>
-                <div class="member-name">قائد الفريق الميداني</div>
-                <div class="member-role">التنظيم والأنشطة</div>
+                <div class="member-name">مسؤول العمليات</div>
+                <div class="member-role">اللوجستيات والأنشطة</div>
                 <a href="#contact" class="btn-outline-card">تواصل</a>
             </div>
             {% endfor %}
         </div>
     </section>
 
-    <!-- 6. قسم أحدث الفعاليات والأنشطة -->
-    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="activities">
+    <!-- 6. قسم أحدث الفعاليات والأنشطة الميدانية -->
+    <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="activities">
         <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-green); padding-right: 12px; margin-bottom: 2rem;">
             الفعاليات الميدانية القادمة
         </h2>
@@ -186,22 +273,22 @@
                     <span><i class="fa-solid fa-location-dot"></i> عمان، الأردن</span>
                 </div>
                 <h3 style="margin-bottom: 8px;">حملة بصمة خير الميدانية</h3>
-                <p class="event-desc">يتم الآن تجهيز الجداول الميدانية للفعالية القادمة وسيتم إشعار جميع المتطوعين المعتمدين فور اكتمال الترتيبات.</p>
+                <p class="event-desc">يتم الآن تجهيز الجداول الميدانية للفعالية القادمة وسيتم إشعار جميع المتطوعين المعتمدين فور اكتمال الترتيبات عبر لوحة التحكم.</p>
             </div>
             {% endfor %}
         </div>
     </section>
 
-    <!-- 7. قسم معرض الصور والفيديوهات (الميزة المسترجعة بالكامل) -->
-    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="gallery">
+    <!-- 7. قسم معرض الصور والفيديوهات (مع الفلاتر ومشغل الوسائط الكامل) -->
+    <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="gallery">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 15px;">
             <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-black); padding-right: 12px;">
                 معرض البصمات والتغطيات
             </h2>
             <div class="gallery-filters" style="display: flex; gap: 10px;">
-                <button class="gallery-filter-btn active" onclick="filterGallery('all')" style="padding: 6px 14px; border: 1px solid var(--jo-border); background: var(--jo-green); color: #fff; border-radius: 6px; cursor: pointer; font-weight: 700;">الكل</button>
-                <button class="gallery-filter-btn" onclick="filterGallery('photo')" style="padding: 6px 14px; border: 1px solid var(--jo-border); background: var(--jo-white); color: var(--jo-black); border-radius: 6px; cursor: pointer; font-weight: 700;">الصور</button>
-                <button class="gallery-filter-btn" onclick="filterGallery('video')" style="padding: 6px 14px; border: 1px solid var(--jo-border); background: var(--jo-white); color: var(--jo-black); border-radius: 6px; cursor: pointer; font-weight: 700;">الفيديوهات</button>
+                <button class="gallery-filter-btn active" onclick="filterGallery('all', this)" style="padding: 7px 16px; border: 1px solid var(--jo-border); background: var(--jo-green); color: #fff; border-radius: 6px; cursor: pointer; font-weight: 700;">الكل</button>
+                <button class="gallery-filter-btn" onclick="filterGallery('photo', this)" style="padding: 7px 16px; border: 1px solid var(--jo-border); background: var(--jo-white); color: var(--jo-black); border-radius: 6px; cursor: pointer; font-weight: 700;">الصور</button>
+                <button class="gallery-filter-btn" onclick="filterGallery('video', this)" style="padding: 7px 16px; border: 1px solid var(--jo-border); background: var(--jo-white); color: var(--jo-black); border-radius: 6px; cursor: pointer; font-weight: 700;">الفيديوهات</button>
             </div>
         </div>
 
@@ -215,7 +302,6 @@
                 </div>
             </div>
             {% else %}
-            <!-- عناصر افتراضية للعرض -->
             <div class="service-card gallery-item" data-type="photo" onclick="openMedia('https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80', 'photo', 'حملة الشتاء الميدانية')">
                 <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80" alt="تطوع">
                 <div class="service-card-title">حملة الشتاء الميدانية</div>
@@ -232,13 +318,13 @@
         </div>
     </section>
 
-    <!-- 8. قسم تواصل معنا المباشر (مطابق لنموذج تمبلت المدرسة) -->
-    <section class="container" style="max-width: 1200px; margin: 3rem auto; padding: 0 5%; width: 100%;" id="contact">
+    <!-- 8. قسم تواصل معنا المباشر (النموذج الكامل) -->
+    <section class="container" style="max-width: 1200px; margin: 3.5rem auto; padding: 0 5%; width: 100%;" id="contact">
         <div style="background: var(--jo-white); border-radius: var(--radius-md); padding: 2.5rem; box-shadow: var(--shadow-sm); border: 1px solid var(--jo-border);">
             <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);">نحن جاهزون للإجابة عن استفساراتك</h2>
-            <p style="color: var(--jo-dark-gray); margin-bottom: 1.5rem; line-height: 1.6;">إذا كان لديك أي سؤال حول آلية الانضمام، الشراكات المجتمعية، أو الفعاليات، تواصل معنا وسنرد خلال 24 ساعة.</p>
+            <p style="color: var(--jo-dark-gray); margin-bottom: 2rem; line-height: 1.6;">إذا كان لديك أي سؤال حول آلية الانضمام، الشراكات المجتمعية، أو الفعاليات، تواصل معنا وسنرد خلال 24 ساعة.</p>
             
-            <form action="{{ url_for('contact_submit') if 'contact_submit' in url_map else '#' }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
+            <form action="{{ url_for('contact_submit') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px;">
                 <div>
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الأول</label>
                     <input type="text" name="first_name" class="custom-input" placeholder="الاسم الأول" required>
@@ -249,7 +335,7 @@
                 </div>
                 <div>
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
-                    <input type="tel" name="phone" class="custom-input" placeholder="079XXXXXXXX" required>
+                    <input type="tel" name="phone" class="custom-input" placeholder="07XXXXXXXX" required>
                 </div>
                 <div>
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
@@ -266,22 +352,96 @@
         </div>
     </section>
 
-    <!-- 9. نافذة مشغل الوسائط المنبثقة (Lightbox Modal) -->
-    <div id="mediaModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 20px;">
-        <div style="position: relative; max-width: 800px; width: 100%; background: #000; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-lg);">
-            <button onclick="closeMedia()" style="position: absolute; top: 15px; right: 15px; background: var(--jo-red); color: #fff; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; z-index: 10;">&times;</button>
-            <div id="modalContent" style="width: 100%; max-height: 500px; display: flex; justify-content: center; align-items: center;"></div>
-            <div id="modalCaption" style="color: #fff; text-align: center; padding: 12px; font-weight: 700; background: #121212;"></div>
+    <!-- 9. نافذة تسجيل الدخول المنبثقة (Login Modal) -->
+    <div id="loginModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <button class="close-btn" onclick="closeAuthModal('loginModal')">&times;</button>
+            <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; color: var(--jo-black);">تسجيل الدخول</h3>
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني (أو اسم المشرف admin)</label>
+                    <input type="text" name="email" class="custom-input" placeholder="example@mail.com" required>
+                </div>
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">كلمة المرور</label>
+                    <input type="password" name="password" class="custom-input" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">دخول للمنصة</button>
+            </form>
         </div>
     </div>
 
-    <!-- 10. الفوتر Footer -->
+    <!-- 10. نافذة طلب الانتساب كمتطوع المنبثقة (Register Modal) -->
+    <div id="registerModal" class="auth-modal">
+        <div class="auth-modal-content" style="max-width: 580px;">
+            <button class="close-btn" onclick="closeAuthModal('registerModal')">&times;</button>
+            <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; color: var(--jo-black);">طلب انتساب لفريق لمتنا بصمة</h3>
+            <form action="{{ url_for('register') }}" method="POST">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الكامل</label>
+                        <input type="text" name="name" class="custom-input" placeholder="الاسم الرباعي" required>
+                    </div>
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
+                        <input type="number" name="age" class="custom-input" min="14" max="70" placeholder="العمر بالسنين" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
+                        <input type="email" name="email" class="custom-input" placeholder="example@mail.com" required>
+                    </div>
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
+                        <input type="tel" name="phone" class="custom-input" placeholder="07XXXXXXXX" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة</label>
+                        <select name="city" id="modalCitySelect" class="custom-input" required>
+                            <option value="عمان">عمان</option>
+                            <option value="الزرقاء">الزرقاء</option>
+                            <option value="إربد">إربد</option>
+                            <option value="البلقاء">البلقاء</option>
+                            <option value="أخرى">محافظة أخرى</option>
+                        </select>
+                    </div>
+                    <div class="custom-select-group">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الفريق المفضل</label>
+                        <select name="team" id="modalTeamSelect" class="custom-input" required>
+                            <option value="الميداني">الفريق الميداني واللوجستي</option>
+                            <option value="الإعلامي">الفريق الإعلامي والتوثيق</option>
+                            <option value="التنظيم">لجنة التنظيم والتخطيط</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">كلمة المرور للحساب</label>
+                    <input type="password" name="password" class="custom-input" placeholder="اختر كلمة مرور قوية" required>
+                </div>
+                <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">إرسال طلب الانضمام</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 11. مشغل الوسائط المنبثق للصور والفيديوهات Lightbox Modal -->
+    <div id="mediaModal" class="media-lightbox">
+        <div class="lightbox-box">
+            <button class="close-btn-lightbox" onclick="closeMedia()">&times;</button>
+            <div id="modalContent" style="width: 100%; max-height: 520px; display: flex; justify-content: center; align-items: center; background: #000;"></div>
+            <div id="modalCaption" style="color: #fff; text-align: center; padding: 14px; font-weight: 700; background: #121212; font-size: 1.05rem;"></div>
+        </div>
+    </div>
+
+    <!-- 12. الفوتر السفلي Footer -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-column">
-                <h4>لمتنا بصمة</h4>
-                <p style="color: #a0aec0; line-height: 1.6; font-size: 0.95rem;">
-                    مبادرة شبابية أردنية تهدف إلى ترسيخ مفهوم التطوع الحقيقي وصناعة أثر مستدام في المجتمع.
+                <h4>{{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} {{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</h4>
+                <p style="color: #a0aec0; line-height: 1.7; font-size: 0.95rem;">
+                    مبادرة شبابية أردنية تهدف إلى ترسيخ مفهوم العمل التطوعي الحقيقي وصناعة أثر إيجابي مستدام في المجتمع.
                 </p>
             </div>
             <div class="footer-column">
@@ -290,35 +450,51 @@
                     <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
                     <li><a href="#about">من نحن</a></li>
                     <li><a href="#leadership">الهيئة الإدارية</a></li>
-                    <li><a href="#gallery">المعرض والتوثيق</a></li>
-                    <li><a href="{{ url_for('register') }}">انضم كمتطوع</a></li>
+                    <li><a href="#gallery">معرض التغطيات</a></li>
+                    <li><a href="javascript:void(0)" onclick="openAuthModal('registerModal')">انضم كمتطوع</a></li>
                 </ul>
             </div>
             <div class="footer-column">
                 <h4>التواصل المباشر</h4>
                 <ul>
                     <li><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> عمان - المملكة الأردنية الهاشمية</li>
-                    <li><i class="fa-regular fa-envelope" style="color: var(--jo-green);"></i> info@lametnahbasmeh.org</li>
+                    <li><i class="fa-regular fa-envelope" style="color: var(--jo-green);"></i> {{ settings.contact_email if settings and settings.contact_email else 'info@lametnahbasmeh.org' }}</li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 مبادرة لمتنا بصمة. جميع الحقوق محفوظة.
+            &copy; 2026 فريق لمتنا بصمة. جميع الحقوق محفوظة.
         </div>
     </footer>
 
-    <!-- 11. المحرك البرمجي للجافاسكريبت المضمن -->
+    <!-- 13. محرك الجافاسكريبت المضمن -->
     <script>
-        function filterGallery(type) {
+        function openAuthModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeAuthModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function forwardToRegisterModal() {
+            const city = document.getElementById('quickCitySelect').value;
+            const team = document.getElementById('quickTeamSelect').value;
+            document.getElementById('modalCitySelect').value = city;
+            document.getElementById('modalTeamSelect').value = team;
+            openAuthModal('registerModal');
+        }
+
+        function filterGallery(type, btnElement) {
             const items = document.querySelectorAll('.gallery-item');
             const buttons = document.querySelectorAll('.gallery-filter-btn');
             
-            buttons.forEach(btn => {
-                btn.style.background = 'var(--jo-white)';
-                btn.style.color = 'var(--jo-black)';
+            buttons.forEach(b => {
+                b.style.background = 'var(--jo-white)';
+                b.style.color = 'var(--jo-black)';
             });
-            event.target.style.background = 'var(--jo-green)';
-            event.target.style.color = '#fff';
+            btnElement.style.background = 'var(--jo-green)';
+            btnElement.style.color = '#fff';
 
             items.forEach(item => {
                 if (type === 'all' || item.getAttribute('data-type') === type) {
@@ -336,9 +512,9 @@
             
             cap.innerText = caption;
             if (type === 'video') {
-                container.innerHTML = `<video controls autoplay style="width: 100%; max-height: 480px;"><source src="${url}" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>`;
+                container.innerHTML = `<video controls autoplay style="width: 100%; max-height: 500px;"><source src="${url}" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>`;
             } else {
-                container.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 480px; object-fit: contain;">`;
+                container.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 500px; object-fit: contain;">`;
             }
             modal.style.display = 'flex';
         }
@@ -350,10 +526,13 @@
         }
 
         window.onclick = function(event) {
-            const modal = document.getElementById('mediaModal');
-            if (event.target === modal) {
-                closeMedia();
-            }
+            const loginModal = document.getElementById('loginModal');
+            const registerModal = document.getElementById('registerModal');
+            const mediaModal = document.getElementById('mediaModal');
+
+            if (event.target === loginModal) closeAuthModal('loginModal');
+            if (event.target === registerModal) closeAuthModal('registerModal');
+            if (event.target === mediaModal) closeMedia();
         };
     </script>
 </body>

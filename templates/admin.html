@@ -3,34 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة القيادة والإدارة | لمتنا بصمة</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='/style.css') }}">
+    <title>لوحة الإدارة والتحكم الشامل | {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} {{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .admin-container {
+        .admin-page-wrapper {
             max-width: 1250px;
-            margin: 2rem auto;
+            margin: 2rem auto 4rem;
             padding: 0 5%;
             width: 100%;
         }
-        .admin-header {
+        .admin-top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
             flex-wrap: wrap;
             gap: 15px;
+            border-bottom: 2px solid var(--jo-border);
+            padding-bottom: 1.5rem;
         }
-        .action-card {
+        .admin-section-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--jo-black);
+            border-right: 4px solid var(--jo-green);
+            padding-right: 10px;
+        }
+        .admin-box {
             background: var(--jo-white);
             border-radius: var(--radius-md);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1.8rem;
+            margin-bottom: 2.5rem;
             border: 1px solid var(--jo-border);
             box-shadow: var(--shadow-sm);
         }
-        .volunteer-row {
-            background: var(--jo-white);
+        .volunteer-item-row {
+            background: var(--jo-light-gray);
             border: 1px solid var(--jo-border);
             border-radius: var(--radius-sm);
             padding: 1rem 1.2rem;
@@ -40,38 +53,33 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 15px;
-            box-shadow: var(--shadow-sm);
         }
-        .volunteer-info-group {
+        .volunteer-profile-snippet {
             display: flex;
             align-items: center;
-            gap: 15px;
-            min-width: 250px;
+            gap: 12px;
+            min-width: 260px;
         }
-        .volunteer-avatar-mini {
-            width: 48px;
-            height: 48px;
+        .volunteer-img-thumb {
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid var(--jo-green);
         }
-        .volunteer-details h4 {
+        .volunteer-text h4 {
             font-size: 1.05rem;
-            color: var(--jo-black);
             margin-bottom: 3px;
+            color: var(--jo-black);
         }
-        .volunteer-details span {
+        .volunteer-text div {
             font-size: 0.85rem;
             color: var(--jo-dark-gray);
-            margin-left: 10px;
-        }
-        .admin-controls-group {
             display: flex;
-            align-items: center;
             gap: 10px;
             flex-wrap: wrap;
         }
-        .btn-ctrl {
+        .btn-ctrl-action {
             padding: 6px 12px;
             border-radius: var(--radius-sm);
             font-size: 0.85rem;
@@ -82,40 +90,72 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            transition: opacity 0.2s;
         }
-        .btn-accept {
+        .btn-ctrl-action:hover {
+            opacity: 0.9;
+        }
+        .btn-green-accept {
             background: #dcfce7;
             color: var(--jo-green);
             border-color: #86efac;
         }
-        .btn-reject {
+        .btn-red-reject {
             background: #fee2e2;
             color: var(--jo-red);
             border-color: #fca5a5;
         }
-        .counter-badge {
+        .badge-counter-ctrl {
             display: inline-flex;
             align-items: center;
-            background: var(--jo-light-gray);
+            background: var(--jo-white);
             border: 1px solid var(--jo-border);
             border-radius: var(--radius-sm);
             overflow: hidden;
         }
-        .btn-step {
-            background: var(--jo-white);
+        .btn-step-arrow {
+            background: #f1f5f9;
             border: none;
             padding: 6px 10px;
             cursor: pointer;
             font-weight: 800;
-            color: var(--jo-dark-gray);
+            color: var(--jo-black);
         }
-        .btn-step:hover {
-            background: var(--jo-border);
+        .btn-step-arrow:hover {
+            background: #e2e8f0;
         }
-        .step-display {
+        .counter-val-display {
             padding: 4px 10px;
             font-size: 0.85rem;
             font-weight: 800;
+            min-width: 85px;
+            text-align: center;
+        }
+        .tab-btn-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .admin-tab-btn {
+            padding: 8px 18px;
+            background: var(--jo-white);
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-tab-btn.active-tab-btn {
+            background: var(--jo-green);
+            color: #fff;
+            border-color: var(--jo-green);
+        }
+        .admin-tab-content {
+            display: none;
+        }
+        .admin-tab-content.active-tab-body {
+            display: block;
         }
     </style>
 </head>
@@ -124,23 +164,27 @@
     <!-- القائمة العلوية -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
-            <div class="nav-brand-title">لمتنا <span>بصمة</span></div>
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
+            <div class="nav-brand-title">
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+            </div>
         </a>
         <nav>
             <ul class="nav-links">
-                <li><a href="{{ url_for('index') }}">عرض الموقع الرئيسي</a></li>
+                <li><a href="{{ url_for('index') }}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> عرض الموقع</a></li>
                 <li><a href="{{ url_for('admin_dashboard') }}" class="active">لوحة التحكم</a></li>
                 <li><a href="{{ url_for('logout') }}" class="btn-danger" style="padding: 6px 14px; text-decoration: none; border-radius: 6px;">خروج</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- شريط التنبيهات -->
-    <div class="admin-container" style="margin-bottom: 0;">
+    <!-- شريط رسائل النظام -->
+    <div class="container" style="max-width: 1250px; margin: 1.5rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div style="padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                    <div style="padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 15px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -148,151 +192,426 @@
         {% endwith %}
     </div>
 
-    <main class="admin-container">
-        
-        <div class="admin-header">
+    <main class="admin-page-wrapper">
+
+        <div class="admin-top-nav">
             <div>
-                <h1 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 4px;">إدارة المتطوعين والهيئة التنظيمية</h1>
-                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">التحكم المركزي في طلبات الانتساب، الصلاحيات، وسجلات الفعاليات الميدانية.</p>
+                <h1 style="font-size: 1.8rem; font-weight: 900; margin-bottom: 4px;">لوحة الإدارة والتحكم المركزي</h1>
+                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، تخصيص محتوى الموقع بالكامل (CMS)، تنظيم الفعاليات، ومتابعة العمليات الميدانية.</p>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <span class="badge-status" style="background: #e2e8f0; font-size: 0.9rem; padding: 8px 14px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <span style="background: #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
                     إجمالي المسجلين: {{ volunteers|length }}
+                </span>
+                <span style="background: #dcfce7; color: var(--jo-green); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
+                    المعتمدين: {{ volunteers|selectattr('status', 'equalto', 'approved')|list|length }}
                 </span>
             </div>
         </div>
 
-        <!-- 1. نموذج تعيين القيادات الذكي (إلغاء الحاجة للـ ID نهائياً) -->
-        <div class="action-card">
-            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black); border-right: 4px solid var(--jo-red); padding-right: 8px;">
-                تعيين وتحديث الهيئة الإدارية وقادة الفرق
-            </h3>
-            <form action="{{ url_for('assign_leader') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) 160px; gap: 12px; align-items: flex-end;">
-                <div>
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">اختر المتطوع</label>
-                    <select name="volunteer_id" class="custom-input" required>
-                        <option value="">-- اختر من المتطوعين المقبولين --</option>
-                        {% for v in volunteers if v.status == 'approved' %}
-                            <option value="{{ v.id }}">{{ v.name }} ({{ v.city }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">المسمى القيادي</label>
-                    <select name="position" class="custom-input" required>
-                        <option value="رئيس المبادرة">رئيس المبادرة</option>
-                        <option value="نائب الرئيس">نائب الرئيس</option>
-                        <option value="مسؤول الفريق الميداني">مسؤول الفريق الميداني</option>
-                        <option value="مسؤول الفريق اللوجستي">مسؤول الفريق اللوجستي</option>
-                        <option value="مسؤول الإعلام والتوثيق">مسؤول الإعلام والتوثيق</option>
-                        <option value="قائد مجموعة">قائد مجموعة</option>
-                    </select>
-                </div>
-                <div>
-                    <button type="submit" class="btn-primary-block" style="padding: 10px; font-size: 0.95rem;">تثبيت المنصب</button>
-                </div>
-            </form>
+        <!-- أزرار التبديل بين أقسام الإدارة -->
+        <div class="tab-btn-bar">
+            <button class="admin-tab-btn active-tab-btn" onclick="switchAdminTab('volunteersTab', this)"><i class="fa-solid fa-users"></i> المتطوعين والقيادات</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> إدارة محتوى ومظهر الموقع</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('eventsTab', this)"><i class="fa-regular fa-calendar-check"></i> الفعاليات الميدانية</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('dutiesTab', this)"><i class="fa-solid fa-list-check"></i> إسناد المهام والتكليفات</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('galleryTab', this)"><i class="fa-solid fa-photo-film"></i> معرض الصور والفيديو</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('excusesTab', this)"><i class="fa-solid fa-file-signature"></i> سجل الأعذار ({{ excuses|length }})</button>
         </div>
 
-        <!-- 2. سجل المتطوعين وإدارة الحالات والساعات -->
-        <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-black);">
-            قائمة المتطوعين والطلبات الميدانية
-        </h3>
+        <!-- ==================== 1. تبويب المتطوعين والقيادات ==================== -->
+        <div id="volunteersTab" class="admin-tab-content active-tab-body">
+            
+            <!-- أ. نموذج تعيين القيادات الذكي بدون إدخال ID -->
+            <div class="admin-box" style="border-top: 4px solid var(--jo-red);">
+                <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1.2rem;">
+                    <i class="fa-solid fa-user-shield" style="color: var(--jo-red);"></i> تعيين وتحديث الهيئة الإدارية وقادة الفرق
+                </h3>
+                <form action="{{ url_for('assign_leader') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 150px; gap: 12px; align-items: flex-end;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">اختر المتطوع المعتمد</label>
+                        <select name="volunteer_id" class="custom-input" required>
+                            <option value="">-- حدد المتطوع من القائمة --</option>
+                            {% for v in volunteers if v.status == 'approved' %}
+                                <option value="{{ v.id }}">{{ v.name }} - ({{ v.city }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">المسمى القيادي</label>
+                        <select name="position" class="custom-input" required>
+                            <option value="رئيس المبادرة">رئيس المبادرة</option>
+                            <option value="نائب الرئيس">نائب الرئيس</option>
+                            <option value="مسؤول الفريق الميداني">مسؤول الفريق الميداني</option>
+                            <option value="مسؤول الفريق اللوجستي">مسؤول الفريق اللوجستي</option>
+                            <option value="مسؤول الإعلام والتوثيق">مسؤول الإعلام والتوثيق</option>
+                            <option value="قائد مجموعة">قائد مجموعة ميدانية</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">رابط الصورة الشخصية (اختياري)</label>
+                        <input type="url" name="photo_url" class="custom-input" placeholder="https://example.com/photo.jpg">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-primary-block" style="padding: 10px;">تثبيت المنصب</button>
+                    </div>
+                </form>
+            </div>
 
-        <div class="volunteers-list">
-            {% for v in volunteers %}
-            <div class="volunteer-row">
-                
-                <!-- تفاصيل المتطوع -->
-                <div class="volunteer-info-group">
-                    <img src="{{ v.photo_url or url_for('static', filename='images/default-avatar.png') }}" class="volunteer-avatar-mini" alt="{{ v.name }}">
-                    <div class="volunteer-details">
-                        <h4>{{ v.name }}</h4>
-                        <div>
-                            <span><i class="fa-solid fa-location-dot"></i> {{ v.city }}</span>
-                            <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
-                            <span><i class="fa-solid fa-phone"></i> {{ v.phone }}</span>
+            <!-- ب. قائمة وسجلات المتطوعين -->
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-address-book" style="color: var(--jo-green);"></i> قائمة المسجلين والطلبات الميدانية
+                </div>
+
+                <div class="volunteers-list-container">
+                    {% for v in volunteers %}
+                    <div class="volunteer-item-row">
+                        
+                        <!-- معلومات المتطوع الشخصية -->
+                        <div class="volunteer-profile-snippet">
+                            <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" alt="{{ v.name }}">
+                            <div class="volunteer-text">
+                                <h4>{{ v.name }}</h4>
+                                <div>
+                                    <span><i class="fa-solid fa-location-dot"></i> {{ v.city }}</span>
+                                    <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
+                                    <span><i class="fa-solid fa-phone"></i> {{ v.phone }}</span>
+                                    <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- شارات الاعتماد والمناصب القيادية -->
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            {% if v.status == 'approved' %}
+                                <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-circle-check"></i> معتمد
+                                </span>
+                            {% elif v.status == 'rejected' %}
+                                <span style="background: #fee2e2; color: var(--jo-red); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-ban"></i> مرفوض
+                                </span>
+                            {% else %}
+                                <span style="background: #fef3c7; color: #d97706; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-clock"></i> بانتظار المراجعة
+                                </span>
+                            {% endif %}
+
+                            {% if v.is_leader %}
+                                <span style="background: #e0f2fe; color: #0284c7; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px;">
+                                    <i class="fa-solid fa-star"></i> {{ v.position }}
+                                </span>
+                                <form action="{{ url_for('remove_leader', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                    <button type="submit" title="إلغاء المنصب القيادي" style="background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem;">&times;</button>
+                                </form>
+                            {% endif %}
+                        </div>
+
+                        <!-- أدوات التحكم والعمليات -->
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            
+                            {% if v.status != 'approved' %}
+                                <!-- أزرار تظهر فقط قبل القبول وتختفي بعده -->
+                                <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                    <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
+                                </form>
+                                <form action="{{ url_for('reject_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                    <button type="submit" class="btn-ctrl-action btn-red-reject"><i class="fa-solid fa-xmark"></i> رفض</button>
+                                </form>
+                            {% else %}
+                                <!-- عداد الفعاليات (+ / -) -->
+                                <div class="badge-counter-ctrl">
+                                    <span class="counter-val-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
+                                    <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn-step-arrow" title="إضافة فعالية">+</button>
+                                    </form>
+                                    <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn-step-arrow" title="إنقاص فعالية">-</button>
+                                    </form>
+                                </div>
+
+                                <!-- عداد الساعات (+2 / -2) -->
+                                <div class="badge-counter-ctrl">
+                                    <span class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
+                                    <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn-step-arrow" title="إضافة ساعتين">+2</button>
+                                    </form>
+                                    <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn-step-arrow" title="خصم ساعتين">-2</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+
+                            <!-- إعادة تعيين كلمة السر -->
+                            <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة المرور إلى 123456">
+                                    <i class="fa-solid fa-key"></i>
+                                </button>
+                            </form>
+
+                            <!-- حذف حساب المتطوع نهائياً -->
+                            <form action="{{ url_for('delete_volunteer_admin', volunteer_id=v.id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد تماماً من حذف هذا المتطوع وسجلاته نهائياً من قاعدة البيانات؟');" style="margin: 0;">
+                                <button type="submit" class="btn-ctrl-action" style="background: transparent; color: var(--jo-red);" title="حذف نهائي">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+
                         </div>
                     </div>
-                </div>
-
-                <!-- شارات الحالة والمناصب القيادية -->
-                <div>
-                    {% if v.status == 'approved' %}
-                        <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                            <i class="fa-solid fa-check"></i> متطوع معتمد
-                        </span>
                     {% else %}
-                        <span style="background: #fef3c7; color: #d97706; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                            <i class="fa-solid fa-clock"></i> طلب جديد
-                        </span>
-                    {% endif %}
-
-                    {% if v.is_leader %}
-                        <span style="background: #e0f2fe; color: #0284c7; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; margin-right: 5px;">
-                            {{ v.position }}
-                        </span>
-                    {% endif %}
-                </div>
-
-                <!-- أزرار الإجراءات والتحكم -->
-                <div class="admin-controls-group">
-                    
-                    {% if v.status != 'approved' %}
-                        <!-- تظهر فقط إذا لم يتم قبول المتطوع بعد -->
-                        <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                            <button type="submit" class="btn-ctrl btn-accept"><i class="fa-solid fa-check"></i> قبول</button>
-                        </form>
-                        <form action="{{ url_for('reject_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                            <button type="submit" class="btn-ctrl btn-reject"><i class="fa-solid fa-xmark"></i> رفض</button>
-                        </form>
-                    {% else %}
-                        <!-- أزرار زيادة وإنقاص الفعاليات والساعات بعد القبول -->
-                        <div class="counter-badge">
-                            <span class="step-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
-                            <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                <button type="submit" class="btn-step" title="إضافة فعالية">+</button>
-                            </form>
-                            <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                <button type="submit" class="btn-step" title="إنقاص فعالية">-</button>
-                            </form>
-                        </div>
-
-                        <div class="counter-badge">
-                            <span class="step-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
-                            <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                <button type="submit" class="btn-step" title="إضافة ساعتين">+2</button>
-                            </form>
-                            <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                <button type="submit" class="btn-step" title="خصم ساعتين">-2</button>
-                            </form>
-                        </div>
-                    {% endif %}
-
-                    <!-- زر إعادة تعيين كلمة السر -->
-                    <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                        <button type="submit" class="btn-ctrl" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر">
-                            <i class="fa-solid fa-key"></i>
-                        </button>
-                    </form>
-
-                    <!-- زر الحذف النهائي للمتطوع -->
-                    <form action="{{ url_for('delete_volunteer_admin', volunteer_id=v.id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من رغبتك في حذف هذا المتطوع نهائياً من النظام؟');" style="margin: 0;">
-                        <button type="submit" class="btn-ctrl" style="background: transparent; color: var(--jo-red);" title="حذف الحساب">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </form>
-
+                    <p style="color: var(--jo-dark-gray); text-align: center; padding: 2rem;">لا يوجد متطوعين مسجلين في النظام حتى الآن.</p>
+                    {% endfor %}
                 </div>
             </div>
-            {% else %}
-            <div style="background: var(--jo-white); padding: 2rem; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--jo-border); color: var(--jo-dark-gray);">
-                لا يوجد متطوعون مسجلون في المنصة حتى الآن.
+        </div>
+
+        <!-- ==================== 2. تبويب إدارة محتوى ومظهر الموقع (CMS) ==================== -->
+        <div id="cmsTab" class="admin-tab-content">
+            <div class="admin-box" style="border-top: 4px solid var(--jo-green);">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وهوية المبادرة
+                </div>
+                <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
+                    أي تعديل تقوم به هنا يتم حفظه فوراً في قاعدة البيانات ويظهر مباشرة على الصفحة الرئيسية دون الحاجة لتعديل أي كود.
+                </p>
+
+                <form action="{{ url_for('update_settings') }}" method="POST">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الصفحة في المتصفح (Site Title)</label>
+                            <input type="text" name="site_name" class="custom-input" value="{{ settings.site_name if settings else '' }}" required>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">اسم الفريق الرئيسي (الترويسة)</label>
+                            <input type="text" name="brand_title_main" class="custom-input" value="{{ settings.brand_title_main if settings else 'فريق لمتنا' }}" required>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">الكلمة الملونة في الشعار</label>
+                            <input type="text" name="brand_title_sub" class="custom-input" value="{{ settings.brand_title_sub if settings else 'بصمة' }}" required>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورة الشعار (Logo URL)</label>
+                            <input type="url" name="logo_url" class="custom-input" value="{{ settings.logo_url if settings and settings.logo_url else '' }}" placeholder="اتركه فارغاً لاستخدام logo.png الافتراضي">
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني الرسمي للتواصل</label>
+                            <input type="email" name="contact_email" class="custom-input" value="{{ settings.contact_email if settings else 'info@lametnahbasmeh.org' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="custom-select-group" style="margin-bottom: 15px;">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (Hero Title - يقبل وسوم HTML مثل &lt;span&gt;)</label>
+                        <input type="text" name="hero_title" class="custom-input" value="{{ settings.hero_title if settings else '' }}" required>
+                    </div>
+
+                    <div class="custom-select-group" style="margin-bottom: 15px;">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">النص التعريفي للواجهة الرئيسية (Hero Description)</label>
+                        <textarea name="hero_desc" class="custom-input" rows="3" required>{{ settings.hero_desc if settings else '' }}</textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">نص الرؤية</label>
+                            <textarea name="vision_text" class="custom-input" rows="4" required>{{ settings.vision_text if settings else '' }}</textarea>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">نص الرسالة</label>
+                            <textarea name="mission_text" class="custom-input" rows="4" required>{{ settings.mission_text if settings else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary-block" style="max-width: 250px;">حفظ وتطبيق التغييرات</button>
+                </form>
             </div>
-            {% endfor %}
+        </div>
+
+        <!-- ==================== 3. تبويب إدارة الفعاليات الميدانية ==================== -->
+        <div id="eventsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-regular fa-calendar-plus" style="color: var(--jo-green);"></i> إضافة فعالية ميدانية جديدة
+                </div>
+                <form action="{{ url_for('add_event') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">عنوان الفعالية</label>
+                        <input type="text" name="title" class="custom-input" placeholder="حملة بصمة خير" required>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">تاريخ الفعالية</label>
+                        <input type="text" name="date" class="custom-input" placeholder="السبت، 15 تشرين الأول" required>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">وقت البدء</label>
+                        <input type="text" name="time" class="custom-input" placeholder="10:00 صباحاً" required>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الموقع الجغرافي</label>
+                        <input type="text" name="location" class="custom-input" placeholder="عمان - وسط البلد" required>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">وصف موجز للفعالية</label>
+                        <textarea name="description" class="custom-input" rows="2" placeholder="تفاصيل النشاط والتجهيزات المطلوبة..." required></textarea>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="submit" class="btn-primary-block" style="max-width: 200px;">إضافة الفعالية</button>
+                    </div>
+                </form>
+
+                <div class="admin-section-title" style="font-size: 1.15rem; border-right-color: var(--jo-black);">
+                    الفعاليات المجدولة الحالية
+                </div>
+                <div style="display: grid; gap: 10px;">
+                    {% for ev in events %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--jo-light-gray); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--jo-border); flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.05rem;">{{ ev.title }}</div>
+                            <div style="color: var(--jo-dark-gray); font-size: 0.85rem; margin-top: 3px;">
+                                <span><i class="fa-regular fa-calendar"></i> {{ ev.date }}</span> | 
+                                <span><i class="fa-regular fa-clock"></i> {{ ev.time }}</span> | 
+                                <span><i class="fa-solid fa-location-dot"></i> {{ ev.location }}</span>
+                            </div>
+                        </div>
+                        <form action="{{ url_for('delete_event', event_id=ev.id) }}" method="POST" onsubmit="return confirm('هل تريد حذف هذه الفعالية؟');" style="margin: 0;">
+                            <button type="submit" class="btn-ctrl-action btn-red-reject"><i class="fa-solid fa-trash-can"></i> حذف</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <p style="color: var(--jo-dark-gray);">لا توجد فعاليات مسجلة حالياً.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 4. تبويب إسناد المهام والتكليفات ==================== -->
+        <div id="dutiesTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-list-check" style="color: var(--jo-green);"></i> إسناد تكليف ميداني لمتطوع معتمد
+                </div>
+                <form action="{{ url_for('assign_duty') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">اختر المتطوع</label>
+                        <select name="volunteer_id" class="custom-input" required>
+                            <option value="">-- حدد المتطوع المكلف --</option>
+                            {% for v in volunteers if v.status == 'approved' %}
+                                <option value="{{ v.id }}">{{ v.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">عنوان المهمة</label>
+                        <input type="text" name="title" class="custom-input" placeholder="تجهيز كشوفات الحضور" required>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">موعد التسليم / الإنجاز</label>
+                        <input type="text" name="due_date" class="custom-input" placeholder="خلال 48 ساعة" required>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">تفاصيل وتعليمات المهمة</label>
+                        <textarea name="description" class="custom-input" rows="3" placeholder="اكتب التعليمات والمسؤوليات الميدانية بدقة..." required></textarea>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="submit" class="btn-primary-block" style="max-width: 220px;">تثبيت التكليف</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ==================== 5. تبويب معرض الوسائط ==================== -->
+        <div id="galleryTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color: var(--jo-green);"></i> إضافة صورة أو فيديو للمعرض الميداني
+                </div>
+                <form action="{{ url_for('add_gallery_item') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">عنوان المادة</label>
+                        <input type="text" name="title" class="custom-input" placeholder="توزيع طرود الخير - رمضان" required>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">نوع المادة</label>
+                        <select name="type" class="custom-input" required>
+                            <option value="photo">صورة (Photo)</option>
+                            <option value="video">فيديو (Video)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">رابط ملف الوسائط (Media URL)</label>
+                        <input type="url" name="media_url" class="custom-input" placeholder="https://example.com/media.jpg" required>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">صورة الغلاف (Thumbnail - اختياري للفيديو)</label>
+                        <input type="url" name="thumbnail_url" class="custom-input" placeholder="https://example.com/thumb.jpg">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="submit" class="btn-primary-block" style="max-width: 200px;">إدراج في المعرض</button>
+                    </div>
+                </form>
+
+                <div class="admin-section-title" style="font-size: 1.15rem; border-right-color: var(--jo-black);">
+                    العناصر المعروضة حالياً
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    {% for item in gallery_items %}
+                    <div style="background: var(--jo-light-gray); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--jo-border);">
+                        <img src="{{ item.thumbnail_url or item.media_url }}" style="width: 100%; height: 120px; object-fit: cover;" alt="{{ item.title }}">
+                        <div style="padding: 10px;">
+                            <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 5px;">{{ item.title }}</div>
+                            <div style="font-size: 0.75rem; color: var(--jo-dark-gray); margin-bottom: 8px;">النوع: {{ 'صورة' if item.type == 'photo' else 'فيديو' }}</div>
+                            <form action="{{ url_for('delete_gallery_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('حذف هذا العنصر من المعرض؟');" style="margin: 0;">
+                                <button type="submit" class="btn-ctrl-action btn-red-reject" style="width: 100%; justify-content: center;"><i class="fa-solid fa-trash-can"></i> حذف</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p style="color: var(--jo-dark-gray);">المعرض فارغ حالياً.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 6. تبويب سجل الأعذار ==================== -->
+        <div id="excusesTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-envelope-open-text" style="color: var(--jo-red);"></i> سجل طلبات الاعتذار عن عدم المشاركة
+                </div>
+                <div style="display: grid; gap: 12px;">
+                    {% for ex in excuses %}
+                    <div style="background: var(--jo-light-gray); border-right: 4px solid var(--jo-red); padding: 1.2rem; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-weight: 800; color: var(--jo-black);">المتطوع: {{ ex.volunteer.name }}</span>
+                            <span style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ ex.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                        <p style="color: #4a5568; margin: 0; line-height: 1.6; font-size: 0.95rem;">
+                            <strong>سبب الاعتذار:</strong> {{ ex.reason }}
+                        </p>
+                    </div>
+                    {% else %}
+                    <p style="color: var(--jo-dark-gray); text-align: center; padding: 1.5rem;">لا توجد أعذار غياب مقدمة في النظام.</p>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
 
     </main>
 
+    <!-- محرك التبديل التفاعلي بين التبويبات -->
+    <script>
+        function switchAdminTab(tabId, btnElement) {
+            const contents = document.querySelectorAll('.admin-tab-content');
+            const buttons = document.querySelectorAll('.admin-tab-btn');
+
+            contents.forEach(c => c.classList.remove('active-tab-body'));
+            buttons.forEach(b => b.classList.remove('active-tab-btn'));
+
+            document.getElementById(tabId).classList.add('active-tab-body');
+            btnElement.classList.add('active-tab-btn');
+        }
+    </script>
 </body>
 </html>
