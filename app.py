@@ -192,7 +192,7 @@ def login():
             },
             'lanooshabdo7@gmail.com': {
                 'password': 'lanooshabdo7',
-                'name': 'لين عبدو',
+                'name': 'لين عبده',
                 'position': 'رئيسة المبادرة'
             }
         }
