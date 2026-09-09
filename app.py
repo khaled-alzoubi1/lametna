@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -35,7 +36,7 @@ class SiteSetting(db.Model):
     mission_text = db.Column(db.Text, default='تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة، منظمة، وآمنة تضمن استدامة البصمة الإيجابية.')
     contact_email = db.Column(db.String(120), default='info@lametnahbasmeh.org')
     
-    # الروابط الرسمية التفاعلية
+    # الروابط الرسمية للقنوات والمنصات
     whatsapp_url = db.Column(db.String(500), default='https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8')
     instagram_url = db.Column(db.String(500), default='https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw')
     nahno_url = db.Column(db.String(500), default='https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843')
@@ -96,20 +97,24 @@ class GalleryItem(db.Model):
     __tablename__ = 'gallery'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
-    type = db.Column(db.String(20), nullable=False)  # 'photo' أو 'video'
+    type = db.Column(db.String(20), nullable=False)  # photo أو video
     media_url = db.Column(db.String(500), nullable=False)
     thumbnail_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# ==================== دالة جلب الإعدادات المساعدة ====================
+# ==================== دوال المساعدة ====================
 
 def get_settings():
-    setting = SiteSetting.query.first()
-    if not setting:
-        setting = SiteSetting()
-        db.session.add(setting)
-        db.session.commit()
-    return setting
+    try:
+        setting = SiteSetting.query.first()
+        if not setting:
+            setting = SiteSetting()
+            db.session.add(setting)
+            db.session.commit()
+        return setting
+    except Exception:
+        db.session.rollback()
+        return SiteSetting()
 
 # ==================== المسارات العامة ====================
 
@@ -463,13 +468,25 @@ def update_settings():
     flash('تم حفظ وتحديث إعدادات ومحتوى الموقع بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
-# ==================== التهيئة الأولية للجداول ====================
+# ==================== التهيئة ومعالجة الأعمدة وتشغيل المنفذ ====================
 
 with app.app_context():
     db.create_all()
-    if not SiteSetting.query.first():
-        db.session.add(SiteSetting())
+    # تحديث تلقائي آمن لقاعدة البيانات السحابية لإضافة الأعمدة الناقصة دون انهيار
+    try:
+        for col in ['whatsapp_url', 'instagram_url', 'nahno_url']:
+            db.session.execute(text(f"ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS {col} VARCHAR(500);"))
         db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+
+    try:
+        if not SiteSetting.query.first():
+            db.session.add(SiteSetting())
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
