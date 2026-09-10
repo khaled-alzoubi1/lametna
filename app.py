@@ -175,7 +175,9 @@ def get_settings():
 
 # ==================== المسارات العامة ====================
 
-@app.route('/')
+@app.route('/robots.txt')
+def robots_txt():
+    return "User-agent: *\nAllow: /", 200, {'Content-Type': 'text/plain'}
 def index():
     settings = get_settings()
     leaders = Volunteer.query.filter_by(is_leader=True).all()
