@@ -195,8 +195,7 @@
         <!-- كرت البيانات الشخصية للمتطوع -->
         <div class="profile-header-card">
             <div class="profile-avatar-box">
-                <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
-            </div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://lametnahbasmeh.org/verify/{{ user.id }}" alt="QR Verification">            </div>
             
             <div class="profile-details-area">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
