@@ -178,6 +178,7 @@ def get_settings():
 @app.route('/robots.txt')
 def robots_txt():
     return "User-agent: *\nAllow: /", 200, {'Content-Type': 'text/plain'}
+@app.route('/')
 def index():
     settings = get_settings()
     leaders = Volunteer.query.filter_by(is_leader=True).all()
