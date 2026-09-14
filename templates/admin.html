@@ -603,6 +603,9 @@
                                 <span style="font-weight: 800; font-size: 0.9rem; padding: 4px 12px; border-radius: 12px; background: {% if ev.is_full %}#fee2e2; color: #b91c1c;{% else %}#dcfce7; color: #15803d;{% endif %}">
                                     {{ ev.registered_count }} / {{ ev.capacity }} مسجلين
                                 </span>
+                                <a href="{{ url_for('export_event_roster', event_id=ev.id) }}" class="btn-checkin" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-left: 5px; display: inline-block;">
+                             <i class="fa-solid fa-file-excel"></i> تصدير الكشف
+                                </a>
                                 <form action="{{ url_for('delete_event', event_id=ev.id) }}" method="POST" onsubmit="return confirm('حذف الفعالية؟');" style="margin: 0;">
                                     <button type="submit" class="btn-ctrl-action btn-red-reject"><i class="fa-solid fa-trash-can"></i> حذف</button>
                                 </form>

@@ -1,10 +1,12 @@
 import os
 import re
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
+from io import BytesIO
+from openpyxl import Workbook
 
 app = Flask(__name__)
 
@@ -628,6 +630,43 @@ def add_event():
     db.session.commit()
     flash('تمت إضافة الفعالية الميدانية بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/event/<int:event_id>/export')
+def export_event_roster(event_id):
+    if not current_user.is_authenticated or getattr(current_user, 'is_admin', False) == False:
+        return redirect(url_for('index'))
+        
+    ev = Event.query.get_or_404(event_id)
+    regs = EventRegistration.query.filter_by(event_id=event_id).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'المشاركون'
+    ws.sheet_view.rightToLeft = True
+    ws.append(['#', 'الاسم', 'الهاتف', 'البريد الإلكتروني', 'الحالة'])
+    
+    for i, reg in enumerate(regs, start=1):
+        ws.append([
+            i, 
+            reg.volunteer.name, 
+            reg.volunteer.phone, 
+            reg.volunteer.email, 
+            reg.status
+        ])
+
+    for col in ws.columns:
+        values = [str(c.value) for c in col if c.value is not None]
+        width = max((len(v) for v in values), default=10)
+        ws.column_dimensions[col[0].column_letter].width = min(width + 4, 40)
+
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return send_file(
+        buffer, as_attachment=True, download_name=f"roster_event_{ev.id}.xlsx",
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
 
 @app.route('/admin/event/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):
