@@ -96,7 +96,7 @@
         </a>
 
         <!-- زر القائمة المنسدلة للهواتف (Hamburger Button) -->
-        <button class="nav-toggle-btn" onclick="toggleMobileNav()" aria-label="فتح القائمة">
+       <button class="nav-toggle-btn" onclick="toggleMobileNav()" aria-label="فتح القائمة" style="position: absolute; left: 20px;">
             <i class="fa-solid fa-bars"></i>
         </button>
 
@@ -185,16 +185,18 @@
             <div class="custom-select-group">
                 <label style="display:block; margin-bottom: 8px; font-weight: 700;">الفريق الميداني المفضل</label>
                 <select id="quickTeamSelect" class="custom-input">
-                    <option value="فريق عمان">فريق عمان</option>
-                    <option value="الفريق الميداني واللوجستي">الفريق الميداني واللوجستي</option>
-                    <option value="الفريق الإعلامي والتوثيق">الفريق الإعلامي والتوثيق</option>
-                    <option value="لجنة التنظيم والتخطيط">لجنة التنظيم والتخطيط</option>
+                    <option value="" disabled selected>اختر الفريق المفضل</option>
+                    <option value="عمان">فريق عمان</option>
+                    <option value="الزرقاء">فريق الزرقاء</option>
+                    <option value="البلقاء">فريق البلقاء (السلط)</option>
+                    <option value="إربد">فريق إربد</option>
+                    <option value="أخرى">محافظة أخرى</option>
                 </select>
             </div>
             <button type="button" onclick="forwardToRegisterModal()" class="btn-primary-block">متابعة طلب الانتساب</button>
         </div>
     </main>
-
+      
     <!-- قسم الرؤية والرسالة -->
     <section class="container" style="max-width: 1200px; margin: 2rem auto; padding: 0 5%; width: 100%;" id="about">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;">
@@ -499,7 +501,7 @@
         </div>
     </section>
 
-    <!-- نافذة تسجيل الدخول المنبثقة -->
+<!-- نافذة تسجيل الدخول المنبثقة -->
     <div id="loginModal" class="auth-modal">
         <div class="auth-modal-content">
             <button class="close-btn" onclick="closeAuthModal('loginModal')">&times;</button>
@@ -518,12 +520,13 @@
         </div>
     </div>
 
-    <!-- نافذة طلب الانتساب كمتطوع -->
+  <!-- نافذة طلب الانتساب كمتطوع -->
     <div id="registerModal" class="auth-modal">
         <div class="auth-modal-content" style="max-width: 580px;">
             <button class="close-btn" onclick="closeAuthModal('registerModal')">&times;</button>
             <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; color: var(--jo-black);">طلب انتساب لفريق لمتنا بصمة</h3>
             <form action="{{ url_for('register') }}" method="POST">
+                
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الكامل</label>
@@ -534,16 +537,27 @@
                         <input type="number" name="age" class="custom-input" min="14" max="70" placeholder="العمر بالسنين" required>
                     </div>
                 </div>
+
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                     <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
-                        <input type="email" name="email" class="custom-input" placeholder="example@mail.com" required>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الجنس</label>
+                        <select name="gender" class="custom-input" required>
+                            <option value="" disabled selected>اختر الجنس</option>
+                            <option value="ذكر">ذكر</option>
+                            <option value="أنثى">أنثى</option>
+                        </select>
                     </div>
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
                         <input type="tel" name="phone" class="custom-input" placeholder="07XXXXXXXX" required>
                     </div>
                 </div>
+
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
+                    <input type="email" name="email" class="custom-input" placeholder="example@mail.com" required>
+                </div>
+
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة</label>
@@ -558,17 +572,41 @@
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">الفريق المفضل</label>
                         <select name="team" id="modalTeamSelect" class="custom-input" required>
-                            <option value="فريق عمان">فريق عمان</option>
-                            <option value="الفريق الميداني واللوجستي">الفريق الميداني واللوجستي</option>
-                            <option value="الفريق الإعلامي والتوثيق">الفريق الإعلامي والتوثيق</option>
-                            <option value="لجنة التنظيم والتخطيط">لجنة التنظيم والتخطيط</option>
+                            <option value="" disabled selected>اختر الفريق المفضل</option>
+                            <option value="عمان">فريق عمان</option>
+                            <option value="الزرقاء">فريق الزرقاء</option>
+                            <option value="البلقاء">فريق البلقاء (السلط)</option>
+                            <option value="إربد">فريق إربد</option>
+                            <option value="أخرى">محافظة أخرى</option>
                         </select>
                     </div>
                 </div>
+
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">المواهب والكفاءات الأبرز</label>
+                    <select name="skills" class="custom-input" required>
+                        <option value="" disabled selected>اختر الموهبة الأبرز</option>
+                        <option value="لا يوجد">لا يوجد</option>
+                        <option value="تصوير فوتوغرافي">تصوير فوتوغرافي</option>
+                        <option value="جرافيك ديزاين وتصميم بوستات">جرافيك ديزاين وتصميم بوستات</option>
+                        <option value="فيديو إيديتنج">فيديو إيديتنج</option>
+                        <option value="تسويق">تسويق</option>
+                        <option value="إدارة وتنظيم">إدارة وتنظيم</option>
+                        <option value="عزف آلة موسيقية">عزف آلة موسيقية</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+
+                <div class="custom-select-group">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">الخبرة السابقة بالعمل التطوعي (اختياري)</label>
+                    <textarea name="experience" class="custom-input" rows="2" placeholder="اذكر المبادرات التي شاركت بها..."></textarea>
+                </div>
+
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">كلمة المرور للحساب</label>
                     <input type="password" name="password" class="custom-input" placeholder="اختر كلمة مرور قوية" required>
                 </div>
+
                 <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">إرسال طلب الانضمام</button>
             </form>
         </div>

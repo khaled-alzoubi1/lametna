@@ -70,6 +70,9 @@ class Volunteer(db.Model):
     city = db.Column(db.String(50), default='عمان')
     age = db.Column(db.Integer, nullable=True)
     team = db.Column(db.String(50), default='عمان')
+    gender = db.Column(db.String(10), nullable=True)
+    skills = db.Column(db.String(200), nullable=True)
+    experience = db.Column(db.Text, nullable=True)
     bio = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     is_leader = db.Column(db.Boolean, default=False)
@@ -231,9 +234,13 @@ def register():
             password_hash=generate_password_hash(request.form.get('password', '').strip()),
             city=request.form.get('city', 'عمان'),
             team=request.form.get('team', 'عمان'),
-            age=int(request.form.get('age')) if request.form.get('age') else None,
-            status='pending'
-        )
+           age=int(request.form.get('age')) if request.form.get('age') else None,
+        gender=request.form.get('gender'),
+        skills=request.form.get('skills'),
+        experience=request.form.get('experience', '').strip(),
+        status='pending'
+    )
+        
         db.session.add(new_volunteer)
         db.session.commit()
         flash('تم استلام طلب انتسابك بنجاح! سيتم تدقيقه من قبل الهيئة الإدارية.', 'success')
@@ -633,7 +640,7 @@ def add_event():
 
 @app.route('/admin/event/<int:event_id>/export')
 def export_event_roster(event_id):
-    if not current_user.is_authenticated or getattr(current_user, 'is_admin', False) == False:
+    if not session.get('admin_logged_in'):
         return redirect(url_for('index'))
         
     ev = Event.query.get_or_404(event_id)
@@ -644,7 +651,7 @@ def export_event_roster(event_id):
     ws.title = 'المشاركون'
     ws.sheet_view.rightToLeft = True
     ws.append(['#', 'الاسم', 'الهاتف', 'البريد الإلكتروني', 'الحالة'])
-    
+
     for i, reg in enumerate(regs, start=1):
         ws.append([
             i, 
@@ -773,12 +780,18 @@ with app.app_context():
         ("site_settings", "card_title_excuse", "VARCHAR(100) DEFAULT 'تقديم اعتذار عن فعالية'"),
         ("site_settings", "card_title_transport", "VARCHAR(100) DEFAULT 'نقاط التجمع والمواصلات'"),
         ("volunteers", "badges", "TEXT DEFAULT ''"),
+        ("volunteers", "gender", "VARCHAR(10)"),
+        ("volunteers", "skills", "VARCHAR(200)"),
+        ("volunteers", "experience", "TEXT"),
         ("events", "capacity", "INTEGER DEFAULT 10"),
         ("event_registrations", "attended", "BOOLEAN DEFAULT FALSE")
     ]
     for tbl, col, col_type in migrations:
         try:
-            db.session.execute(text(f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {col_type};"))
+            if "sqlite" in app.config['SQLALCHEMY_DATABASE_URI']:
+                db.session.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_type};"))
+            else:
+                db.session.execute(text(f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {col_type};"))
             db.session.commit()
         except Exception:
             db.session.rollback()
