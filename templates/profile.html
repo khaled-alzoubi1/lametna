@@ -212,12 +212,20 @@
                 </div>
                 
                 <div class="profile-meta-tags">
-                    <span><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> المحافظة: {{ user.city or 'عمان' }}</span>
-                    <span><i class="fa-solid fa-users" style="color: var(--jo-green);"></i> الفريق: {{ user.team or 'عمان' }}</span>
-                    <span><i class="fa-solid fa-phone" style="color: #6366f1;"></i> {{ user.phone }}</span>
-                    <span><i class="fa-solid fa-cake-candles" style="color: var(--jo-black);"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
-                    <span><i class="fa-regular fa-envelope" style="color: #0284c7;"></i> {{ user.email }}</span>
-                </div>
+                <span><i class="fa-solid fa-venus-mars" style="color: var(--jo-black);"></i> الجنس: {{ user.gender or 'غير محدد' }}</span>
+                <span><i class="fa-solid fa-cake-candles" style="color: var(--jo-black);"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
+                <span><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> المحافظة: {{ user.city or 'عمان' }}</span>
+                <span><i class="fa-solid fa-users" style="color: var(--jo-green);"></i> الفريق: {{ user.team or 'عمان' }}</span>
+                <span><i class="fa-solid fa-phone" style="color: #6366f1;"></i> {{ user.phone }}</span>
+                <span><i class="fa-regular fa-envelope" style="color: #0284c7;"></i> {{ user.email }}</span>
+                <span><i class="fa-solid fa-star" style="color: var(--gold);"></i> المهارة: {{ user.skills or 'لا يوجد' }}</span>
+            </div>
+
+            {% if user.experience %}
+            <div style="margin-bottom: 14px; font-size: 0.9rem; color: #475569; background: #f8fafc; padding: 8px 14px; border-radius: 6px; border: 1px dashed var(--jo-border); line-height: 1.6;">
+                <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة السابقة:</strong> {{ user.experience }}
+            </div>
+            {% endif %}
 
                 <!-- الأوسمة والشارات الممنوحة يدوياً -->
                 <div style="margin-bottom: 12px;">
@@ -516,6 +524,24 @@
                     في حال تأكيد حضورك لنشاط ميداني وطرأ ظرف طارئ، يُرجى تقديم العذر مسبقاً ليتم فتح المقعد لمتطوع بديل وتنظيم حركة الباص.
                 </p>
                 <form action="{{ url_for('submit_excuse') }}" method="POST" style="max-width: 650px;">
+                    <div class="custom-select-group">
+                <label style="display:block; margin-bottom: 6px; font-weight: 700;">المواهب والكفاءات الأبرز</label>
+                <select name="skills" class="custom-input" required>
+                    <option value="لا يوجد" {% if user.skills == 'لا يوجد' %}selected{% endif %}>لا يوجد</option>
+                    <option value="تصوير فوتوغرافي" {% if user.skills == 'تصوير فوتوغرافي' %}selected{% endif %}>تصوير فوتوغرافي</option>
+                    <option value="جرافيك ديزاين وتصميم بوستات" {% if user.skills == 'جرافيك ديزاين وتصميم بوستات' %}selected{% endif %}>جرافيك ديزاين وتصميم بوستات</option>
+                    <option value="فيديو إيديتنج" {% if user.skills == 'فيديو إيديتنج' %}selected{% endif %}>فيديو إيديتنج</option>
+                    <option value="تسويق" {% if user.skills == 'تسويق' %}selected{% endif %}>تسويق</option>
+                    <option value="إدارة وتنظيم" {% if user.skills == 'إدارة وتنظيم' %}selected{% endif %}>إدارة وتنظيم</option>
+                    <option value="عزف آلة موسيقية" {% if user.skills == 'عزف آلة موسيقية' %}selected{% endif %}>عزف آلة موسيقية</option>
+                    <option value="أخرى" {% if user.skills == 'أخرى' %}selected{% endif %}>أخرى</option>
+                </select>
+            </div>
+
+            <div class="custom-select-group">
+                <label style="display:block; margin-bottom: 6px; font-weight: 700;">الخبرة السابقة بالعمل التطوعي (اختياري)</label>
+                <textarea name="experience" class="custom-input" rows="2" placeholder="اذكر المبادرات التي شاركت بها...">{{ user.experience or '' }}</textarea>
+            </div>
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">حدد الفعالية المعتذر عنها</label>
                         <select name="event_id" class="custom-input" required>

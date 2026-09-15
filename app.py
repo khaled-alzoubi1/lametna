@@ -95,8 +95,33 @@ class Volunteer(db.Model):
             return []
         return [b.strip() for b in self.badges.split(',') if b.strip()]
 
-    @property
-    def wa_link(self):
+    def auto_assign_badges(self):
+        badges = self.badges_list
+        changed = False
+
+        # وسام النشاط الأول
+        if (self.attended_events_count or 0) >= 1 and 'وسام أول بصمة' not in badges:
+            badges.append('وسام أول بصمة')
+            changed = True
+
+        # عتبة 10 ساعات
+        if (self.volunteer_hours or 0) >= 10 and 'وسام الالتزام الميداني' not in badges:
+            badges.append('وسام الالتزام الميداني')
+            changed = True
+
+        # عتبة 25 ساعة
+        if (self.volunteer_hours or 0) >= 25 and 'وسام بطل الميدان' not in badges:
+            badges.append('وسام بطل الميدان')
+            changed = True
+
+        # عتبة 50 ساعة
+        if (self.volunteer_hours or 0) >= 50 and 'وسام الانضباط الذهبي' not in badges:
+            badges.append('وسام الانضباط الذهبي')
+            changed = True
+
+        if changed:
+            self.badges = ','.join(badges)
+
         raw_phone = re.sub(r'\D', '', self.phone or '')
         if raw_phone.startswith('0'):
             return f"https://wa.me/962{raw_phone[1:]}"
@@ -357,6 +382,8 @@ def update_profile():
     user.team = request.form.get('team', user.team)
     user.phone = request.form.get('phone')
     user.bio = request.form.get('bio')
+    user.skills = request.form.get('skills', user.skills)
+    user.experience = request.form.get('experience', user.experience)
     photo_url = request.form.get('photo_url')
     if photo_url:
         user.photo_url = photo_url
@@ -426,16 +453,23 @@ def submit_excuse():
     if 'user_id' not in session:
         return redirect(url_for('index'))
 
+    event_id = request.form.get('event_id', type=int)
     excuse = Excuse(
         volunteer_id=session['user_id'],
-        event_id=request.form.get('event_id', type=int),
+        event_id=event_id,
         reason=request.form.get('reason')
     )
     db.session.add(excuse)
-    db.session.commit()
-    flash('تم رفع عذر عدم الحضور للإدارة بنجاح.', 'success')
-    return redirect(url_for('profile'))
 
+    # تفريغ المقعد تلقائياً بإلغاء تسجيل المتطوع في الفعالية
+    if event_id and event_id > 0:
+        reg = EventRegistration.query.filter_by(volunteer_id=session['user_id'], event_id=event_id).first()
+        if reg:
+            db.session.delete(reg)
+
+    db.session.commit()
+    flash('تم رفع عذر عدم الحضور للإدارة وإلغاء حجز المقعد بنجاح.', 'success')
+    return redirect(url_for('profile'))
 # ==================== لوحة تحكم الإدارة (Admin Dashboard & CMS) ====================
 
 @app.route('/admin')
@@ -491,8 +525,9 @@ def checkin_rsvp_volunteer(reg_id):
     if not reg.attended:
         reg.attended = True
         hours_to_award = request.form.get('hours', type=int) or 3
-        reg.volunteer.volunteer_hours += hours_to_award
-        reg.volunteer.attended_events_count += 1
+        reg.volunteer.volunteer_hours = (reg.volunteer.volunteer_hours or 0) + hours_to_award
+        reg.volunteer.attended_events_count = (reg.volunteer.attended_events_count or 0) + 1
+        reg.volunteer.auto_assign_badges()
         db.session.commit()
         flash(f'تم تحضير المتطوع {reg.volunteer.name} ومنحه {hours_to_award} ساعات.', 'success')
     return redirect(url_for('admin_dashboard'))
@@ -584,9 +619,10 @@ def adjust_events(volunteer_id, action):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
     if action == 'increment':
-        v.attended_events_count += 1
-    elif action == 'decrement' and v.attended_events_count > 0:
-        v.attended_events_count -= 1
+        v.attended_events_count = (v.attended_events_count or 0) + 1
+        v.auto_assign_badges()
+    elif action == 'decrement' and (v.attended_events_count or 0) > 0:
+        v.attended_events_count = (v.attended_events_count or 0) - 1
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
@@ -595,9 +631,10 @@ def adjust_hours(volunteer_id, action):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
     if action == 'increment':
-        v.volunteer_hours += 1
-    elif action == 'decrement' and v.volunteer_hours >= 1:
-        v.volunteer_hours -= 1
+        v.volunteer_hours = (v.volunteer_hours or 0) + 1
+        v.auto_assign_badges()
+    elif action == 'decrement' and (v.volunteer_hours or 0) >= 1:
+        v.volunteer_hours = (v.volunteer_hours or 0) - 1
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
@@ -642,7 +679,7 @@ def add_event():
 def export_event_roster(event_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('index'))
-        
+
     ev = Event.query.get_or_404(event_id)
     regs = EventRegistration.query.filter_by(event_id=event_id).all()
 
@@ -650,15 +687,21 @@ def export_event_roster(event_id):
     ws = wb.active
     ws.title = 'المشاركون'
     ws.sheet_view.rightToLeft = True
-    ws.append(['#', 'الاسم', 'الهاتف', 'البريد الإلكتروني', 'الحالة'])
+    ws.append(['#', 'الاسم', 'الجنس', 'العمر', 'الهاتف', 'البريد الإلكتروني', 'الفريق', 'المهارات', 'الخبرة السابقة', 'حالة الحضور'])
 
     for i, reg in enumerate(regs, start=1):
+        attendance_status = 'تم التحضير' if reg.attended else 'مسجل (لم يحضر بعد)'
         ws.append([
             i, 
             reg.volunteer.name, 
+            reg.volunteer.gender or 'غير محدد',
+            reg.volunteer.age or 'غير محدد',
             reg.volunteer.phone, 
             reg.volunteer.email, 
-            reg.status
+            reg.volunteer.team,
+            reg.volunteer.skills or 'لا يوجد',
+            reg.volunteer.experience or 'لا يوجد',
+            attendance_status
         ])
 
     for col in ws.columns:
@@ -669,7 +712,7 @@ def export_event_roster(event_id):
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-    
+
     return send_file(
         buffer, as_attachment=True, download_name=f"roster_event_{ev.id}.xlsx",
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'

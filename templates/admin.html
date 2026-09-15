@@ -406,30 +406,66 @@
                     <i class="fa-solid fa-address-book" style="color: var(--jo-green);"></i> كشوفات المتطوعين والأوسمة والتحكم بالساعات
                 </div>
 
-                <!-- شريط البحث الفوري -->
-                <div class="admin-search-box">
-                    <i class="fa-solid fa-magnifying-glass admin-search-icon"></i>
-                    <input type="text" id="volunteerSearchInput" onkeyup="filterVolunteers()" class="admin-search-input" placeholder="ابحث باسم المتطوع، المحافظة، أو رقم الهاتف للوصول السريع...">
+               <!-- شريط البحث والفلاتر الفورية المتقدمة -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 1.5rem;">
+                <div>
+                    <input type="text" id="volunteerSearchInput" onkeyup="filterVolunteers()" class="custom-input" placeholder="بحث بالاسم أو الهاتف...">
                 </div>
+                <div>
+                    <select id="filterCity" onchange="filterVolunteers()" class="custom-input">
+                        <option value="">جميع المحافظات</option>
+                        <option value="عمان">عمان</option>
+                        <option value="الزرقاء">الزرقاء</option>
+                        <option value="إربد">إربد</option>
+                        <option value="البلقاء">البلقاء</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="filterSkill" onchange="filterVolunteers()" class="custom-input">
+                        <option value="">جميع المواهب والكفاءات</option>
+                        <option value="تصوير فوتوغرافي">تصوير فوتوغرافي</option>
+                        <option value="جرافيك ديزاين">جرافيك ديزاين</option>
+                        <option value="فيديو إيديتنج">فيديو إيديتنج</option>
+                        <option value="تسويق">تسويق</option>
+                        <option value="إدارة وتنظيم">إدارة وتنظيم</option>
+                        <option value="عزف آلة موسيقية">عزف آلة موسيقية</option>
+                        <option value="لا يوجد">لا يوجد</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="filterGender" onchange="filterVolunteers()" class="custom-input">
+                        <option value="">الجنس (الكل)</option>
+                        <option value="ذكر">ذكر</option>
+                        <option value="أنثى">أنثى</option>
+                    </select>
+                </div>
+            </div>
 
                 <div class="volunteers-list-container" id="volunteersContainer">
                     {% for v in volunteers %}
-                    <div class="volunteer-item-row" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }}">
-                        
-                        <!-- المعلومات الأساسية -->
-                        <div class="volunteer-top-info">
-                            <div class="volunteer-profile-snippet">
-                                <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" alt="{{ v.name }}">
-                                <div class="volunteer-text">
-                                    <h4>{{ v.name }}</h4>
-                                    <div>
-                                        <span><i class="fa-solid fa-location-dot"></i> {{ v.city }}</span>
-                                        <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
-                                        <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
-                                        <a href="{{ v.wa_link }}" target="_blank" style="color: #16a34a; text-decoration: none; font-weight: 700;"><i class="fa-brands fa-whatsapp"></i> {{ v.phone }}</a>
-                                    </div>
+                    <div class="volunteer-item-row" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
+
+                    <!-- المعلومات الأساسية -->
+                    <div class="volunteer-top-info">
+                        <div class="volunteer-profile-snippet">
+                            <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" alt="{{ v.name }}">
+                            <div class="volunteer-text">
+                                <h4>{{ v.name }}</h4>
+                                <div>
+                                    <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
+                                    <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
+                                    <span><i class="fa-solid fa-location-dot"></i> {{ v.city }}</span>
+                                    <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
+                                    <span><i class="fa-solid fa-star"></i> {{ v.skills or 'لا توجد موهبة محددة' }}</span>
                                 </div>
+                                {% if v.experience %}
+                                <div style="margin-top: 5px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
+                                    <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
+                                </div>
+                                {% endif %}
                             </div>
+                        </div>
 
                             <!-- الحالة والمنصب القيادي والباجة -->
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -493,7 +529,9 @@
                                         </form>
                                     </div>
                                 {% endif %}
-
+<a href="{{ v.wa_link }}" target="_blank" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a; border-color: #86efac;" title="مراسلة فورية عبر واتساب">
+                                <i class="fa-brands fa-whatsapp"></i> واتساب
+                            </a>
                                 <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
                                     <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر إلى 123456">
                                         <i class="fa-solid fa-key"></i>
@@ -1054,20 +1092,29 @@
             }
         }
 
-        // محرك البحث الفوري في كشوفات المتطوعين
-        function filterVolunteers() {
-            const input = document.getElementById('volunteerSearchInput').value.toLowerCase().trim();
-            const rows = document.querySelectorAll('.volunteer-item-row');
+       // محرك الفلترة والبحث الفوري المتعدد
+    function filterVolunteers() {
+        const query = document.getElementById('volunteerSearchInput').value.toLowerCase().trim();
+        const city = document.getElementById('filterCity').value.toLowerCase().trim();
+        const skill = document.getElementById('filterSkill').value.toLowerCase().trim();
+        const gender = document.getElementById('filterGender').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.volunteer-item-row');
 
-            rows.forEach(row => {
-                const searchText = row.getAttribute('data-search-text').toLowerCase();
-                if (searchText.includes(input)) {
-                    row.style.display = 'flex';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
+        rows.forEach(row => {
+            const text = (row.getAttribute('data-search-text') || '').toLowerCase();
+
+            const matchesQuery = !query || text.includes(query);
+            const matchesCity = !city || text.includes(city);
+            const matchesSkill = !skill || text.includes(skill);
+            const matchesGender = !gender || text.includes(gender);
+
+            if (matchesQuery && matchesCity && matchesSkill && matchesGender) {
+                row.style.display = 'flex';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
 
         window.onclick = function(e) {
             const profileModal = document.getElementById('adminProfileModal');
