@@ -248,14 +248,19 @@ def index():
 def register():
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
+        phone = request.form.get('phone', '').strip()
         if Volunteer.query.filter_by(email=email).first():
             flash('البريد الإلكتروني مسجل مسبقاً في المنصة.', 'danger')
             return redirect(url_for('index'))
+        if phone and Volunteer.query.filter_by(phone=phone).first():
+            flash('رقم الهاتف مسجل مسبقاً في المنصة.', 'danger')
+            return redirect(url_for('index'))
+
 
         new_volunteer = Volunteer(
             name=request.form.get('name', '').strip(),
             email=email,
-            phone=request.form.get('phone', '').strip(),
+            phone=phone,
             password_hash=generate_password_hash(request.form.get('password', '').strip()),
             city=request.form.get('city', 'عمان'),
             team=request.form.get('team', 'عمان'),
@@ -651,11 +656,11 @@ def reset_volunteer_password(volunteer_id):
 def delete_volunteer_admin(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    EventRegistration.query.filter_by(volunteer_id=v.id).delete()
     db.session.delete(v)
     db.session.commit()
-    flash('تم مسح حساب المتطوع وسجلاته نهائياً.', 'info')
+    flash('تم حذف المتطوع وسجلاته بنجاح.', 'info')
     return redirect(url_for('admin_dashboard'))
-
 # --- إدارة الفعاليات والمهام والمعرض ---
 
 @app.route('/admin/event/add', methods=['POST'])
