@@ -155,6 +155,50 @@ class Event(db.Model):
     def is_full(self):
         return self.registered_count >= self.capacity
 
+    @property
+    def is_completed(self):
+        if not self.date:
+            return False
+        raw_date = str(self.date).strip()
+        today = datetime.now().date()
+        
+        # فحص كافة صيغ التاريخ المحتملة
+        event_date = None
+        for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d', '%d-%m-%Y'):
+            try:
+                event_date = datetime.strptime(raw_date, fmt).date()
+                break
+            except (ValueError, TypeError):
+                pass
+        
+        # دعم الإدخال المختصر مثل 11/9 أو 11-9
+        if not event_date:
+            try:
+                parts = re.split(r'[/.-]', raw_date)
+                if len(parts) >= 2:
+                    d, m = int(parts[0]), int(parts[1])
+                    y = int(parts[2]) if len(parts) > 2 else today.year
+                    event_date = datetime(y, m, d).date()
+            except Exception:
+                return False
+
+        if not event_date:
+            return False
+
+        # إذا كان تاريخ الفعالية قد مضى
+        if event_date < today:
+            return True
+        elif event_date == today:
+            if self.time:
+                for t_fmt in ('%H:%M', '%I:%M %p', '%I:%M%p'):
+                    try:
+                        t = datetime.strptime(self.time.strip(), t_fmt).time()
+                        return datetime.combine(event_date, t) <= datetime.now()
+                    except (ValueError, TypeError):
+                        pass
+            return True
+        return False
+
 class EventRegistration(db.Model):
     __tablename__ = 'event_registrations'
     id = db.Column(db.Integer, primary_key=True)
@@ -413,6 +457,9 @@ def rsvp_event(event_id):
         return redirect(request.referrer or url_for('profile'))
 
     ev = Event.query.get_or_404(event_id)
+    if ev.is_completed:
+        flash('عذراً، هذه الفعالية انتهت ومغلقة أمام التسجيل الميداني.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
     existing_reg = EventRegistration.query.filter_by(volunteer_id=user.id, event_id=ev.id).first()
     if existing_reg:
         flash('أنت مسجل مسبقاً في هذا النشاط الميداني.', 'info')

@@ -351,12 +351,39 @@
                         <span style="font-size: 0.85rem; font-weight: 700; color: var(--jo-dark-gray);">
                             المطلوب للميدان: {{ event.capacity }} متطوعين
                         </span>
-                        {% if event.is_full %}
+                        {% if event.is_completed %}
+                            <span class="rsvp-pill" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
+                                <i class="fa-solid fa-circle-check"></i> فعالية منجزة
+                            </span>
+                        {% elif event.is_full %}
                             <span class="rsvp-pill rsvp-pill-full"><i class="fa-solid fa-lock"></i> اكتمل العدد</span>
                         {% else %}
                             <span class="rsvp-pill rsvp-pill-active"><i class="fa-solid fa-user-check"></i> متبقي {{ event.remaining_seats }} مقاعد</span>
                         {% endif %}
                     </div>
+
+                    <div>
+                        {% if event.is_completed %}
+                            <button class="btn-rsvp-join" disabled style="opacity: 0.65; cursor: not-allowed; background: #64748b; border: 1px solid #475569;">
+                                <i class="fa-solid fa-check-double"></i> انتهت الفعالية
+                            </button>
+                        {% elif session.get('user_id') %}
+                            {% if event.id in user_registered_event_ids %}
+                                <form action="{{ url_for('cancel_rsvp', event_id=event.id) }}" method="POST" style="margin:0;">
+                                    <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد">إلغاء حضوري</button>
+                                </form>
+                            {% elif event.is_full %}
+                                <button class="btn-rsvp-join" disabled style="opacity: 0.5; cursor: not-allowed;">اكتمل التسجيل</button>
+                            {% else %}
+                                <form action="{{ url_for('rsvp_event', event_id=event.id) }}" method="POST" style="margin:0;">
+                                    <button type="submit" class="btn-rsvp-join"><i class="fa-solid fa-check"></i> تأكيد مشاركتي</button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <a href="javascript:void(0)" onclick="openAuthModal('loginModal')" class="btn-rsvp-join" style="text-decoration:none; display:inline-block;">سجل دخولك للمشاركة</a>
+                        {% endif %}
+                    </div>
+                </div>
 
                     <div>
                         {% if session.get('user_id') %}
@@ -599,7 +626,7 @@
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">الخبرة السابقة بالعمل التطوعي (اختياري)</label>
                     <textarea name="experience" class="custom-input" rows="2" placeholder="اذكر المبادرات التي شاركت بها..."></textarea>
                 </div>
-
+                </div>
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">كلمة المرور للحساب</label>
                     <input type="password" name="password" class="custom-input" placeholder="اختر كلمة مرور قوية" required>
@@ -618,39 +645,6 @@
             <div id="modalCaption" style="color: #fff; text-align: center; padding: 14px; font-weight: 700; background: #121212; font-size: 1.05rem;"></div>
         </div>
     </div>
-
-    <!-- الفوتر Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-column">
-                <h4>{{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} {{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</h4>
-                <p style="color: #a0aec0; line-height: 1.7; font-size: 0.95rem;">
-                    مبادرة شبابية أردنية تهدف إلى ترسيخ مفهوم العمل التطوعي الحقيقي وصناعة أثر إيجابي مستدام في المجتمع.
-                </p>
-            </div>
-            <div class="footer-column">
-                <h4>روابط سريعة</h4>
-                <ul>
-                    <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
-                    <li><a href="#about">من نحن</a></li>
-                    <li><a href="#leadership">الهيئة الإدارية</a></li>
-                    <li><a href="#leaderboard">فرسان الأثر</a></li>
-                    <li><a href="#activities">الفعاليات الميدانية</a></li>
-                    <li><a href="#channels">قنواتنا وشراكاتنا</a></li>
-                </ul>
-            </div>
-            <div class="footer-column">
-                <h4>التواصل المباشر</h4>
-                <ul>
-                    <li><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> عمان - المملكة الأردنية الهاشمية</li>
-                    <li><i class="fa-regular fa-envelope" style="color: var(--jo-green);"></i> {{ settings.contact_email if settings and settings.contact_email else 'info@lametnahbasmeh.org' }}</li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            &copy; 2026 فريق لمتنا بصمة. جميع الحقوق محفوظة.
-        </div>
-    </footer>
 
     <!-- محرك الجافاسكريبت التفاعلي -->
     <script>
@@ -738,5 +732,64 @@
             if (event.target === mediaModal) closeMedia();
         };
     </script>
+
+    <!-- الفوتر الرسمي -->
+   <!-- الفوتر الرسمي -->
+    <footer style="background: linear-gradient(180deg, #091a14 0%, #050d0a 100%); color: #e2e8f0; width: 100%; border-top: 3px solid #dc2626; position: relative; margin-top: 60px; padding: 45px 20px 20px; direction: rtl; box-sizing: border-box;">
+        <div style="max-width: 1150px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px;">
+            
+            <!-- التعريف بالمبادرة -->
+            <div style="flex: 1 1 300px; min-width: 260px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <span style="display: inline-block; width: 10px; height: 10px; background: #dc2626; border-radius: 50%;"></span>
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #ffffff;">فريق لمتنا بصمة</h3>
+                </div>
+                <p style="font-size: 0.9rem; line-height: 1.7; color: #94a3b8; margin: 0;">
+                    مبادرة شبابية أردنية تطوعية ميدانية تُعنى بالتمكين المجتمعي وصناعة الأثر الإيجابي المستدام في كافة محافظات المملكة.
+                </p>
+            </div>
+
+            <!-- قنوات التواصل والاعتماد -->
+            <div style="flex: 1 1 350px; min-width: 280px;">
+                <h4 style="color: #ffffff; margin: 0 0 16px; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #dc2626;">✦</span> الاعتماد وقنوات التواصل
+                </h4>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.88rem;">
+                    <!-- رابط صفحة نحن الرسمية للمبادرة -->
+                    <div style="background: rgba(255, 255, 255, 0.03); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06);">
+                        <span style="color: #cbd5e1; font-weight: 500;">منصة نَحْنُ:</span>
+                        <a href="https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843" target="_blank" style="color: #4ade80; text-decoration: none; margin-right: 6px; word-break: break-all; transition: color 0.2s;">
+                            nahno.org/ngo/فريق-لمتنا-بصمة-81843
+                        </a>
+                    </div>
+
+                    <!-- حساب إنستغرام -->
+                    <div style="background: rgba(255, 255, 255, 0.03); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06);">
+                        <span style="color: #cbd5e1; font-weight: 500;">إنستغرام:</span>
+                        <a href="https://www.instagram.com/lametna_basmeh" target="_blank" style="color: #4ade80; text-decoration: none; margin-right: 6px; direction: ltr; display: inline-block;">
+                            @lametna_basmeh
+                        </a>
+                    </div>
+
+                    <!-- البريد الرسمي -->
+                    <div style="background: rgba(255, 255, 255, 0.03); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.06);">
+                        <span style="color: #cbd5e1; font-weight: 500;">البريد الإلكتروني:</span>
+                        <a href="mailto:info@lametnahbasmeh.org" style="color: #4ade80; text-decoration: none; margin-right: 6px; direction: ltr; display: inline-block;">
+                            info@lametnahbasmeh.org
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- شريط التوقيع والحقوق -->
+        <div style="max-width: 1150px; margin: 30px auto 0; padding-top: 18px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; font-size: 0.82rem; color: #64748b;">
+            <div>جميع الحقوق محفوظة © فريق لمتنا بصمة التطوعي</div>
+            <div style="color: #94a3b8; font-weight: 600; letter-spacing: 0.3px;">
+                Made by <span style="color: #dc2626;">Eng. Khalid Alzoubi</span>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
