@@ -583,19 +583,17 @@
                 </div>
 
                 <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">المواهب والكفاءات الأبرز</label>
-                    <select name="skills" class="custom-input" required>
-                        <option value="" disabled selected>اختر الموهبة الأبرز</option>
-                        <option value="لا يوجد">لا يوجد</option>
-                        <option value="تصوير فوتوغرافي">تصوير فوتوغرافي</option>
-                        <option value="جرافيك ديزاين وتصميم بوستات">جرافيك ديزاين وتصميم بوستات</option>
-                        <option value="فيديو إيديتنج">فيديو إيديتنج</option>
-                        <option value="تسويق">تسويق</option>
-                        <option value="إدارة وتنظيم">إدارة وتنظيم</option>
-                        <option value="عزف آلة موسيقية">عزف آلة موسيقية</option>
-                        <option value="أخرى">أخرى</option>
-                    </select>
-                </div>
+                    <label style="font-weight: bold; margin-bottom: 6px; display: block;">المواهب والكفاءات (اختر كل ما ينطبق عليك):</label>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; background: rgba(0,0,0,0.02); padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="تصوير فوتوغرافي"> تصوير فوتوغرافي</label>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="جرافيك ديزاين"> جرافيك ديزاين</label>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="مونتاج فيديو"> مونتاج فيديو</label>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="تسويق وإعلام"> تسويق وإعلام</label>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="إدارة وتنظيم"> إدارة وتنظيم</label>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="خطابة وإلقاء"> خطابة وإلقاء</label>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="عزف وموسيقى"> عزف وموسيقى</label>
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="إسعافات أولية"> إسعافات أولية</label>
+</div>
 
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">الخبرة السابقة بالعمل التطوعي (اختياري)</label>

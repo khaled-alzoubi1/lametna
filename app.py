@@ -261,7 +261,7 @@ def register():
             team=request.form.get('team', 'عمان'),
            age=int(request.form.get('age')) if request.form.get('age') else None,
         gender=request.form.get('gender'),
-        skills=request.form.get('skills'),
+        skills = ', '.join(request.form.getlist('skills')),
         experience=request.form.get('experience', '').strip(),
         status='pending'
     )
