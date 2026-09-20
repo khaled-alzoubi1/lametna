@@ -225,7 +225,7 @@
             padding: 6px 12px;
             cursor: pointer;
             font-weight: 800;
-            color: var(--jo-black);
+            color: #111111;
             font-size: 0.95rem;
         }
         .btn-step-arrow:hover {
@@ -237,6 +237,7 @@
             font-weight: 800;
             min-width: 85px;
             text-align: center;
+            color: #111111;
         }
         .tab-btn-bar {
             display: flex;
@@ -326,6 +327,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -363,7 +365,7 @@
     <main class="admin-page-wrapper">
 
         <!-- واجهة البروفايل الإداري والباجة المذهبة للرئاسة -->
-        <div class="admin-profile-hero">
+        <div class="admin-profile-hero dark-premium-bg dark-premium-surface holo-border">
             <div class="admin-profile-meta">
                 <img src="{{ current_admin.photo_url or url_for('static', filename='logo.png') }}" alt="{{ current_admin.name }}" class="admin-avatar-lg">
                 <div>
@@ -396,10 +398,10 @@
             </div>
         </div>
 
-        <div class="admin-top-nav">
+        <div class="admin-top-nav dark-premium-bg dark-premium-surface admin-kpi-header" style="padding: 2.5rem 5%;">
             <div>
                 <h1 style="font-size: 1.7rem; font-weight: 900; margin-bottom: 4px;">مركز القيادة والإدارة الميدانية</h1>
-                <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">إدارة المتطوعين، رصد ساعات الفعاليات، التحكم الكامل بالمحتوى، وتوليد بطاقات العضوية.</p>
+                <p style="color: #94a3b8; font-size: 0.95rem;">إدارة المتطوعين، رصد ساعات الفعاليات، التحكم الكامل بالمحتوى، وتوليد بطاقات العضوية.</p>
             </div>
             <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <span style="background: #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
@@ -408,6 +410,61 @@
                 <span style="background: #dcfce7; color: var(--jo-green); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;">
                     المعتمدين: {{ volunteers|selectattr('status', 'equalto', 'approved')|list|length }}
                 </span>
+            </div>
+        </div>
+
+
+        <!-- Action Command Bar (Glassmorphism) -->
+        <div style="background: rgba(15,23,42,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(34,197,94,0.15); border-radius: 20px; padding: 16px 24px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.35);">
+            <div style="color: #e2e8f0; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-terminal" style="color: #22c55e;"></i> أوامر سريعة
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{{ url_for('export_event_roster', event_id=0) }}" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
+                    <i class="fa-solid fa-file-excel"></i> تصدير كشف Excel
+                </a>
+                <a href="{{ settings.whatsapp_url if settings and settings.whatsapp_url else '#' }}" target="_blank" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
+                    <i class="fa-brands fa-whatsapp"></i> مجتمع الواتساب
+                </a>
+                <button onclick="openAdminModal('adminBadgeModal')" class="btn-ctrl-action" style="background: rgba(217,119,6,0.15); color: #fbbf24; border: 1px solid rgba(217,119,6,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#d97706'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(217,119,6,0.5)';" onmouseout="this.style.background='rgba(217,119,6,0.15)'; this.style.color='#fbbf24'; this.style.boxShadow='none';">
+                    <i class="fa-solid fa-id-card-clip"></i> باجتي الرسمية
+                </button>
+            </div>
+        </div>
+
+
+        <!-- PHASE 2: Command Center Data Viz (Bento Grid) -->
+        <div class="chart-bento-grid">
+            <div class="chart-container-glass">
+                <h3 class="chart-title"><i class="fa-solid fa-chart-line" style="color: #22c55e;"></i> منحنى نمو الساعات والنشاطات</h3>
+                <div class="canvas-wrapper"><canvas id="growthChart"></canvas></div>
+            </div>
+            <div class="chart-container-glass">
+                <h3 class="chart-title"><i class="fa-solid fa-chart-pie" style="color: #f87171;"></i> توزيع المتطوعين حسب المحافظات</h3>
+                <div class="canvas-wrapper"><canvas id="cityChart"></canvas></div>
+            </div>
+            <div class="chart-container-glass" style="grid-column: 1 / -1; /* Make it full width on desktop if 2 cols, or span 2 */">
+                <h3 class="chart-title"><i class="fa-solid fa-chart-bar" style="color: #38bdf8;"></i> نشاط الفرق الميدانية</h3>
+                <div class="canvas-wrapper" style="height: 250px;"><canvas id="teamChart"></canvas></div>
+            </div>
+        </div>
+
+
+        <!-- Action Command Bar (Glassmorphism) -->
+        <div style="background: rgba(15,23,42,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(34,197,94,0.15); border-radius: 20px; padding: 16px 24px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.35);">
+            <div style="color: #e2e8f0; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-terminal" style="color: #22c55e;"></i> أوامر سريعة
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="{{ url_for('export_event_roster', event_id=0) }}" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
+                    <i class="fa-solid fa-file-excel"></i> تصدير كشف Excel
+                </a>
+                <a href="{{ settings.whatsapp_url if settings and settings.whatsapp_url else '#' }}" target="_blank" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
+                    <i class="fa-brands fa-whatsapp"></i> مجتمع الواتساب
+                </a>
+                <button onclick="openAdminModal('adminBadgeModal')" class="btn-ctrl-action" style="background: rgba(217,119,6,0.15); color: #fbbf24; border: 1px solid rgba(217,119,6,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#d97706'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(217,119,6,0.5)';" onmouseout="this.style.background='rgba(217,119,6,0.15)'; this.style.color='#fbbf24'; this.style.boxShadow='none';">
+                    <i class="fa-solid fa-id-card-clip"></i> باجتي الرسمية
+                </button>
             </div>
         </div>
 
@@ -501,12 +558,12 @@
 
                 <div class="volunteers-list-container" id="volunteersContainer">
                     {% for v in volunteers %}
-                    <div class="volunteer-item-row" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
+                    <details class="admin-swipe-card" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
 
                     <!-- المعلومات الأساسية -->
-                    <div class="volunteer-top-info">
+                    <summary class="volunteer-top-info card-summary">
                         <div class="volunteer-profile-snippet">
-                            <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" alt="{{ v.name }}">
+                            <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" loading="lazy" alt="{{ v.name }}">
                             <div class="volunteer-text">
                                 <h4>{{ v.name }}</h4>
                                 <div>
@@ -524,7 +581,11 @@
                             </div>
                         </div>
 
-                            <!-- الحالة والمنصب القيادي والباجة -->
+                            </summary>
+                    <div class="card-expanded-content">
+                        </summary>
+                    <div class="card-expanded-content">
+                        <!-- الحالة والمنصب القيادي والباجة -->
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status == 'approved' %}
                                     <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
@@ -633,8 +694,8 @@
                                 <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
                             </form>
                         </div>
-
                     </div>
+                    </details>
                     {% else %}
                     <p style="color: var(--jo-dark-gray); text-align: center; padding: 2rem;">لا يوجد متطوعين مسجلين في المنصة حتى الآن.</p>
                     {% endfor %}
@@ -756,8 +817,8 @@
                                 <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">لم يسجل أي متطوع في هذا النشاط بعد.</p>
                             {% endif %}
                         </div>
-
                     </div>
+                    </details>
                     {% else %}
                     <p style="color: var(--jo-dark-gray);">لا توجد فعاليات مسجلة حالياً.</p>
                     {% endfor %}
@@ -1183,6 +1244,100 @@
             if (e.target === profileModal) profileModal.style.display = 'none';
             if (e.target === badgeModal) badgeModal.style.display = 'none';
         };
+    </script>
+    <!-- PHASE 2: Chart.js Initialization -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const data = {{ chart_data | tojson }};
+            if (!data) return;
+
+            // True Black / Dark Premium Chart Config
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = "'Cairo', sans-serif";
+            const gridConfig = { color: 'rgba(255, 255, 255, 0.05)', borderColor: 'rgba(255, 255, 255, 0.1)' };
+
+            // 1. Growth Line Chart
+            const ctxGrowth = document.getElementById('growthChart').getContext('2d');
+            const gradientGrowth = ctxGrowth.createLinearGradient(0, 0, 0, 400);
+            gradientGrowth.addColorStop(0, 'rgba(34, 197, 94, 0.5)'); // Green
+            gradientGrowth.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
+
+            new Chart(ctxGrowth, {
+                type: 'line',
+                data: {
+                    labels: data.growth_labels,
+                    datasets: [{
+                        label: 'النشاط الميداني',
+                        data: data.growth_data,
+                        borderColor: '#22c55e',
+                        backgroundColor: gradientGrowth,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#111111',
+                        pointBorderColor: '#22c55e',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: gridConfig },
+                        y: { grid: gridConfig, beginAtZero: true }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 2. City Doughnut Chart
+            const ctxCity = document.getElementById('cityChart').getContext('2d');
+            new Chart(ctxCity, {
+                type: 'doughnut',
+                data: {
+                    labels: data.city_labels,
+                    datasets: [{
+                        data: data.city_data,
+                        backgroundColor: ['#22c55e', '#f87171', '#38bdf8', '#fbbf24', '#a855f7'],
+                        borderWidth: 2,
+                        borderColor: '#111111'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#e2e8f0' } } },
+                    cutout: '70%'
+                }
+            });
+
+            // 3. Team Bar Chart
+            const ctxTeam = document.getElementById('teamChart').getContext('2d');
+            new Chart(ctxTeam, {
+                type: 'bar',
+                data: {
+                    labels: data.team_labels,
+                    datasets: [{
+                        label: 'عدد المتطوعين',
+                        data: data.team_data,
+                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                        borderColor: '#22c55e',
+                        borderWidth: 2,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { grid: gridConfig, beginAtZero: true }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        });
     </script>
 </body>
 </html>

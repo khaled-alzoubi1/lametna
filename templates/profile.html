@@ -56,7 +56,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 15px;
-            color: var(--jo-dark-gray);
+            color: #ffffff;
             font-size: 0.95rem;
             margin-bottom: 14px;
         }
@@ -66,7 +66,7 @@
             gap: 6px;
         }
         .profile-bio-text {
-            color: #4a5568;
+            color: #ffffff;
             line-height: 1.7;
             margin-bottom: 16px;
             max-width: 800px;
@@ -106,7 +106,7 @@
             align-items: center;
             gap: 5px;
         }
-        .badge-v-approved { background: #dcfce7; color: var(--jo-green); }
+        .badge-v-approved { background: #dcfce7; color: #111111; }
         .badge-v-pending { background: #fef3c7; color: #ce1126; }
         .profile-modal-overlay {
             display: none;
@@ -193,13 +193,13 @@
     <main class="profile-page-wrapper">
 
         <!-- كرت البيانات الشخصية للمتطوع -->
-        <div class="profile-header-card">
+        <div class="profile-header-card dark-premium-bg dark-premium-surface holo-border">
             <div class="profile-avatar-box">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://lametnahbasmeh.org/verify/{{ user.id }}" alt="QR Verification">            </div>
+            <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">            </div>
             
             <div class="profile-details-area">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
-                    <h2 class="profile-user-name">{{ user.name }}</h2>
+                    <h2 class="profile-user-name" style="color: #fff;" style="color: #fff;">{{ user.name }}</h2>
                     {% if user.status == 'approved' %}
                         <span class="badge-volunteer-status badge-v-approved"><i class="fa-solid fa-circle-check"></i> عضوية معتمدة</span>
                     {% else %}
@@ -212,8 +212,8 @@
                 </div>
                 
                 <div class="profile-meta-tags">
-                <span><i class="fa-solid fa-venus-mars" style="color: var(--jo-black);"></i> الجنس: {{ user.gender or 'غير محدد' }}</span>
-                <span><i class="fa-solid fa-cake-candles" style="color: var(--jo-black);"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
+                <span><i class="fa-solid fa-venus-mars" style="color: #94a3b8;"></i> الجنس: {{ user.gender or 'غير محدد' }}</span>
+                <span><i class="fa-solid fa-cake-candles" style="color: #94a3b8;"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
                 <span><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> المحافظة: {{ user.city or 'عمان' }}</span>
                 <span><i class="fa-solid fa-users" style="color: var(--jo-green);"></i> الفريق: {{ user.team or 'عمان' }}</span>
                 <span><i class="fa-solid fa-phone" style="color: #6366f1;"></i> {{ user.phone }}</span>
@@ -222,14 +222,14 @@
             </div>
 
             {% if user.experience %}
-            <div style="margin-bottom: 14px; font-size: 0.9rem; color: #475569; background: #f8fafc; padding: 8px 14px; border-radius: 6px; border: 1px dashed var(--jo-border); line-height: 1.6;">
+            <div style="margin-bottom: 14px; font-size: 0.9rem; color: #ffffff; background: #f8fafc; padding: 8px 14px; border-radius: 6px; border: 1px dashed var(--jo-border); line-height: 1.6;">
                 <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة السابقة:</strong> {{ user.experience }}
             </div>
             {% endif %}
 
                 <!-- الأوسمة والشارات الممنوحة يدوياً -->
                 <div style="margin-bottom: 12px;">
-                    <span style="font-weight: 800; font-size: 0.88rem; color: var(--jo-black); margin-left: 6px;">الأوسمة التقديرية:</span>
+                    <span style="font-weight: 800; font-size: 0.88rem; color: #e2e8f0; margin-left: 6px;">الأوسمة التقديرية:</span>
                     {% for badge in user.badges_list %}
                         <span class="volunteer-badge-ribbon"><i class="fa-solid fa-medal" style="color: var(--gold);"></i> {{ badge }}</span>
                     {% else %}
@@ -237,12 +237,12 @@
                     {% endfor %}
                 </div>
 
-                <p class="profile-bio-text">
+                <p class="profile-bio-text" style="color: #94a3b8 !important;">
                     {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي وصورتي لكتابة مهاراتك وإدراج صورتك وتغيير كلمة السر.' }}
                 </p>
 
                 <div class="profile-actions-bar">
-                    <button onclick="openProfileModal('editProfileModal')" class="btn-profile-action">
+                    <button onclick="openProfileModal('editProfileModal')" class="btn-profile-action" style="background: var(--jo-green); color: #fff; border-color: var(--jo-green);">
                         <i class="fa-solid fa-user-pen"></i> تعديل بياناتي وكلمة المرور
                     </button>
                     <button onclick="openProfileModal('deleteAccountModal')" class="btn-profile-action" style="border-color: var(--jo-red); color: var(--jo-red);">
@@ -253,7 +253,7 @@
         </div>
 
         <!-- الباجة الميدانية الرسمية التفاعلية (3D Flip & Save Image) -->
-        <div class="badge-section-wrapper printable-badge-area">
+        <div class="badge-section-wrapper printable-badge-area dark-premium-bg dark-premium-surface">
             <h3 style="font-size: 1.35rem; font-weight: 900; margin-bottom: 4px; color: var(--jo-black);">
                 بطاقة العضوية الميدانية الرسمية
             </h3>
@@ -262,10 +262,10 @@
             </p>
 
             <div class="badge-interactive-container">
-                <div class="badge-card-3d" id="volunteerBadgeCard" onclick="toggleBadgeFlip()">
+                <div class="badge-card-3d holographic-card" id="volunteerBadgeCard" onclick="toggleBadgeFlip()">
                     
                     <!-- الوجه الأمامي -->
-                    <div class="badge-face badge-front" id="badgeFrontFace">
+                    <div class="badge-face badge-front" id="badgeFrontFace"><div class="holo-glare"></div><div class="holo-glare"></div>
                         <div class="badge-corner-decor decor-top-left"></div>
                         <div class="badge-corner-decor decor-top-right"></div>
                         <div class="badge-corner-decor decor-bottom-left"></div>
@@ -302,7 +302,7 @@
                     </div>
 
                     <!-- الوجه الخلفي (QR Code) -->
-                    <div class="badge-face badge-back" id="badgeBackFace">
+                    <div class="badge-face badge-back" id="badgeBackFace" style="transform: rotateY(180deg); backface-visibility: hidden;"><div class="holo-glare"></div><div class="holo-glare"></div>
                         <div class="badge-corner-decor decor-top-left"></div>
                         <div class="badge-corner-decor decor-top-right"></div>
                         <div class="badge-corner-decor decor-bottom-left"></div>
@@ -317,8 +317,8 @@
                             </div>
 
                             <div class="badge-qr-box">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data={{ request.url_root }}verify/{{ user.id }}" alt="QR Verification">
-                            </div>
+    <img src="https://quickchart.io/qr?text={{ request.url_root }}verify/{{ user.id }}&size=140&margin=1" alt="QR Verification" style="width: 140px; height: 140px; border-radius: 8px; background: #ffffff; padding: 4px;">
+</div>
 
                             <div>
                                 <div style="font-weight: 900; font-size: 0.9rem; color: var(--jo-black); margin-bottom: 4px;">
@@ -464,9 +464,9 @@
                     <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> {{ settings.card_title_events }}
                 </h4>
                 
-                <div class="events-list">
+                <div class="fintech-timeline">
                     {% for ev in user_events %}
-                    <div class="event-item-card">
+                    <div class="timeline-node">
                         <div>
                             <div class="event-meta">
                                 <span><i class="fa-regular fa-calendar"></i> {{ ev.date }}</span>
@@ -589,13 +589,13 @@
                         <i class="fa-solid fa-map-pin" style="color: var(--jo-red);"></i> نقطة التجمع المركزية:
                     </p>
                     <p style="color: var(--jo-dark-gray); margin-bottom: 18px; font-size: 1rem;">
-                        عمان - مجمع بنك الإسكان / الشميساني (أمام البوابة الرئيسية للمجمع).
+                        {{ settings.transport_location | default('سيتم تحديد نقطة التجمع من قبل الإدارة') }}
                     </p>
                     <p style="font-weight: 800; margin-bottom: 8px; color: var(--jo-black);">
                         <i class="fa-solid fa-clock" style="color: var(--jo-green);"></i> موعد ومسار الانطلاق:
                     </p>
                     <p style="color: var(--jo-dark-gray); line-height: 1.7; font-size: 0.95rem;">
-                        يتحرك باص المتطوعين قبل موعد أي نشاط ميداني بساعة ونصف تماماً. نرجو التواجد قبل موعد الحركة بـ 15 دقيقة لتسجيل الحضور مع قائد الفريق الميداني وتثبيت الباجة الرسمية.
+                        {{ settings.transport_timing | default('سيتم تحديد الموعد ومسار الانطلاق قريباً') }}
                     </p>
                 </div>
             </div>
@@ -610,11 +610,13 @@
                 <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">تعديل الملف الشخصي وكلمة المرور</h3>
                 <button onclick="closeProfileModal('editProfileModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
             </div>
-            <form action="{{ url_for('update_profile') }}" method="POST">
+            <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
                 
                 <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط صورتي الشخصية (Photo URL)</label>
-                    <input type="url" name="photo_url" class="custom-input" value="{{ user.photo_url or '' }}" placeholder="https://example.com/my-photo.jpg">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;"><i class="fa-solid fa-camera" style="color: var(--jo-green);"></i> رفع صورة شخصية من الجهاز</label>
+                    <input type="file" accept="image/*" name="profile_image" class="custom-input file-upload-styled">
+                    <small style="display:block; margin-top:4px; color:#64748b; font-size:0.8rem;">أو أدخل رابط الصورة يدوياً:</small>
+                    <input type="url" name="photo_url" class="custom-input" value="{{ user.photo_url or '' }}" placeholder="https://example.com/my-photo.jpg" style="margin-top:6px;">
                 </div>
 
                 <!-- خيار تغيير كلمة المرور للمتطوع -->

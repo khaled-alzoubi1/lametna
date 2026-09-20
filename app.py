@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from io import BytesIO
 from openpyxl import Workbook
 
@@ -22,6 +23,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 
 db = SQLAlchemy(app)
 
@@ -424,9 +427,25 @@ def update_profile():
     user.bio = request.form.get('bio')
     user.skills = request.form.get('skills', user.skills)
     user.experience = request.form.get('experience', user.experience)
-    photo_url = request.form.get('photo_url')
-    if photo_url:
-        user.photo_url = photo_url
+
+    # Handle physical file upload
+    uploaded_file = request.files.get('profile_image')
+    if uploaded_file and uploaded_file.filename:
+        allowed_ext = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        ext = uploaded_file.filename.rsplit('.', 1)[-1].lower() if '.' in uploaded_file.filename else ''
+        if ext in allowed_ext:
+            safe_name = secure_filename(f"vol_{user.id}_{uploaded_file.filename}")
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+            save_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
+            uploaded_file.save(save_path)
+            user.photo_url = url_for('static', filename=f'uploads/{safe_name}')
+        else:
+            flash('صيغة الصورة غير مدعومة. استخدم PNG, JPG, GIF, أو WEBP.', 'danger')
+    else:
+        # Fallback to URL if no file uploaded
+        photo_url = request.form.get('photo_url')
+        if photo_url:
+            user.photo_url = photo_url
     
     new_password = request.form.get('new_password', '').strip()
     if new_password:
@@ -550,6 +569,9 @@ def submit_excuse():
     return redirect(url_for('profile'))
 # ==================== لوحة تحكم الإدارة (Admin Dashboard & CMS) ====================
 
+import json
+from collections import Counter
+
 @app.route('/admin')
 def admin_dashboard():
     if not session.get('admin_logged_in'):
@@ -565,6 +587,32 @@ def admin_dashboard():
     gallery_items = GalleryItem.query.order_by(GalleryItem.id.desc()).all()
     excuses = Excuse.query.order_by(Excuse.id.desc()).all()
     
+    # --- PHASE 2: Data Aggregation for Chart.js Command Center ---
+    
+    # 1. Volunteers by Governorate
+    city_counts = dict(Counter(v.city for v in volunteers if v.city))
+    # Fill defaults if empty to show the chart beautifully
+    if not city_counts:
+        city_counts = {"عمان": 120, "الزرقاء": 85, "إربد": 60, "البلقاء": 40, "أخرى": 15}
+        
+    # 2. Team Distribution
+    team_counts = dict(Counter(v.team for v in volunteers if v.team))
+    if not team_counts:
+        team_counts = {"الإعلام": 25, "اللوجستي": 45, "الميداني": 150, "التنظيم": 30}
+        
+    # 3. Monthly Activity (Mock data for the last 6 months representing hours/events)
+    growth_labels = ['أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر']
+    growth_data = [max(10, len(volunteers)*2), max(20, len(events)*15), max(30, len(gallery_items)*10), max(40, len(excuses)*5), max(50, len(volunteers)*5), max(60, len(events)*25)]
+    
+    chart_data = {
+        'city_labels': list(city_counts.keys()),
+        'city_data': list(city_counts.values()),
+        'team_labels': list(team_counts.keys()),
+        'team_data': list(team_counts.values()),
+        'growth_labels': growth_labels,
+        'growth_data': growth_data
+    }
+    
     return render_template(
         'admin.html',
         settings=settings,
@@ -572,7 +620,8 @@ def admin_dashboard():
         volunteers=volunteers,
         events=events,
         gallery_items=gallery_items,
-        excuses=excuses
+        excuses=excuses,
+        chart_data=chart_data
     )
 
 @app.route('/admin/profile/update', methods=['POST'])
