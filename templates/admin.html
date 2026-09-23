@@ -579,7 +579,7 @@
                         <div class="volunteer-profile-snippet">
                             <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" alt="{{ v.name }}">
                             <div class="volunteer-text">
-                                <h4>{{ v.name }}</h4>
+                                <h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
                                 <div>
                                     <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
                                     <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
@@ -587,16 +587,16 @@
                                     <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
                                     <span><i class="fa-solid fa-star"></i> {{ v.skills or 'لا توجد موهبة محددة' }}</span>
                                 </div>
-                                {% if v.experience %}
-                                <div style="margin-top: 5px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
-                                    <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                     </summary>
 
                     <div class="card-expanded-content">
+                        {% if v.experience %}
+                        <div style="margin-bottom: 10px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
+                            <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
+                        </div>
+                        {% endif %}
                         <!-- الحالة والمنصب القيادي والباجة -->
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status == 'approved' %}
@@ -721,7 +721,7 @@
                         <div class="volunteer-profile-snippet">
                             <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" loading="lazy" alt="{{ v.name }}">
                             <div class="volunteer-text">
-                                <h4>{{ v.name }}</h4>
+                                <h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
                                 <div>
                                     <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
                                     <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
@@ -729,16 +729,16 @@
                                     <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
                                     <span><i class="fa-solid fa-star"></i> {{ v.skills or 'لا توجد موهبة محددة' }}</span>
                                 </div>
-                                {% if v.experience %}
-                                <div style="margin-top: 5px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
-                                    <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
-                                </div>
-                                {% endif %}
                             </div>
                         </div>
                     </summary>
 
                     <div class="card-expanded-content">
+                        {% if v.experience %}
+                        <div style="margin-bottom: 10px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
+                            <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
+                        </div>
+                        {% endif %}
                         <!-- الحالة والمنصب القيادي والباجة -->
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status == 'approved' %}
