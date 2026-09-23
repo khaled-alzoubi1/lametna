@@ -555,9 +555,10 @@
                 </div>
                 {% endif %}
             </form>
+            </div>
 
+            <div class="volunteers-list-container" id="volunteersContainer">
 
-                <div class="volunteers-list-container" id="volunteersContainer">
                     <!-- Loop 1: Pending volunteers -->
                     {% for v in volunteers if v.status == 'pending' %}
                     <details class="admin-swipe-card pending-volunteer-card" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
@@ -691,7 +692,6 @@
                                 <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
                             </form>
                         </div>
-                    </div>
                     </details>
                     {% endfor %}
 
@@ -836,14 +836,12 @@
                                 <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
                             </form>
                         </div>
-                    </div>
                     </details>
                     {% else %}
                     <p style="color: var(--jo-dark-gray); text-align: center; padding: 2rem;">لا يوجد متطوعين مسجلين في المنصة حتى الآن.</p>
                     {% endfor %}
                 </div>
 
-            </div>
         </div>
 
         <!-- ==================== 2. تبويب الفعاليات ورصد الساعات الميداني ==================== -->
