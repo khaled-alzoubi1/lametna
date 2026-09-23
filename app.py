@@ -227,6 +227,16 @@ class GalleryItem(db.Model):
     thumbnail_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Inquiry(db.Model):
+    __tablename__ = 'inquiries'
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(80), nullable=False)
+    last_name = db.Column(db.String(80), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(120), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 # ==================== دوال المساعدة ====================
 
 def get_settings():
@@ -379,6 +389,21 @@ def logout():
 
 @app.route('/contact', methods=['POST'])
 def contact_submit():
+    first_name = request.form.get('first_name', '').strip()
+    last_name = request.form.get('last_name', '').strip()
+    phone = request.form.get('phone', '').strip()
+    email = request.form.get('email', '').strip()
+    message = request.form.get('message', '').strip()
+    if first_name or last_name or message:
+        inquiry = Inquiry(
+            first_name=first_name or 'غير محدد',
+            last_name=last_name or '',
+            phone=phone,
+            email=email,
+            message=message or 'لا يوجد نص'
+        )
+        db.session.add(inquiry)
+        db.session.commit()
     flash('شكراً لتواصلك معنا، تم استلام استفسارك وسنقوم بالرد عليك في أقرب وقت.', 'success')
     return redirect(url_for('index'))
 
@@ -582,37 +607,63 @@ def admin_dashboard():
     admin_email = session.get('admin_email')
     current_admin = Volunteer.query.filter_by(email=admin_email).first()
     
-    volunteers = Volunteer.query.order_by(Volunteer.id.desc()).all()
+    # --- Task 6: Search & Filter ---
+    search_name = request.args.get('search_name', '').strip()
+    filter_city = request.args.get('filter_city', '').strip()
+    filter_skill = request.args.get('filter_skill', '').strip()
+    filter_gender = request.args.get('filter_gender', '').strip()
+
+    vol_query = Volunteer.query
+    if search_name:
+        vol_query = vol_query.filter(
+            db.or_(
+                Volunteer.name.ilike(f'%{search_name}%'),
+                Volunteer.phone.ilike(f'%{search_name}%')
+            )
+        )
+    if filter_city:
+        vol_query = vol_query.filter(Volunteer.city.ilike(f'%{filter_city}%'))
+    if filter_skill:
+        vol_query = vol_query.filter(Volunteer.skills.ilike(f'%{filter_skill}%'))
+    if filter_gender:
+        vol_query = vol_query.filter(Volunteer.gender == filter_gender)
+
+    volunteers = vol_query.order_by(Volunteer.id.desc()).all()
+    inquiries = Inquiry.query.order_by(Inquiry.id.desc()).all()
+
     events = Event.query.order_by(Event.id.desc()).all()
     gallery_items = GalleryItem.query.order_by(GalleryItem.id.desc()).all()
     excuses = Excuse.query.order_by(Excuse.id.desc()).all()
-    
+
     # --- PHASE 2: Data Aggregation for Chart.js Command Center ---
-    
-    # 1. Volunteers by Governorate
-    city_counts = dict(Counter(v.city for v in volunteers if v.city))
-    # Fill defaults if empty to show the chart beautifully
+    all_volunteers = Volunteer.query.all()
+    city_counts = dict(Counter(v.city for v in all_volunteers if v.city))
     if not city_counts:
         city_counts = {"عمان": 120, "الزرقاء": 85, "إربد": 60, "البلقاء": 40, "أخرى": 15}
-        
-    # 2. Team Distribution
-    team_counts = dict(Counter(v.team for v in volunteers if v.team))
-    if not team_counts:
-        team_counts = {"الإعلام": 25, "اللوجستي": 45, "الميداني": 150, "التنظيم": 30}
-        
-    # 3. Monthly Activity (Mock data for the last 6 months representing hours/events)
+
     growth_labels = ['أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر']
-    growth_data = [max(10, len(volunteers)*2), max(20, len(events)*15), max(30, len(gallery_items)*10), max(40, len(excuses)*5), max(50, len(volunteers)*5), max(60, len(events)*25)]
-    
+    growth_data = [max(1, len(all_volunteers)*2), max(1, len(events)*3), max(1, len(gallery_items)*2), max(1, len(excuses)), max(1, len(all_volunteers)*3), max(1, len(events)*4)]
+
+    activity_labels = ['وقف ثريد', 'مسنين', 'بنك ملابس', 'أطفال', 'بيئي']
+    activity_data = [
+        EventRegistration.query.join(Event).filter(Event.title.ilike('%ثريد%')).count() or 0,
+        EventRegistration.query.join(Event).filter(Event.title.ilike('%مسن%')).count() or 0,
+        EventRegistration.query.join(Event).filter(Event.title.ilike('%ملابس%')).count() or 0,
+        EventRegistration.query.join(Event).filter(Event.title.ilike('%أطفال%')).count() or 0,
+        EventRegistration.query.join(Event).filter(Event.title.ilike('%بيئ%')).count() or 0,
+    ]
+    total_activities = len(events)
+
     chart_data = {
         'city_labels': list(city_counts.keys()),
         'city_data': list(city_counts.values()),
-        'team_labels': list(team_counts.keys()),
-        'team_data': list(team_counts.values()),
         'growth_labels': growth_labels,
-        'growth_data': growth_data
+        'growth_data': growth_data,
+        'activity_labels': activity_labels,
+        'activity_data': activity_data,
+        'total_activities': total_activities
     }
-    
+
     return render_template(
         'admin.html',
         settings=settings,
@@ -621,8 +672,14 @@ def admin_dashboard():
         events=events,
         gallery_items=gallery_items,
         excuses=excuses,
-        chart_data=chart_data
+        inquiries=inquiries,
+        chart_data=chart_data,
+        search_name=search_name,
+        filter_city=filter_city,
+        filter_skill=filter_skill,
+        filter_gender=filter_gender
     )
+
 
 @app.route('/admin/profile/update', methods=['POST'])
 def update_admin_profile():
@@ -809,29 +866,39 @@ def export_event_roster(event_id):
     if not session.get('admin_logged_in'):
         return redirect(url_for('index'))
 
-    ev = Event.query.get_or_404(event_id)
-    regs = EventRegistration.query.filter_by(event_id=event_id).all()
-
     wb = Workbook()
     ws = wb.active
-    ws.title = 'المشاركون'
     ws.sheet_view.rightToLeft = True
-    ws.append(['#', 'الاسم', 'الجنس', 'العمر', 'الهاتف', 'البريد الإلكتروني', 'الفريق', 'المهارات', 'الخبرة السابقة', 'حالة الحضور'])
 
-    for i, reg in enumerate(regs, start=1):
-        attendance_status = 'تم التحضير' if reg.attended else 'مسجل (لم يحضر بعد)'
-        ws.append([
-            i, 
-            reg.volunteer.name, 
-            reg.volunteer.gender or 'غير محدد',
-            reg.volunteer.age or 'غير محدد',
-            reg.volunteer.phone, 
-            reg.volunteer.email, 
-            reg.volunteer.team,
-            reg.volunteer.skills or 'لا يوجد',
-            reg.volunteer.experience or 'لا يوجد',
-            attendance_status
-        ])
+    if event_id == 0:
+        # Export all volunteers
+        ws.title = 'كشف المتطوعين'
+        ws.append(['#', 'الاسم', 'الجنس', 'العمر', 'المحافظة', 'الفريق', 'الهاتف', 'البريد الإلكتروني', 'المهارات', 'الخبرة', 'الحالة', 'الساعات', 'الفعاليات'])
+        volunteers_all = Volunteer.query.order_by(Volunteer.id.asc()).all()
+        for i, v in enumerate(volunteers_all, start=1):
+            ws.append([
+                i, v.name, v.gender or 'غير محدد', v.age or 'غير محدد',
+                v.city, v.team, v.phone, v.email,
+                v.skills or 'لا يوجد', v.experience or 'لا يوجد',
+                v.status, v.volunteer_hours or 0, v.attended_events_count or 0
+            ])
+        filename = 'all_volunteers.xlsx'
+    else:
+        ev = Event.query.get_or_404(event_id)
+        regs = EventRegistration.query.filter_by(event_id=event_id).all()
+        ws.title = 'المشاركون'
+        ws.append(['#', 'الاسم', 'الجنس', 'العمر', 'الهاتف', 'البريد الإلكتروني', 'الفريق', 'المهارات', 'الخبرة السابقة', 'حالة الحضور'])
+        for i, reg in enumerate(regs, start=1):
+            attendance_status = 'تم التحضير' if reg.attended else 'مسجل (لم يحضر بعد)'
+            ws.append([
+                i, reg.volunteer.name, reg.volunteer.gender or 'غير محدد',
+                reg.volunteer.age or 'غير محدد', reg.volunteer.phone,
+                reg.volunteer.email, reg.volunteer.team,
+                reg.volunteer.skills or 'لا يوجد',
+                reg.volunteer.experience or 'لا يوجد',
+                attendance_status
+            ])
+        filename = f'roster_event_{ev.id}.xlsx'
 
     for col in ws.columns:
         values = [str(c.value) for c in col if c.value is not None]
@@ -843,9 +910,10 @@ def export_event_roster(event_id):
     buffer.seek(0)
 
     return send_file(
-        buffer, as_attachment=True, download_name=f"roster_event_{ev.id}.xlsx",
+        buffer, as_attachment=True, download_name=filename,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
 
 @app.route('/admin/event/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):

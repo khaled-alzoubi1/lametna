@@ -327,6 +327,11 @@
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .pending-volunteer-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #3a0000 100%) !important;
+            border-color: #7f1d1d !important;
+        }
+        .pending-volunteer-card .volunteer-text h4 { color: #fca5a5 !important; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -415,25 +420,6 @@
         </div>
 
 
-        <!-- Action Command Bar (Glassmorphism) -->
-        <div style="background: rgba(15,23,42,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(34,197,94,0.15); border-radius: 20px; padding: 16px 24px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.35);">
-            <div style="color: #e2e8f0; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-terminal" style="color: #22c55e;"></i> أوامر سريعة
-            </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <a href="{{ url_for('export_event_roster', event_id=0) }}" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
-                    <i class="fa-solid fa-file-excel"></i> تصدير كشف Excel
-                </a>
-                <a href="{{ settings.whatsapp_url if settings and settings.whatsapp_url else '#' }}" target="_blank" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
-                    <i class="fa-brands fa-whatsapp"></i> مجتمع الواتساب
-                </a>
-                <button onclick="openAdminModal('adminBadgeModal')" class="btn-ctrl-action" style="background: rgba(217,119,6,0.15); color: #fbbf24; border: 1px solid rgba(217,119,6,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#d97706'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(217,119,6,0.5)';" onmouseout="this.style.background='rgba(217,119,6,0.15)'; this.style.color='#fbbf24'; this.style.boxShadow='none';">
-                    <i class="fa-solid fa-id-card-clip"></i> باجتي الرسمية
-                </button>
-            </div>
-        </div>
-
-
         <!-- PHASE 2: Command Center Data Viz (Bento Grid) -->
         <div class="chart-bento-grid">
             <div class="chart-container-glass">
@@ -445,7 +431,11 @@
                 <div class="canvas-wrapper"><canvas id="cityChart"></canvas></div>
             </div>
             <div class="chart-container-glass" style="grid-column: 1 / -1; /* Make it full width on desktop if 2 cols, or span 2 */">
-                <h3 class="chart-title"><i class="fa-solid fa-chart-bar" style="color: #38bdf8;"></i> نشاط الفرق الميدانية</h3>
+                <h3 class="chart-title"><i class="fa-solid fa-chart-bar" style="color: #38bdf8;"></i> إحصائيات الأنشطة
+                    <span style="margin-right: 12px; background: rgba(56,189,248,0.15); color: #38bdf8; padding: 3px 12px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; border: 1px solid rgba(56,189,248,0.3);">
+                        إجمالي الفعاليات: {{ chart_data.total_activities }}
+                    </span>
+                </h3>
                 <div class="canvas-wrapper" style="height: 250px;"><canvas id="teamChart"></canvas></div>
             </div>
         </div>
@@ -476,7 +466,7 @@
             <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> تخصيص الموقع وبطاقات الخدمات الـ 5</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('dutiesTab', this)"><i class="fa-solid fa-list-check"></i> التكليفات الميدانية</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('galleryTab', this)"><i class="fa-solid fa-photo-film"></i> معرض الصور والفيديو</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('excusesTab', this)"><i class="fa-solid fa-file-signature"></i> سجل الأعذار ({{ excuses|length }})</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('excusesTab', this)"><i class="fa-solid fa-file-signature"></i> سجل الأعذار ({{ excuses|length }}) والاستفسارات ({{ inquiries|length }})</button>
         </div>
 
         <!-- ==================== 1. تبويب المتطوعين والقيادات والأوسمة ==================== -->
@@ -521,44 +511,198 @@
                     <i class="fa-solid fa-address-book" style="color: var(--jo-green);"></i> كشوفات المتطوعين والأوسمة والتحكم بالساعات
                 </div>
 
-               <!-- شريط البحث والفلاتر الفورية المتقدمة -->
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 1.5rem;">
+               <!-- شريط البحث والفلاتر المرتبطة بالخادم -->
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 10px; margin-bottom: 1.5rem; align-items: end;">
                 <div>
-                    <input type="text" id="volunteerSearchInput" onkeyup="filterVolunteers()" class="custom-input" placeholder="بحث بالاسم أو الهاتف...">
+                    <input type="text" name="search_name" id="volunteerSearchInput" class="custom-input" placeholder="بحث بالاسم أو الهاتف..." value="{{ search_name }}">
                 </div>
                 <div>
-                    <select id="filterCity" onchange="filterVolunteers()" class="custom-input">
+                    <select name="filter_city" id="filterCity" class="custom-input">
                         <option value="">جميع المحافظات</option>
-                        <option value="عمان">عمان</option>
-                        <option value="الزرقاء">الزرقاء</option>
-                        <option value="إربد">إربد</option>
-                        <option value="البلقاء">البلقاء</option>
-                        <option value="أخرى">أخرى</option>
+                        <option value="عمان" {% if filter_city == 'عمان' %}selected{% endif %}>عمان</option>
+                        <option value="الزرقاء" {% if filter_city == 'الزرقاء' %}selected{% endif %}>الزرقاء</option>
+                        <option value="إربد" {% if filter_city == 'إربد' %}selected{% endif %}>إربد</option>
+                        <option value="البلقاء" {% if filter_city == 'البلقاء' %}selected{% endif %}>البلقاء</option>
+                        <option value="أخرى" {% if filter_city == 'أخرى' %}selected{% endif %}>أخرى</option>
                     </select>
                 </div>
                 <div>
-                    <select id="filterSkill" onchange="filterVolunteers()" class="custom-input">
+                    <select name="filter_skill" id="filterSkill" class="custom-input">
                         <option value="">جميع المواهب والكفاءات</option>
-                        <option value="تصوير فوتوغرافي">تصوير فوتوغرافي</option>
-                        <option value="جرافيك ديزاين">جرافيك ديزاين</option>
-                        <option value="فيديو إيديتنج">فيديو إيديتنج</option>
-                        <option value="تسويق">تسويق</option>
-                        <option value="إدارة وتنظيم">إدارة وتنظيم</option>
-                        <option value="عزف آلة موسيقية">عزف آلة موسيقية</option>
-                        <option value="لا يوجد">لا يوجد</option>
+                        <option value="تصوير فوتوغرافي" {% if filter_skill == 'تصوير فوتوغرافي' %}selected{% endif %}>تصوير فوتوغرافي</option>
+                        <option value="جرافيك ديزاين" {% if filter_skill == 'جرافيك ديزاين' %}selected{% endif %}>جرافيك ديزاين</option>
+                        <option value="فيديو إيديتنج" {% if filter_skill == 'فيديو إيديتنج' %}selected{% endif %}>فيديو إيديتنج</option>
+                        <option value="تسويق" {% if filter_skill == 'تسويق' %}selected{% endif %}>تسويق</option>
+                        <option value="إدارة وتنظيم" {% if filter_skill == 'إدارة وتنظيم' %}selected{% endif %}>إدارة وتنظيم</option>
+                        <option value="عزف آلة موسيقية" {% if filter_skill == 'عزف آلة موسيقية' %}selected{% endif %}>عزف آلة موسيقية</option>
+                        <option value="لا يوجد" {% if filter_skill == 'لا يوجد' %}selected{% endif %}>لا يوجد</option>
                     </select>
                 </div>
                 <div>
-                    <select id="filterGender" onchange="filterVolunteers()" class="custom-input">
+                    <select name="filter_gender" id="filterGender" class="custom-input">
                         <option value="">الجنس (الكل)</option>
-                        <option value="ذكر">ذكر</option>
-                        <option value="أنثى">أنثى</option>
+                        <option value="ذكر" {% if filter_gender == 'ذكر' %}selected{% endif %}>ذكر</option>
+                        <option value="أنثى" {% if filter_gender == 'أنثى' %}selected{% endif %}>أنثى</option>
                     </select>
                 </div>
-            </div>
+                <div>
+                    <button type="submit" style="background: var(--jo-green); color: #fff; border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 800; cursor: pointer; white-space: nowrap; width: 100%;"><i class="fa-solid fa-magnifying-glass"></i> بحث</button>
+                </div>
+                {% if search_name or filter_city or filter_skill or filter_gender %}
+                <div>
+                    <a href="{{ url_for('admin_dashboard') }}" style="background: #fee2e2; color: var(--jo-red); border: 1px solid #fca5a5; padding: 9px 16px; border-radius: var(--radius-sm); font-weight: 800; text-decoration: none; display: inline-block; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> مسح الفلاتر</a>
+                </div>
+                {% endif %}
+            </form>
+
 
                 <div class="volunteers-list-container" id="volunteersContainer">
-                    {% for v in volunteers %}
+                    <!-- Loop 1: Pending volunteers -->
+                    {% for v in volunteers if v.status == 'pending' %}
+                    <details class="admin-swipe-card pending-volunteer-card" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
+
+                    <!-- المعلومات الأساسية -->
+                    <summary class="volunteer-top-info card-summary">
+                        <div class="volunteer-profile-snippet">
+                            <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" alt="{{ v.name }}">
+                            <div class="volunteer-text">
+                                <h4>{{ v.name }}</h4>
+                                <div>
+                                    <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
+                                    <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
+                                    <span><i class="fa-solid fa-location-dot"></i> {{ v.city }}</span>
+                                    <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
+                                    <span><i class="fa-solid fa-star"></i> {{ v.skills or 'لا توجد موهبة محددة' }}</span>
+                                </div>
+                                {% if v.experience %}
+                                <div style="margin-top: 5px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
+                                    <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                            </summary>
+                    <div class="card-expanded-content">
+                        </summary>
+                    <div class="card-expanded-content">
+                        <!-- الحالة والمنصب القيادي والباجة -->
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                {% if v.status == 'approved' %}
+                                    <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
+                                        <i class="fa-solid fa-circle-check"></i> معتمد
+                                    </span>
+                                {% elif v.status == 'rejected' %}
+                                    <span style="background: #fee2e2; color: var(--jo-red); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
+                                        <i class="fa-solid fa-ban"></i> مرفوض
+                                    </span>
+                                {% else %}
+                                    <span style="background: #fef3c7; color: #d97706; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
+                                        <i class="fa-solid fa-clock"></i> بانتظار المراجعة
+                                    </span>
+                                {% endif %}
+
+                                {% if v.is_leader %}
+                                    <span style="background: #e0f2fe; color: #0284c7; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
+                                        <i class="fa-solid fa-star"></i> {{ v.position }}
+                                    </span>
+                                    <form action="{{ url_for('remove_leader', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                        <button type="submit" title="إلغاء المنصب القيادي" style="background: none; border: none; color: #94a3b8; cursor: pointer;">&times;</button>
+                                    </form>
+                                {% endif %}
+
+                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}" target="_blank" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
+                                    <i class="fa-solid fa-qrcode"></i> فحص الباجة
+                                </a>
+                            </div>
+
+                            <!-- أدوات الاعتماد، العدادات (+ / -)، وكلمة المرور -->
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                {% if v.status != 'approved' %}
+                                    <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
+                                    </form>
+                                    <form action="{{ url_for('reject_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                        <button type="submit" class="btn-ctrl-action btn-red-reject"><i class="fa-solid fa-xmark"></i> رفض</button>
+                                    </form>
+                                {% else %}
+                                    <div class="badge-counter-ctrl">
+                                        <span class="counter-val-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
+                                        <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
+                                            <button type="submit" class="btn-step-arrow" title="إضافة فعالية">+</button>
+                                        </form>
+                                        <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
+                                            <button type="submit" class="btn-step-arrow" title="إنقاص فعالية">-</button>
+                                        </form>
+                                    </div>
+                                    <div class="badge-counter-ctrl">
+                                        <span class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
+                                        <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
+                                            <button type="submit" class="btn-step-arrow" title="إضافة ساعة واحدة">+</button>
+                                        </form>
+                                        <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
+                                            <button type="submit" class="btn-step-arrow" title="خصم ساعة واحدة">-</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+<a href="{{ v.wa_link }}" target="_blank" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a; border-color: #86efac;" title="مراسلة فورية عبر واتساب">
+                                <i class="fa-brands fa-whatsapp"></i> واتساب
+                            </a>
+                                <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                    <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر إلى 123456">
+                                        <i class="fa-solid fa-key"></i>
+                                    </button>
+                                </form>
+
+                                <form action="{{ url_for('delete_volunteer_admin', volunteer_id=v.id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا المتطوع نهائياً؟');" style="margin: 0;">
+                                    <button type="submit" class="btn-ctrl-action" style="background: transparent; color: var(--jo-red);" title="حذف نهائي">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- إدارة الأوسمة الممنوحة يدوياً -->
+                        <div class="badge-manager-bar">
+                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-size: 0.85rem; font-weight: 800; color: var(--jo-black);">
+                                    <i class="fa-solid fa-award" style="color: var(--gold);"></i> الأوسمة الممنوحة:
+                                </span>
+                                {% for badge in v.badges_list %}
+                                    <span class="volunteer-badge-ribbon">
+                                        {{ badge }}
+                                        <form action="{{ url_for('remove_badge', volunteer_id=v.id) }}" method="POST" style="display:inline; margin:0;">
+                                            <input type="hidden" name="badge_name" value="{{ badge }}">
+                                            <button type="submit" title="سحب الوسام" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:900; margin-right:4px;">&times;</button>
+                                        </form>
+                                    </span>
+                                {% else %}
+                                    <span style="font-size: 0.8rem; color: #94a3b8;">لا توجد أوسمة ممنوحة حالياً.</span>
+                                {% endfor %}
+                            </div>
+
+                            <form action="{{ url_for('assign_badge', volunteer_id=v.id) }}" method="POST" style="display: flex; gap: 8px; align-items: center; margin: 0;">
+                                <select name="badge_name" class="custom-input" style="padding: 4px 8px; font-size: 0.85rem; width: auto;" required>
+                                    <option value="">-- امنح وساماً يدوياً --</option>
+                                    <option value="وسام أول بصمة">وسام أول بصمة (النشاط الأول)</option>
+                                    <option value="وسام بطل الميدان">وسام بطل الميدان</option>
+                                    <option value="وسام الانضباط الذهبي">وسام الانضباط الذهبي</option>
+                                    <option value="وسام درع الطوارئ">وسام درع الطوارئ</option>
+                                </select>
+                                <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
+                            </form>
+                        </div>
+                    </div>
+                    </details>
+                    {% endfor %}
+
+                    <!-- فاصل أحمر بين المنتظرين والمعتمدين -->
+                    {% if volunteers|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
+                    <hr style="border: 1px solid red; margin: 20px 0;">
+                    {% endif %}
+
+                    <!-- Loop 2: Approved volunteers -->
+                    {% for v in volunteers if v.status != 'pending' %}
                     <details class="admin-swipe-card" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
 
                     <!-- المعلومات الأساسية -->
@@ -701,6 +845,7 @@
                     <p style="color: var(--jo-dark-gray); text-align: center; padding: 2rem;">لا يوجد متطوعين مسجلين في المنصة حتى الآن.</p>
                     {% endfor %}
                 </div>
+
             </div>
         </div>
 
@@ -1040,27 +1185,60 @@
             </div>
         </div>
 
-        <!-- ==================== 6. تبويب سجل الأعذار ==================== -->
+        <!-- ==================== 6. تبويب سجل الأعذار والاستفسارات ==================== -->
         <div id="excusesTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-envelope-open-text" style="color: var(--jo-red);"></i> سجل طلبات الاعتذار الميدانية
-                </div>
-                <div style="display: grid; gap: 12px;">
-                    {% for ex in excuses %}
-                    <div style="background: var(--jo-light-gray); border-right: 4px solid var(--jo-red); padding: 1.2rem; border-radius: 4px; border: 1px solid var(--jo-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="font-weight: 800; color: var(--jo-black);">المتطوع: {{ ex.volunteer.name }} ({{ ex.volunteer.phone }})</span>
-                            <span style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ ex.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                        </div>
-                        <p style="color: #4a5568; margin: 0; line-height: 1.6; font-size: 0.95rem;">
-                            <strong>سبب الاعتذار:</strong> {{ ex.reason }}
-                        </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+                <!-- الجانب الأيمن: سجل الأعذار -->
+                <div class="admin-box" style="border-top: 4px solid var(--jo-red);">
+                    <div class="admin-section-title">
+                        <i class="fa-solid fa-envelope-open-text" style="color: var(--jo-red);"></i> سجل طلبات الاعتذار الميدانية
+                        <span style="background: #fee2e2; color: var(--jo-red); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: 800;">{{ excuses|length }}</span>
                     </div>
-                    {% else %}
-                    <p style="color: var(--jo-dark-gray); text-align: center; padding: 1.5rem;">لا توجد أعذار غياب مسجلة في النظام.</p>
-                    {% endfor %}
+                    <div style="display: grid; gap: 12px; max-height: 600px; overflow-y: auto;">
+                        {% for ex in excuses %}
+                        <div style="background: var(--jo-light-gray); border-right: 4px solid var(--jo-red); padding: 1.2rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-weight: 800; color: var(--jo-black);">المتطوع: {{ ex.volunteer.name }} ({{ ex.volunteer.phone }})</span>
+                                <span style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ ex.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                            <p style="color: #4a5568; margin: 0; line-height: 1.6; font-size: 0.95rem;">
+                                <strong>سبب الاعتذار:</strong> {{ ex.reason }}
+                            </p>
+                        </div>
+                        {% else %}
+                        <p style="color: var(--jo-dark-gray); text-align: center; padding: 1.5rem;">لا توجد أعذار غياب مسجلة في النظام.</p>
+                        {% endfor %}
+                    </div>
                 </div>
+
+                <!-- الجانب الأيسر: استفسارات نموذج التواصل -->
+                <div class="admin-box" style="border-top: 4px solid #38bdf8;">
+                    <div class="admin-section-title">
+                        <i class="fa-solid fa-inbox" style="color: #38bdf8;"></i> استفسارات نموذج التواصل
+                        <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; font-weight: 800;">{{ inquiries|length }}</span>
+                    </div>
+                    <div style="display: grid; gap: 12px; max-height: 600px; overflow-y: auto;">
+                        {% for inq in inquiries %}
+                        <div style="background: var(--jo-light-gray); border-right: 4px solid #38bdf8; padding: 1.2rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                                <span style="font-weight: 800; color: var(--jo-black);">{{ inq.first_name }} {{ inq.last_name }}</span>
+                                <span style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ inq.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--jo-dark-gray); margin-bottom: 6px; display: flex; gap: 12px; flex-wrap: wrap;">
+                                {% if inq.phone %}<span><i class="fa-solid fa-phone"></i> {{ inq.phone }}</span>{% endif %}
+                                {% if inq.email %}<span><i class="fa-regular fa-envelope"></i> {{ inq.email }}</span>{% endif %}
+                            </div>
+                            <p style="color: #4a5568; margin: 0; line-height: 1.6; font-size: 0.95rem;">
+                                <strong>الرسالة:</strong> {{ inq.message }}
+                            </p>
+                        </div>
+                        {% else %}
+                        <p style="color: var(--jo-dark-gray); text-align: center; padding: 1.5rem;">لا توجد استفسارات مسجلة بعد.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -1286,7 +1464,11 @@
                     maintainAspectRatio: false,
                     scales: {
                         x: { grid: gridConfig },
-                        y: { grid: gridConfig, beginAtZero: true }
+                        y: {
+                            grid: gridConfig,
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 }
+                        }
                     },
                     plugins: { legend: { display: false } }
                 }
@@ -1313,27 +1495,32 @@
                 }
             });
 
-            // 3. Team Bar Chart
+            // 3. Activity Stats Horizontal Bar Chart
             const ctxTeam = document.getElementById('teamChart').getContext('2d');
             new Chart(ctxTeam, {
                 type: 'bar',
                 data: {
-                    labels: data.team_labels,
+                    labels: data.activity_labels,
                     datasets: [{
-                        label: 'عدد المتطوعين',
-                        data: data.team_data,
-                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                        borderColor: '#22c55e',
+                        label: 'عدد المشاركين',
+                        data: data.activity_data,
+                        backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                        borderColor: '#38bdf8',
                         borderWidth: 2,
                         borderRadius: 4
                     }]
                 },
                 options: {
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { grid: { display: false } },
-                        y: { grid: gridConfig, beginAtZero: true }
+                        x: {
+                            grid: gridConfig,
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 }
+                        },
+                        y: { grid: { display: false } }
                     },
                     plugins: { legend: { display: false } }
                 }
@@ -1341,4 +1528,4 @@
         });
     </script>
 </body>
-</html>
+</html>

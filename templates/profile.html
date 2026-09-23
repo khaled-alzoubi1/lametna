@@ -293,7 +293,7 @@
                             </div>
 
                             <div>
-                                <div class="badge-name">{{ user.name }}</div>
+                                <div class="badge-name" style="color: #000000 !important;">{{ user.name }}</div>
                                 <div class="badge-info-rows">
                                     <div>الصفة : {{ user.position or ('متطوع معتمد' if user.status == 'approved' else 'متطوع مسجل') }}</div>
                                     <div>الفريق : {{ user.team or 'عمان' }}</div>
