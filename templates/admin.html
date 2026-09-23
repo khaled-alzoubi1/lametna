@@ -500,9 +500,14 @@
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">رابط الصورة الشخصية (اختياري)</label>
                         <input type="url" name="photo_url" class="custom-input" placeholder="https://example.com/photo.jpg">
                     </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الرقم الميداني (اختياري)</label>
-                        <input type="number" name="badge_number" placeholder="تعديل الرقم الميداني" class="custom-input" style="margin-bottom: 10px;">
+                    <div style="background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); padding: 12px; border-radius: 8px; margin-bottom: 15px; grid-column: 1 / -1;">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; color: #facc15;">
+                            <i class="fa-solid fa-hashtag"></i> الرقم الميداني للمتطوع (Badge Number)
+                        </label>
+                        <p style="font-size: 12px; color: #d1d5db; margin-bottom: 8px;">
+                            لإصلاح المتطوعين القدامى (الذين يظهر رقمهم ----)، أدخل الرقم الجديد هنا واضغط حفظ. (مثال: 21, 22)
+                        </p>
+                        <input type="number" name="badge_number" value="{{ v.badge_number if v is defined and v.badge_number else '' }}" placeholder="أدخل الرقم هنا..." class="custom-input" style="width: 100%; border: 1px solid #facc15;">
                     </div>
                     <div>
                         <button type="submit" class="btn-primary-block" style="padding: 10px;">تثبيت المنصب</button>
