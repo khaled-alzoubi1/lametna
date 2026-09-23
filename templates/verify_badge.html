@@ -59,7 +59,7 @@
             <div class="data-grid">
                 <div class="data-item">
                     <strong>الرقم الميداني:</strong>
-                    LB-{{ '%04d' % volunteer.id }}
+                    LB-{{ '%04d' % volunteer.badge_number|int if volunteer.badge_number else '----' }}
                 </div>
                 <div class="data-item">
                     <strong>الفريق التابع له:</strong>

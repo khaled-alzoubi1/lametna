@@ -482,31 +482,31 @@
             </div>
 
             <div class="services-grid" id="gallery-container">
-                {% for item in gallery_items %}
-                <div class="service-card gallery-item" data-type="{{ item.type }}" onclick="openMedia('{{ item.media_url }}', '{{ item.type }}', '{{ item.title }}')">
-                    <img src="{{ item.thumbnail_url or item.media_url }}" alt="{{ item.title }}">
+                {% for album in albums %}
+                <div class="service-card gallery-item" data-type="{{ album.category }}" onclick="openAlbumModal('{{ album.id }}')">
+                    <img src="{{ album.cover_image_url }}" alt="{{ album.title }}">
                     <div class="gallery-item-overlay">
-                        {% if item.type == 'video' %}
+                        {% if album.category == 'video' %}
                         <div class="gallery-play-icon"><i class="fa-solid fa-play"></i></div>
                         {% endif %}
                     </div>
                     <div class="service-card-title">
-                        {% if item.type == 'video' %}<i class="fa-solid fa-play" style="display:block; margin-bottom: 6px;"></i>{% endif %}
-                        {{ item.title }}
+                        {% if album.category == 'video' %}<i class="fa-solid fa-play" style="display:block; margin-bottom: 6px;"></i>{% endif %}
+                        {{ album.title }}
                     </div>
                 </div>
                 {% else %}
-                <div class="service-card gallery-item" data-type="photo" onclick="openMedia('https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80', 'photo', 'حملة الشتاء الميدانية')">
+                <div class="service-card gallery-item" data-type="photo" onclick="alert('لم يتم إضافة ألبومات بعد.')">
                     <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80" alt="تطوع">
                     <div class="gallery-item-overlay"></div>
                     <div class="service-card-title">حملة الشتاء الميدانية</div>
                 </div>
-                <div class="service-card gallery-item" data-type="photo" onclick="openMedia('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80', 'photo', 'توزيع الحقائب المدرسية')">
+                <div class="service-card gallery-item" data-type="photo" onclick="alert('لم يتم إضافة ألبومات بعد.')">
                     <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80" alt="تعليم">
                     <div class="gallery-item-overlay"></div>
                     <div class="service-card-title">توزيع الحقائب المدرسية</div>
                 </div>
-                <div class="service-card gallery-item" data-type="video" onclick="openMedia('https://www.w3schools.com/html/mov_bbb.mp4', 'video', 'التوثيق السنوي لمتنا بصمة')">
+                <div class="service-card gallery-item" data-type="video" onclick="alert('لم يتم إضافة ألبومات بعد.')">
                     <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80" alt="لقاء المتطوعين">
                     <div class="gallery-item-overlay">
                         <div class="gallery-play-icon"><i class="fa-solid fa-play"></i></div>
@@ -714,8 +714,10 @@
 
     <!-- مشغل الوسائط المنبثق Lightbox Modal -->
     <div id="mediaModal" class="media-lightbox">
-        <div class="lightbox-box">
+        <div class="lightbox-box" style="position: relative;">
             <button class="close-btn-lightbox" onclick="closeMedia()">&times;</button>
+            <button id="lightboxPrevBtn" onclick="lightboxPrev()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; font-size: 2rem; cursor: pointer; padding: 10px 15px; border-radius: 5px; z-index: 10;">&#10094;</button>
+            <button id="lightboxNextBtn" onclick="lightboxNext()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; font-size: 2rem; cursor: pointer; padding: 10px 15px; border-radius: 5px; z-index: 10;">&#10095;</button>
             <div id="modalContent" style="width: 100%; max-height: 520px; display: flex; justify-content: center; align-items: center; background: #000;"></div>
             <div id="modalCaption" style="color: #fff; text-align: center; padding: 14px; font-weight: 700; background: #121212; font-size: 1.05rem;"></div>
         </div>
@@ -723,6 +725,22 @@
 
     <!-- ═══════════ JAVASCRIPT — PRESERVED + Scroll Observer ═══════════ -->
     <script>
+        const ALBUMS_DATA = {
+            {% for album in albums %}
+            "{{ album.id }}": {
+                title: "{{ album.title|replace('"', '\\"') }}",
+                media: [
+                    {% for m in album.media %}
+                    { url: "{{ m.media_url }}", type: "{{ m.media_type }}" }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        };
+        
+        let currentAlbumId = null;
+        let currentMediaIndex = 0;
+
         // زر فتح وإغلاق قائمة الهاتف الذكي
         function toggleMobileNav() {
             const navLinks = document.getElementById('mainNavLinks');
@@ -761,22 +779,58 @@
             });
         }
 
-        function openMedia(url, type, caption) {
-            const modal     = document.getElementById('mediaModal');
-            const container = document.getElementById('modalContent');
-            const cap       = document.getElementById('modalCaption');
-            cap.innerText   = caption;
-            if (type === 'video') {
-                container.innerHTML = `<video controls autoplay style="width: 100%; max-height: 500px;"><source src="${url}" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>`;
-            } else {
-                container.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 500px; object-fit: contain;">`;
+        function openAlbumModal(albumId) {
+            const album = ALBUMS_DATA[albumId];
+            if (!album || !album.media || album.media.length === 0) {
+                alert('هذا الألبوم لا يحتوي على وسائط.');
+                return;
             }
-            modal.style.display = 'flex';
+            currentAlbumId = albumId;
+            currentMediaIndex = 0;
+            
+            document.getElementById('mediaModal').style.display = 'flex';
+            renderCurrentMedia();
+        }
+
+        function renderCurrentMedia() {
+            const album = ALBUMS_DATA[currentAlbumId];
+            const media = album.media[currentMediaIndex];
+            const container = document.getElementById('modalContent');
+            const cap = document.getElementById('modalCaption');
+            
+            cap.innerText = album.title + ' (' + (currentMediaIndex + 1) + ' / ' + album.media.length + ')';
+            
+            if (media.type === 'video') {
+                container.innerHTML = `<video controls autoplay style="width: 100%; max-height: 500px;"><source src="${media.url}" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>`;
+            } else {
+                container.innerHTML = `<img src="${media.url}" style="max-width: 100%; max-height: 500px; object-fit: contain;">`;
+            }
+
+            const prevBtn = document.getElementById('lightboxPrevBtn');
+            const nextBtn = document.getElementById('lightboxNextBtn');
+            if (prevBtn) prevBtn.style.display = currentMediaIndex > 0 ? 'block' : 'none';
+            if (nextBtn) nextBtn.style.display = currentMediaIndex < album.media.length - 1 ? 'block' : 'none';
+        }
+
+        function lightboxNext() {
+            const album = ALBUMS_DATA[currentAlbumId];
+            if (currentMediaIndex < album.media.length - 1) {
+                currentMediaIndex++;
+                renderCurrentMedia();
+            }
+        }
+
+        function lightboxPrev() {
+            if (currentMediaIndex > 0) {
+                currentMediaIndex--;
+                renderCurrentMedia();
+            }
         }
 
         function closeMedia() {
             document.getElementById('modalContent').innerHTML = '';
             document.getElementById('mediaModal').style.display = 'none';
+            currentAlbumId = null;
         }
 
         window.onclick = function(event) {

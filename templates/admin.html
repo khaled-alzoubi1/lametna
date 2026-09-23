@@ -501,6 +501,10 @@
                         <input type="url" name="photo_url" class="custom-input" placeholder="https://example.com/photo.jpg">
                     </div>
                     <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الرقم الميداني (اختياري)</label>
+                        <input type="number" name="badge_number" placeholder="تعديل الرقم الميداني" class="custom-input" style="margin-bottom: 10px;">
+                    </div>
+                    <div>
                         <button type="submit" class="btn-primary-block" style="padding: 10px;">تثبيت المنصب</button>
                     </div>
                 </form>
@@ -620,6 +624,7 @@
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status != 'approved' %}
                                     <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                        <input type="number" name="badge_number" placeholder="الرقم الميداني المخصص (مثال: 21)" class="custom-input" required style="margin-bottom: 10px;">
                                         <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
                                     </form>
                                     <form action="{{ url_for('reject_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
@@ -761,6 +766,7 @@
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status != 'approved' %}
                                     <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
+                                        <input type="number" name="badge_number" placeholder="الرقم الميداني المخصص (مثال: 21)" class="custom-input" required style="margin-bottom: 10px;">
                                         <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
                                     </form>
                                     <form action="{{ url_for('reject_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
@@ -1133,43 +1139,44 @@
                 <div class="admin-section-title">
                     <i class="fa-solid fa-cloud-arrow-up" style="color: var(--jo-green);"></i> إضافة صورة أو فيديو للمعرض الميداني
                 </div>
-                <form action="{{ url_for('add_gallery_item') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                <form action="{{ url_for('add_gallery_item') }}" method="POST" enctype="multipart/form-data" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 2rem;">
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">عنوان المادة</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">عنوان الألبوم</label>
                         <input type="text" name="title" class="custom-input" placeholder="حملة طرود الخير - عمان" required>
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">نوع المادة</label>
-                        <select name="type" class="custom-input" required>
-                            <option value="photo">صورة (Photo)</option>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">تصنيف الألبوم</label>
+                        <select name="category" class="custom-input" required>
+                            <option value="photo">صور (Photo)</option>
                             <option value="video">فيديو (Video)</option>
+                            <option value="all">مختلط (Mixed)</option>
                         </select>
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">رابط ملف الوسائط (Media URL)</label>
-                        <input type="url" name="media_url" class="custom-input" placeholder="https://example.com/media.jpg" required>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">صورة الغلاف (Cover Image)</label>
+                        <input type="file" name="cover_image" class="custom-input" accept="image/*" required>
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">صورة الغلاف (Thumbnail - اختياري للفيديو)</label>
-                        <input type="url" name="thumbnail_url" class="custom-input" placeholder="https://example.com/thumb.jpg">
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">محتوى الألبوم (صور/فيديو متعدد)</label>
+                        <input type="file" name="album_media" class="custom-input" accept="image/*,video/*" multiple required>
                     </div>
                     <div style="grid-column: 1 / -1;">
-                        <button type="submit" class="btn-primary-block" style="max-width: 200px;">إدراج في المعرض</button>
+                        <button type="submit" class="btn-primary-block" style="max-width: 200px;">إنشاء الألبوم وإدراج الوسائط</button>
                     </div>
                 </form>
 
                 <div class="admin-section-title" style="font-size: 1.15rem; border-right-color: var(--jo-black);">
-                    العناصر المعروضة حالياً
+                    الألبومات المعروضة حالياً
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                    {% for item in gallery_items %}
+                    {% for item in albums %}
                     <div style="background: var(--jo-light-gray); border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--jo-border);">
-                        <img src="{{ item.thumbnail_url or item.media_url }}" style="width: 100%; height: 120px; object-fit: cover;" alt="{{ item.title }}">
+                        <img src="{{ item.cover_image_url }}" style="width: 100%; height: 120px; object-fit: cover;" alt="{{ item.title }}">
                         <div style="padding: 10px;">
                             <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 5px;">{{ item.title }}</div>
-                            <div style="font-size: 0.75rem; color: var(--jo-dark-gray); margin-bottom: 8px;">النوع: {{ 'صورة' if item.type == 'photo' else 'فيديو' }}</div>
-                            <form action="{{ url_for('delete_gallery_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('حذف هذا العنصر من المعرض؟');" style="margin: 0;">
-                                <button type="submit" class="btn-ctrl-action btn-red-reject" style="width: 100%; justify-content: center;"><i class="fa-solid fa-trash-can"></i> حذف</button>
+                            <div style="font-size: 0.75rem; color: var(--jo-dark-gray); margin-bottom: 8px;">محتوى: {{ item.media|length }} وسائط</div>
+                            <form action="{{ url_for('delete_gallery_item', item_id=item.id) }}" method="POST" onsubmit="return confirm('تأكيد حذف الألبوم بجميع محتوياته؟');" style="margin: 0;">
+                                <button type="submit" class="btn-ctrl-action btn-red-reject" style="width: 100%; justify-content: center;"><i class="fa-solid fa-trash-can"></i> حذف الألبوم</button>
                             </form>
                         </div>
                     </div>
@@ -1306,7 +1313,7 @@
 
                             <div>
                                 <div style="font-weight: 900; font-size: 0.9rem; color: var(--gold); margin-bottom: 4px;">
-                                    الرقم القيادي: LB-{{ '%04d' % current_admin.id }}
+                                    الرقم القيادي: LB-{{ '%04d' % current_admin.badge_number|int if current_admin.badge_number else '----' }}
                                 </div>
                                 <p class="badge-back-rules">
                                     بطاقة قيادية معتمدة تمنح حاملها صلاحية الإشراف والتنسيق الميداني باسم فريق لمتنا بصمة.

@@ -323,7 +323,7 @@
 
                             <div>
                                 <div style="font-weight: 900; font-size: 0.9rem; color: var(--jo-black); margin-bottom: 4px;">
-                                    الرقم الميداني: LB-{{ '%04d' % user.id }}
+                                    الرقم الميداني: LB-{{ '%04d' % user.badge_number|int if user.badge_number else '----' }}
                                 </div>
                                 <p class="badge-back-rules">
                                     هذه البطاقة وثيقة تطوعية معتمدة صادرة عن إدارة فريق لمتنا بصمة. يُمنع استخدامها لغير الأغراض التطوعية الميدانية المقررة.

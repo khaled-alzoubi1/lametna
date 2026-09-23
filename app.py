@@ -86,6 +86,7 @@ class Volunteer(db.Model):
     photo_url = db.Column(db.String(500), nullable=True)
     leader_notes = db.Column(db.Text, nullable=True)
     badges = db.Column(db.Text, default='')  # تخزين الأوسمة مفصولة بفواصل
+    badge_number = db.Column(db.String(50), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # العلاقات التابعة
@@ -222,14 +223,22 @@ class Excuse(db.Model):
     reason = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class GalleryItem(db.Model):
-    __tablename__ = 'gallery'
+class Album(db.Model):
+    __tablename__ = 'albums'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150), nullable=False)
-    type = db.Column(db.String(20), nullable=False)  # photo أو video
-    media_url = db.Column(db.String(500), nullable=False)
-    thumbnail_url = db.Column(db.String(500), nullable=True)
+    category = db.Column(db.String(50), nullable=False, default='عام')
+    cover_image_url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    media = db.relationship('AlbumMedia', backref='album', lazy=True, cascade="all, delete-orphan")
+
+class AlbumMedia(db.Model):
+    __tablename__ = 'album_media'
+    id = db.Column(db.Integer, primary_key=True)
+    album_id = db.Column(db.Integer, db.ForeignKey('albums.id'), nullable=False)
+    media_url = db.Column(db.String(500), nullable=False)
+    media_type = db.Column(db.String(20), nullable=False) # 'image' or 'video'
 
 class Inquiry(db.Model):
     __tablename__ = 'inquiries'
@@ -265,7 +274,7 @@ def index():
     settings = get_settings()
     leaders = Volunteer.query.filter_by(is_leader=True).all()
     events = Event.query.order_by(Event.id.desc()).limit(4).all()
-    gallery_items = GalleryItem.query.order_by(GalleryItem.id.desc()).all()
+    albums = Album.query.order_by(Album.id.desc()).all()
     
     top_volunteers = Volunteer.query.filter_by(status='approved')\
                                     .order_by(Volunteer.volunteer_hours.desc(), Volunteer.attended_events_count.desc())\
@@ -290,7 +299,7 @@ def index():
         settings=settings,
         leaders=leaders,
         events=events,
-        gallery_items=gallery_items,
+        albums=albums,
         top_volunteers=top_volunteers,
         stats=stats,
         user_registered_event_ids=user_registered_event_ids
@@ -636,7 +645,7 @@ def admin_dashboard():
     inquiries = Inquiry.query.order_by(Inquiry.id.desc()).all()
 
     events = Event.query.order_by(Event.id.desc()).all()
-    gallery_items = GalleryItem.query.order_by(GalleryItem.id.desc()).all()
+    albums = Album.query.order_by(Album.id.desc()).all()
     excuses = Excuse.query.order_by(Excuse.id.desc()).all()
 
     # --- PHASE 2: Data Aggregation for Chart.js Command Center ---
@@ -646,7 +655,7 @@ def admin_dashboard():
         city_counts = {"عمان": 120, "الزرقاء": 85, "إربد": 60, "البلقاء": 40, "أخرى": 15}
 
     growth_labels = ['أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر']
-    growth_data = [max(1, len(all_volunteers)*2), max(1, len(events)*3), max(1, len(gallery_items)*2), max(1, len(excuses)), max(1, len(all_volunteers)*3), max(1, len(events)*4)]
+    growth_data = [max(1, len(all_volunteers)*2), max(1, len(events)*3), max(1, len(albums)*2), max(1, len(excuses)), max(1, len(all_volunteers)*3), max(1, len(events)*4)]
 
     activity_labels = ['وقف ثريد', 'مسنين', 'بنك ملابس', 'أطفال', 'بيئي']
     activity_data = [
@@ -674,7 +683,7 @@ def admin_dashboard():
         current_admin=current_admin,
         volunteers=volunteers,
         events=events,
-        gallery_items=gallery_items,
+        albums=albums,
         excuses=excuses,
         inquiries=inquiries,
         chart_data=chart_data,
@@ -734,6 +743,17 @@ def remove_rsvp_volunteer(reg_id):
 def approve_volunteer(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    # Intercept incoming badge_number
+    submitted_number = request.form.get('badge_number')
+    if submitted_number:
+        submitted_number = submitted_number.strip()
+        existing = Volunteer.query.filter_by(badge_number=submitted_number).first()
+        if existing and existing.id != v.id:
+            flash('الرقم الميداني مسجل مسبقاً لمتطوع آخر. يرجى اختيار رقم مختلف.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+        v.badge_number = submitted_number
+
     v.status = 'approved'
     db.session.commit()
     flash(f'تم اعتماد المتطوع {v.name}.', 'success')
@@ -756,13 +776,24 @@ def assign_leader():
     photo_url = request.form.get('photo_url')
 
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    # Intercept incoming badge_number
+    submitted_number = request.form.get('badge_number')
+    if submitted_number:
+        submitted_number = submitted_number.strip()
+        existing = Volunteer.query.filter_by(badge_number=submitted_number).first()
+        if existing and existing.id != v.id:
+            flash('الرقم الميداني مسجل مسبقاً لمتطوع آخر. يرجى اختيار رقم مختلف.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+        v.badge_number = submitted_number
+
     v.is_leader = True
     v.position = position
     if photo_url:
         v.photo_url = photo_url
     db.session.commit()
 
-    flash(f'تم تثبيت {v.name} في منصب: {position}.', 'success')
+    flash(f'تم تحديث بيانات {v.name} وتثبيته في المنصب.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/remove_leader/<int:volunteer_id>', methods=['POST'])
@@ -945,24 +976,55 @@ def assign_duty():
 @app.route('/admin/gallery/add', methods=['POST'])
 def add_gallery_item():
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
-    new_item = GalleryItem(
+    
+    # 1. Create the Album
+    new_album = Album(
         title=request.form.get('title'),
-        type=request.form.get('type'),
-        media_url=request.form.get('media_url'),
-        thumbnail_url=request.form.get('thumbnail_url')
+        category=request.form.get('category', 'عام')
     )
-    db.session.add(new_item)
+    
+    # Handle Cover Image Upload
+    cover_file = request.files.get('cover_image')
+    if cover_file and cover_file.filename:
+        safe_name = secure_filename(f"cover_{datetime.now().strftime('%Y%m%d%H%M%S')}_{cover_file.filename}")
+        os.makedirs(app.config.get('UPLOAD_FOLDER', 'static/uploads'), exist_ok=True)
+        cover_file.save(os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), safe_name))
+        new_album.cover_image_url = url_for('static', filename=f'uploads/{safe_name}')
+    else:
+        new_album.cover_image_url = request.form.get('cover_image_url', '') # Fallback to URL if provided
+
+    db.session.add(new_album)
+    db.session.commit() # Commit to get the album ID
+    
+    # 2. Handle Multi-Media Upload
+    uploaded_files = request.files.getlist('album_media')
+    for file in uploaded_files:
+        if file and file.filename:
+            safe_name = secure_filename(f"media_{new_album.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+            os.makedirs(app.config.get('UPLOAD_FOLDER', 'static/uploads'), exist_ok=True)
+            file.save(os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), safe_name))
+            
+            ext = safe_name.rsplit('.', 1)[-1].lower()
+            media_type = 'video' if ext in ['mp4', 'webm', 'ogg', 'mov'] else 'image'
+            
+            new_media = AlbumMedia(
+                album_id=new_album.id,
+                media_url=url_for('static', filename=f'uploads/{safe_name}'),
+                media_type=media_type
+            )
+            db.session.add(new_media)
+            
     db.session.commit()
-    flash('تمت إضافة المادة للمعرض بنجاح.', 'success')
+    flash('تمت إضافة الألبوم بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/gallery/delete/<int:item_id>', methods=['POST'])
 def delete_gallery_item(item_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
-    item = GalleryItem.query.get_or_404(item_id)
-    db.session.delete(item)
+    album = Album.query.get_or_404(item_id)
+    db.session.delete(album)
     db.session.commit()
-    flash('تم حذف العنصر من المعرض.', 'info')
+    flash('تم حذف الألبوم.', 'info')
     return redirect(url_for('admin_dashboard'))
 
 # --- إدارة محتوى ومظهر الموقع (CMS) ---
@@ -1024,6 +1086,7 @@ with app.app_context():
         ("site_settings", "card_title_excuse", "VARCHAR(100) DEFAULT 'تقديم اعتذار عن فعالية'"),
         ("site_settings", "card_title_transport", "VARCHAR(100) DEFAULT 'نقاط التجمع والمواصلات'"),
         ("volunteers", "badges", "TEXT DEFAULT ''"),
+        ("volunteers", "badge_number", "VARCHAR(50)"),
         ("volunteers", "gender", "VARCHAR(10)"),
         ("volunteers", "skills", "VARCHAR(200)"),
         ("volunteers", "experience", "TEXT"),
