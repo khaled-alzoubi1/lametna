@@ -126,7 +126,11 @@ class Volunteer(db.Model):
         if changed:
             self.badges = ','.join(badges)
 
-        raw_phone = re.sub(r'\D', '', self.phone or '')
+    @property
+    def wa_link(self):
+        if not self.phone:
+            return "#"
+        raw_phone = re.sub(r'\D', '', self.phone)
         if raw_phone.startswith('0'):
             return f"https://wa.me/962{raw_phone[1:]}"
         elif raw_phone.startswith('962'):
