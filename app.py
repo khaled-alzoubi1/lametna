@@ -172,7 +172,8 @@ class Event(db.Model):
     date = db.Column(db.String(50), nullable=False)
     time = db.Column(db.String(50), nullable=False)
     location = db.Column(db.String(150), nullable=False)
-    capacity = db.Column(db.Integer, default=10)  # المقاعد المطلوبة للميدان
+    capacity = db.Column(db.Integer, default=10)
+    event_hours = db.Column(db.Integer, default=3)  # المقاعد المطلوبة للميدان
     secret_code = db.Column(db.String(10), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -848,7 +849,7 @@ def checkin_rsvp_volunteer(reg_id):
     reg = EventRegistration.query.get_or_404(reg_id)
     if not reg.attended:
         reg.attended = True
-        hours_to_award = request.form.get('hours', type=int) or 3
+        hours_to_award = reg.event.event_hours if reg.event and reg.event.event_hours else 3
         reg.volunteer.volunteer_hours = (reg.volunteer.volunteer_hours or 0) + hours_to_award
         reg.volunteer.attended_events_count = (reg.volunteer.attended_events_count or 0) + 1
         reg.volunteer.auto_assign_badges()
@@ -1083,6 +1084,7 @@ def delete_volunteer_admin(volunteer_id):
 def add_event():
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     capacity = request.form.get('capacity', type=int) or 10
+    event_hours = request.form.get('event_hours', type=int) or 3
     code = str(random.randint(1000, 9999))
     new_event = Event(
         title=request.form.get('title'),
@@ -1091,6 +1093,7 @@ def add_event():
         time=request.form.get('time'),
         location=request.form.get('location'),
         capacity=capacity,
+        event_hours=event_hours,
         secret_code=code
     )
     db.session.add(new_event)
@@ -1409,6 +1412,7 @@ with app.app_context():
     db.create_all()
     
     migrations = [
+        ("events", "event_hours", "INTEGER DEFAULT 3"),
         ("system_settings", "banner_text", "VARCHAR(500)"),
         ("system_settings", "is_banner_active", "BOOLEAN DEFAULT FALSE"),
 

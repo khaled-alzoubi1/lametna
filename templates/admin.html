@@ -334,6 +334,17 @@
         .pending-volunteer-card .volunteer-text h4 { color: #fca5a5 !important; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Bootstrap CSS & JS for Modals -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+/* Scoped overrides to protect the existing dark theme from Bootstrap */
+body { background-color: var(--jo-bg); color: var(--jo-light-gray); font-family: 'Cairo', sans-serif; }
+a { text-decoration: none; }
+h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
+</style>
+
 </head>
 <body>
 
@@ -451,11 +462,11 @@
                     <i class="fa-solid fa-file-excel"></i> تصدير كشف Excel
                 </a>
                 
-                <button onclick="openAdminModal('bannerModal')" class="btn-ctrl-action" style="background: #dc3545; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
+                <button data-bs-toggle="modal" data-bs-target="#bannerModal" class="btn-ctrl-action" style="background: #dc3545; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
                     <i class="fa-solid fa-bullhorn"></i> لوحة الإعلانات
                 </button>
 
-                <button onclick="openAdminModal('waBroadcastModal')" class="btn-ctrl-action" style="background: #28a745; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
+                <button data-bs-toggle="modal" data-bs-target="#waBulkModal" class="btn-ctrl-action" style="background: #28a745; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
                     <i class="fa-brands fa-whatsapp"></i> رسالة واتساب مخصصة
                 </button>
                 <a href="{{ settings.whatsapp_url if settings.whatsapp_url and settings.whatsapp_url.startswith('http') else 'https://' + settings.whatsapp_url if settings.whatsapp_url else '#' }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
@@ -598,7 +609,10 @@
                         <div class="volunteer-profile-snippet">
                             <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" alt="{{ v.name }}">
                             <div class="volunteer-text">
-                                <h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
+                                <div style="display: flex; align-items: center;">
+<input type="checkbox" class="vol-select" value="{{ v.id }}" data-name="{{ v.name }}" data-phone="{{ v.phone }}" style="transform: scale(1.5); margin-right: 15px; cursor: pointer;">
+<h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
+</div>
                                 <div>
                                     <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
                                     <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
@@ -732,7 +746,10 @@
                         <div class="volunteer-profile-snippet">
                             <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" loading="lazy" alt="{{ v.name }}">
                             <div class="volunteer-text">
-                                <h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
+                                <div style="display: flex; align-items: center;">
+<input type="checkbox" class="vol-select" value="{{ v.id }}" data-name="{{ v.name }}" data-phone="{{ v.phone }}" style="transform: scale(1.5); margin-right: 15px; cursor: pointer;">
+<h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
+</div>
                                 <div>
                                     <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
                                     <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
@@ -893,7 +910,8 @@
                     </div>
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">العدد المطلوب للميدان</label>
-                        <input type="number" name="capacity" class="custom-input" min="1" max="200" value="7" required>
+                        <input type="number" name="event_hours" placeholder="عدد الساعات المخصصة (افتراضي 3)" class="custom-input" min="1" max="24" style="margin-bottom: 10px;">
+<input type="number" name="capacity" class="custom-input" min="1" max="200" value="7" required>
                     </div>
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">تاريخ الفعالية</label>
@@ -940,7 +958,8 @@
                                 <span style="font-weight: 800; font-size: 0.9rem; padding: 4px 12px; border-radius: 12px; background: {% if ev.is_full %}#fee2e2; color: #b91c1c;{% else %}#dcfce7; color: #15803d;{% endif %}">
                                     {{ ev.registered_count }} / {{ ev.capacity }} مسجلين
                                 </span>
-                                <a href="{{ url_for('export_event_roster', event_id=ev.id) }}" class="btn-checkin" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-left: 5px; display: inline-block;">
+                                <button data-bs-toggle="modal" data-bs-target="#waBulkEventModal" onclick="currentEventId={{ ev.id }}" class="btn-ctrl-action" style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer;"><i class="fa-brands fa-whatsapp"></i> رسالة واتساب للمحددين</button>
+<a href="{{ url_for('export_event_roster', event_id=ev.id) }}" class="btn-checkin" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-left: 5px; display: inline-block;">
                              <i class="fa-solid fa-file-excel"></i> تصدير الكشف
                                 </a>
                                 <form action="{{ url_for('delete_event', event_id=ev.id) }}" method="POST" onsubmit="return confirm('حذف الفعالية؟');" style="margin: 0;">
@@ -959,7 +978,8 @@
                                     {% for reg in ev.registrations %}
                                     <div class="roster-volunteer-item">
                                         <div style="display: flex; align-items: center; gap: 10px;">
-                                            <img src="{{ reg.volunteer.photo_url or url_for('static', filename='logo.png') }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                                            <input type="checkbox" class="vol-select-event" data-event-id="{{ ev.id }}" value="{{ reg.volunteer.id }}" data-name="{{ reg.volunteer.name }}" data-phone="{{ reg.volunteer.phone }}" style="transform: scale(1.5); margin-right: 10px; cursor: pointer;">
+<img src="{{ reg.volunteer.photo_url or url_for('static', filename='logo.png') }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
                                             <div>
                                                 <span style="font-weight: 800; color: var(--jo-black);">{{ reg.volunteer.name }}</span>
                                                 <div style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ reg.volunteer.team }} | {{ reg.volunteer.phone }}</div>
@@ -1560,28 +1580,8 @@
         });
     </script>
 
-    <div id="bannerModal" class="admin-modal-overlay">
-        <div class="admin-modal-box">
-            <button class="close-modal-btn" onclick="closeAdminModal('bannerModal')">&times;</button>
-            <h3 style="margin-bottom: 15px; color: var(--jo-black);">إدارة لوحة الإعلانات</h3>
-            <form action="{{ url_for('update_banner') }}" method="POST">
-                <textarea name="banner_text" class="custom-input" rows="3" placeholder="نص الإعلان...">{{ sys_settings.banner_text if sys_settings else '' }}</textarea>
-                <label style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
-                    <input type="checkbox" name="is_banner_active" {% if sys_settings and sys_settings.is_banner_active %}checked{% endif %}>
-                    تفعيل لوحة الإعلانات
-                </label>
-                <button type="submit" class="btn-primary-block" style="margin-top: 15px;">حفظ</button>
-            </form>
-        </div>
-    </div>
-    <div id="waBroadcastModal" class="admin-modal-overlay">
-        <div class="admin-modal-box" style="max-width: 600px;">
-            <button class="close-modal-btn" onclick="closeAdminModal('waBroadcastModal')">&times;</button>
-            <h3 style="margin-bottom: 15px; color: var(--jo-black);">رسالة واتساب مخصصة للمحددين</h3>
-            <textarea id="waMessageText" class="custom-input" rows="4" placeholder="اكتب الرسالة هنا..."></textarea>
-            <button type="button" class="btn-primary-block" onclick="generateWALinks()" style="margin-top: 15px; background: #28a745;">توليد الروابط</button>
-            <div id="waLinksContainer" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;"></div>
-        </div>
+    
+    
     </div>
 
 
@@ -1593,6 +1593,200 @@
         <button type="button" class="btn-ctrl-action" style="background:#ef4444; color:white; border:none; padding: 8px 15px;" onclick="promptBulk('evaluation')">ملاحظة إدارية</button>
         <form id="bulkActionFormHidden" method="POST" style="display:none;"></form>
     </div>
+
+
+    <!-- Banner Modal (Bootstrap) -->
+    <div class="modal fade" id="bannerModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: var(--jo-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: white; margin: 0;">إدارة لوحة الإعلانات</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="background: transparent; color: white; border: none; font-size: 1.5rem;">&times;</button>
+            </div>
+            <form action="{{ url_for('update_banner') }}" method="POST">
+                <textarea name="banner_text" class="custom-input" rows="3" placeholder="نص الإعلان...">{{ sys_settings.banner_text if sys_settings else '' }}</textarea>
+                <label style="display: flex; align-items: center; gap: 10px; margin-top: 15px; color: white;">
+                    <input type="checkbox" name="is_banner_active" {% if sys_settings and sys_settings.is_banner_active %}checked{% endif %}>
+                    تفعيل لوحة الإعلانات
+                </label>
+                <button type="submit" class="btn-primary-block" style="margin-top: 15px;">حفظ</button>
+            </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- WA Broadcast Modal (Bootstrap) -->
+    <div class="modal fade" id="waBulkModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
+        <div class="modal-content" style="background: var(--jo-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: white; margin: 0;">رسالة واتساب مخصصة للمحددين</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="background: transparent; color: white; border: none; font-size: 1.5rem;">&times;</button>
+            </div>
+            <textarea id="waMessageText" class="custom-input" rows="4" placeholder="اكتب الرسالة هنا..."></textarea>
+            <button type="button" class="btn-primary-block" onclick="generateWALinks('.vol-select:checked', 'waLinksContainer', 'waMessageText')" style="margin-top: 15px; background: #28a745;">توليد الروابط</button>
+            <div id="waLinksContainer" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WA Event Bulk Modal (Bootstrap) -->
+    <div class="modal fade" id="waBulkEventModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
+        <div class="modal-content" style="background: var(--jo-card); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: white; margin: 0;">مراسلة المشاركين المحددين</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="background: transparent; color: white; border: none; font-size: 1.5rem;">&times;</button>
+            </div>
+            <textarea id="waEventMessageText" class="custom-input" rows="4" placeholder="اكتب الرسالة هنا..."></textarea>
+            <button type="button" class="btn-primary-block" onclick="generateEventWALinks()" style="margin-top: 15px; background: #28a745;">توليد الروابط</button>
+            <div id="waEventLinksContainer" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </div>
+
+
+<script>
+let currentEventId = null;
+
+// Bulk Actions
+const selectAll = document.getElementById('selectAllVols');
+const bulkToolbar = document.getElementById('bulkToolbar');
+const bulkCount = document.getElementById('bulkCountDisplay');
+
+function getVolCheckboxes() {
+    return document.querySelectorAll('.vol-select');
+}
+
+function updateBulkToolbar() {
+    const checked = document.querySelectorAll('.vol-select:checked');
+    if (bulkToolbar && bulkCount) {
+        if (checked.length > 0) {
+            bulkToolbar.style.display = 'flex';
+            bulkCount.innerText = checked.length;
+        } else {
+            bulkToolbar.style.display = 'none';
+        }
+    }
+}
+
+if(selectAll) {
+    selectAll.addEventListener('change', (e) => {
+        getVolCheckboxes().forEach(cb => cb.checked = e.target.checked);
+        updateBulkToolbar();
+    });
+}
+document.addEventListener('change', (e) => {
+    if(e.target.classList.contains('vol-select')) {
+        updateBulkToolbar();
+    }
+});
+
+function getSelectedVols() {
+    return Array.from(document.querySelectorAll('.vol-select:checked')).map(cb => cb.value);
+}
+
+function promptBulk(type) {
+    const vols = getSelectedVols();
+    if(vols.length === 0) return;
+    
+    let actionUrl = '';
+    let extraInput = '';
+    
+    if(type === 'hours') {
+        let val = prompt('أدخل عدد الساعات لإضافتها:');
+        if(!val) return;
+        actionUrl = '{{ url_for("bulk_add_hours") }}';
+        extraInput = `<input type="hidden" name="hours" value="${val}">`;
+    } else if(type === 'events') {
+        let val = prompt('أدخل عدد الفعاليات لإضافتها:');
+        if(!val) return;
+        actionUrl = '{{ url_for("bulk_add_events") }}';
+        extraInput = `<input type="hidden" name="events" value="${val}">`;
+    } else if(type === 'evaluation') {
+        let val = prompt('أدخل الملاحظة الإدارية:');
+        if(!val) return;
+        actionUrl = '{{ url_for("bulk_evaluation") }}';
+        extraInput = `<input type="hidden" name="evaluation" value="${val}">`;
+    }
+    
+    const form = document.getElementById('bulkActionFormHidden');
+    if(form) {
+        form.action = actionUrl;
+        form.innerHTML = extraInput;
+        vols.forEach(vid => {
+            form.innerHTML += `<input type="hidden" name="vol_ids" value="${vid}">`;
+        });
+        form.submit();
+    }
+}
+
+const bForm = document.getElementById('bulkApproveForm');
+if(bForm) {
+    bForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const vols = getSelectedVols();
+        if(vols.length === 0) return;
+        const form = e.target;
+        form.innerHTML = '<button type="submit" class="btn-ctrl-action" style="background:#10b981; color:white; border:none; padding: 8px 15px;">اعتماد المحدد</button>';
+        vols.forEach(vid => {
+            form.innerHTML += `<input type="hidden" name="vol_ids" value="${vid}">`;
+        });
+        form.submit();
+    });
+}
+
+function generateWALinks(selector, containerId, msgId) {
+    const msg = document.getElementById(msgId).value;
+    const container = document.getElementById(containerId);
+    if(container) {
+        container.innerHTML = '';
+        const checked = document.querySelectorAll(selector);
+        if(checked.length === 0) {
+            container.innerHTML = '<p style="color:red; font-weight:bold;">الرجاء تحديد متطوعين أولاً.</p>';
+            return;
+        }
+        checked.forEach(cb => {
+            let phone = cb.getAttribute('data-phone');
+            let name = cb.getAttribute('data-name');
+            if(phone.startsWith('0')) phone = phone.substring(1);
+            let link = `https://wa.me/962${phone}?text=${encodeURIComponent(msg)}`;
+            container.innerHTML += `<a href="${link}" target="_blank" class="btn-ctrl-action" style="background:#dcfce7; color:#16a34a; text-decoration:none; padding:10px; display:block; text-align:center;">إرسال إلى ${name}</a>`;
+        });
+    }
+}
+
+function generateEventWALinks() {
+    generateWALinks(`.vol-select-event[data-event-id="${currentEventId}"]:checked`, 'waEventLinksContainer', 'waEventMessageText');
+}
+
+function updateStat(volId, type, action) {
+    fetch('{{ url_for("ajax_update_stat") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({vol_id: volId, type: type, action: action})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if(data.success) {
+            if(type === 'hours') {
+                let el = document.getElementById('hours-count-'+volId);
+                if(el) el.innerText = 'ساعات: ' + data.hours;
+            }
+            if(type === 'events') {
+                let el = document.getElementById('events-count-'+volId);
+                if(el) el.innerText = 'الفعاليات: ' + data.events;
+            }
+        } else {
+            alert('حدث خطأ أثناء التحديث');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('حدث خطأ في الاتصال');
+    });
+}
+</script>
 
 </body>
 </html>
