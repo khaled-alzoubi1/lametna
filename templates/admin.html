@@ -554,7 +554,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                 </div>
 
                <!-- شريط البحث والفلاتر المرتبطة بالخادم -->
-            <form method="GET" action="{{ url_for('admin_dashboard') }}" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 10px; margin-bottom: 1.5rem; align-items: end;">
+            <form method="GET" action="{{ url_for('admin_dashboard') }}" id="searchForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 10px; margin-bottom: 1.5rem; align-items: end;">
                 <div>
                     <input type="text" name="search_name" id="volunteerSearchInput" class="custom-input" placeholder="بحث بالاسم أو الهاتف..." value="{{ search_name }}">
                 </div>
@@ -607,304 +607,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             </form>
             </div>
 
-            <div class="volunteers-list-container" id="volunteersContainer">
-
-                    <!-- Loop 1: Pending volunteers -->
-                    {% for v in volunteers if v.status == 'pending' %}
-                    <details class="admin-swipe-card pending-volunteer-card" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
-
-                    <!-- المعلومات الأساسية -->
-                    <summary class="volunteer-top-info card-summary">
-                        <div class="volunteer-profile-snippet">
-                            <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" alt="{{ v.name }}">
-                            <div class="volunteer-text">
-                                <div style="display: flex; align-items: center;">
-<input type="checkbox" class="vol-select" value="{{ v.id }}" data-name="{{ v.name }}" data-phone="{{ v.phone }}" style="transform: scale(1.5); margin-right: 15px; cursor: pointer;">
-<h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
-</div>
-                                <div>
-                                    <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
-                                    <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
-                                    <span><i class="fa-solid fa-location-dot"></i> {{ v.city }}</span>
-                                    <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
-                                    <span><i class="fa-solid fa-star"></i> {{ v.skills or 'لا توجد موهبة محددة' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </summary>
-
-                    <div class="card-expanded-content">
-                        {% if v.experience %}
-                        <div style="margin-bottom: 10px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
-                            <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
-                        </div>
-                        {% endif %}
-                        <!-- الحالة والمنصب القيادي والباجة -->
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                {% if v.status == 'approved' %}
-                                    <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-circle-check"></i> معتمد
-                                    </span>
-                                {% elif v.status == 'rejected' %}
-                                    <span style="background: #fee2e2; color: var(--jo-red); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-ban"></i> مرفوض
-                                    </span>
-                                {% else %}
-                                    <span style="background: #fef3c7; color: #d97706; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-clock"></i> بانتظار المراجعة
-                                    </span>
-                                {% endif %}
-
-                                {% if v.is_leader %}
-                                    <span style="background: #e0f2fe; color: #0284c7; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-star"></i> {{ v.position }}
-                                    </span>
-                                    <form action="{{ url_for('remove_leader', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                        <button type="submit" title="إلغاء المنصب القيادي" style="background: none; border: none; color: #94a3b8; cursor: pointer;">&times;</button>
-                                    </form>
-                                {% endif %}
-
-                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}"  onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
-                                    <i class="fa-solid fa-qrcode"></i> فحص الباجة
-                                </a>
-                            </div>
-
-                            <!-- أدوات الاعتماد، العدادات (+ / -)، وكلمة المرور -->
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                {% if v.status != 'approved' %}
-                                    <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                        <input type="number" name="badge_number" placeholder="الرقم الميداني المخصص (مثال: 21)" class="custom-input" required style="margin-bottom: 10px;">
-                                        <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
-                                    </form>
-                                    <form action="{{ url_for('reject_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                        <button type="submit" class="btn-ctrl-action btn-red-reject"><i class="fa-solid fa-xmark"></i> رفض</button>
-                                    </form>
-                                {% else %}
-                                    <div class="badge-counter-ctrl">
-                                        <span class="counter-val-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'increment')">+</button>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'decrement')">-</button>
-                                    </div>
-                                    <div class="badge-counter-ctrl">
-                                        <span id="hours-count-{{ v.id }}" class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'increment')">+</button>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'decrement')">-</button>
-                                    </div>
-                                {% endif %}
-                                <a href="{{ v.wa_link }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a; border-color: #86efac;" title="مراسلة فورية عبر واتساب">
-                                    <i class="fa-brands fa-whatsapp"></i> واتساب
-                                </a>
-                                <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                    <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر إلى 123456">
-                                        <i class="fa-solid fa-key"></i>
-                                    </button>
-                                </form>
-
-                                <form action="{{ url_for('delete_volunteer_admin', volunteer_id=v.id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا المتطوع نهائياً؟');" style="margin: 0;">
-                                    <button type="submit" class="btn-ctrl-action" style="background: transparent; color: var(--jo-red);" title="حذف نهائي">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- إدارة الأوسمة الممنوحة يدوياً -->
-                        <div class="badge-manager-bar">
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <span style="font-size: 0.85rem; font-weight: 800; color: var(--jo-black);">
-                                    <i class="fa-solid fa-award" style="color: var(--gold);"></i> الأوسمة الممنوحة:
-                                </span>
-                                {% for badge in v.badges_list %}
-                                    <span class="volunteer-badge-ribbon">
-                                        {{ badge }}
-                                        <form action="{{ url_for('remove_badge', volunteer_id=v.id) }}" method="POST" style="display:inline; margin:0;">
-                                            <input type="hidden" name="badge_name" value="{{ badge }}">
-                                            <button type="submit" title="سحب الوسام" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:900; margin-right:4px;">&times;</button>
-                                        </form>
-                                    </span>
-                                {% else %}
-                                    <span style="font-size: 0.8rem; color: #94a3b8;">لا توجد أوسمة ممنوحة حالياً.</span>
-                                {% endfor %}
-                            </div>
-
-                            <form action="{{ url_for('assign_badge', volunteer_id=v.id) }}" method="POST" style="display: flex; gap: 8px; align-items: center; margin: 0;">
-                                <select name="badge_name" class="custom-input" style="padding: 4px 8px; font-size: 0.85rem; width: auto;" required>
-                                    <option value="">-- امنح وساماً يدوياً --</option>
-                                    <option value="وسام أول بصمة">وسام أول بصمة (النشاط الأول)</option>
-                                    <option value="وسام بطل الميدان">وسام بطل الميدان</option>
-                                    <option value="وسام الانضباط الذهبي">وسام الانضباط الذهبي</option>
-                                    <option value="وسام درع الطوارئ">وسام درع الطوارئ</option>
-                                </select>
-                                <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
-                            </form>
-                        </div>
-                    </details>
-                    {% endfor %}
-
-                    <!-- فاصل أحمر بين المنتظرين والمعتمدين -->
-                    {% if volunteers|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
-                    <hr style="border: 1px solid red; margin: 20px 0;">
-                    {% endif %}
-
-                    <!-- Loop 2: Approved volunteers -->
-                    {% for v in volunteers if v.status != 'pending' %}
-                    <details class="admin-swipe-card" data-search-text="{{ v.name }} {{ v.phone }} {{ v.city }} {{ v.team }} {{ v.gender }} {{ v.skills }}">
-
-                    <!-- المعلومات الأساسية -->
-                    <summary class="volunteer-top-info card-summary">
-                        <div class="volunteer-profile-snippet">
-                            <img src="{{ v.photo_url or url_for('static', filename='logo.png') }}" class="volunteer-img-thumb" loading="lazy" loading="lazy" alt="{{ v.name }}">
-                            <div class="volunteer-text">
-                                <div style="display: flex; align-items: center;">
-<input type="checkbox" class="vol-select" value="{{ v.id }}" data-name="{{ v.name }}" data-phone="{{ v.phone }}" style="transform: scale(1.5); margin-right: 15px; cursor: pointer;">
-<h4>{{ v.name }}<span style="color: #facc15; font-size: 0.85em; margin-right: 10px; font-weight: bold;">(LB-{{ '%04d' % v.badge_number|int if v.badge_number else '----' }})</span></h4>
-</div>
-                                <div>
-                                    <span><i class="fa-solid fa-venus-mars"></i> {{ v.gender or 'غير محدد' }}</span>
-                                    <span><i class="fa-solid fa-cake-candles"></i> {{ v.age or 'غير محدد' }} سنة</span>
-                                    <span><i class="fa-solid fa-location-dot"></i> {{ v.city }}</span>
-                                    <span><i class="fa-solid fa-users"></i> {{ v.team }}</span>
-                                    <span><i class="fa-solid fa-star"></i> {{ v.skills or 'لا توجد موهبة محددة' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </summary>
-
-                    <div class="card-expanded-content">
-                        {% if v.experience %}
-                        <div style="margin-bottom: 10px; font-size: 0.8rem; color: #475569; background: #ffffff; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--jo-border);">
-                            <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
-                        </div>
-                        {% endif %}
-                        
-                        {% if v.status == 'approved' %}
-                        <div style="margin-bottom: 15px; font-size: 0.85rem; color: #e2e8f0; background: #0f172a; padding: 10px; border-radius: 6px; border-right: 3px solid #3b82f6;">
-                            <div style="margin-bottom: 6px;"><i class="fa-solid fa-clock-rotate-left"></i> <strong>آخر ظهور:</strong> {{ v.last_active.strftime('%Y-%m-%d %H:%M') if v.last_active else 'غير متاح' }}</div>
-                            <div style="margin-bottom: 6px;"><i class="fa-solid fa-truck-medical text-red-400"></i> <strong>جهة طوارئ:</strong> {{ v.emergency_contact_name or 'لا يوجد' }} ({{ v.emergency_contact_phone or '-' }})</div>
-                            <form action="{{ url_for('update_evaluation', vol_id=v.id) }}" method="POST" style="margin-top: 10px; display: flex; gap: 8px;">
-                                <input type="text" name="admin_evaluation" value="{{ v.admin_evaluation or '' }}" placeholder="ملاحظات / تقييم إداري (مخفية عن المتطوع)" class="custom-input" style="flex: 1; padding: 6px; font-size: 0.8rem;">
-                                <button type="submit" class="btn-ctrl-action" style="background: #3b82f6; color: #fff; border: none; padding: 4px 10px;"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
-                            </form>
-                        </div>
-                        {% endif %}
-
-                        <!-- الحالة والمنصب القيادي والباجة -->
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                {% if v.status == 'approved' %}
-                                    <span style="background: #dcfce7; color: var(--jo-green); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-circle-check"></i> معتمد
-                                    </span>
-                                {% elif v.status == 'rejected' %}
-                                    <span style="background: #fee2e2; color: var(--jo-red); font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-ban"></i> مرفوض
-                                    </span>
-                                {% else %}
-                                    <span style="background: #fef3c7; color: #d97706; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-clock"></i> بانتظار المراجعة
-                                    </span>
-                                {% endif %}
-
-                                {% if v.is_leader %}
-                                    <span style="background: #e0f2fe; color: #0284c7; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
-                                        <i class="fa-solid fa-star"></i> {{ v.position }}
-                                    </span>
-                                    <form action="{{ url_for('remove_leader', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                        <button type="submit" title="إلغاء المنصب القيادي" style="background: none; border: none; color: #94a3b8; cursor: pointer;">&times;</button>
-                                    </form>
-                                {% endif %}
-
-                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}"  onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
-                                    <i class="fa-solid fa-qrcode"></i> فحص الباجة
-                                </a>
-                            </div>
-
-                            <!-- أدوات الاعتماد، العدادات (+ / -)، وكلمة المرور -->
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                {% if v.status != 'approved' %}
-                                    <form action="{{ url_for('approve_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                        <input type="number" name="badge_number" placeholder="الرقم الميداني المخصص (مثال: 21)" class="custom-input" required style="margin-bottom: 10px;">
-                                        <button type="submit" class="btn-ctrl-action btn-green-accept"><i class="fa-solid fa-check"></i> قبول واعتماد</button>
-                                    </form>
-                                    <form action="{{ url_for('reject_volunteer', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                        <button type="submit" class="btn-ctrl-action btn-red-reject"><i class="fa-solid fa-xmark"></i> رفض</button>
-                                    </form>
-                                {% else %}
-                                    <!-- عداد الفعاليات المنجزة (+ / -) -->
-                                    <div class="badge-counter-ctrl">
-                                        <span class="counter-val-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'increment')">+</button>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'decrement')">-</button>
-                                    </div>
-
-                                    <!-- عداد الساعات المعتمدة (+1 / -1) -->
-                                    <div class="badge-counter-ctrl">
-                                        <span id="hours-count-{{ v.id }}" class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'increment')">+</button>
-                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'decrement')">-</button>
-                                    </div>
-                                {% endif %}
-                                <a href="{{ v.wa_link }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a; border-color: #86efac;" title="مراسلة فورية عبر واتساب">
-                                    <i class="fa-brands fa-whatsapp"></i> واتساب
-                                </a>
-                                {% if v.status == 'approved' %}
-                                
-                                <form action="{{ url_for('toggle_suspend', vol_id=v.id) }}" method="POST" style="margin: 0;">
-                                    <button type="submit" class="btn-ctrl-action" style="background: {{ '#fee2e2' if not v.is_suspended else '#dcfce7' }}; color: {{ 'var(--jo-red)' if not v.is_suspended else 'var(--jo-green)' }};" title="{{ 'تجميد الحساب' if not v.is_suspended else 'فك تجميد الحساب' }}">
-                                        <i class="fa-solid {{ 'fa-lock' if not v.is_suspended else 'fa-unlock' }}"></i> {{ 'تجميد' if not v.is_suspended else 'فك تجميد' }}
-                                    </button>
-                                </form>
-                                {% endif %}
-                                <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
-                                    <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر إلى 123456">
-                                        <i class="fa-solid fa-key"></i>
-                                    </button>
-                                </form>
-
-                                <form action="{{ url_for('delete_volunteer_admin', volunteer_id=v.id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا المتطوع نهائياً؟');" style="margin: 0;">
-                                    <button type="submit" class="btn-ctrl-action" style="background: transparent; color: var(--jo-red);" title="حذف نهائي">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- إدارة الأوسمة الممنوحة يدوياً -->
-                        <div class="badge-manager-bar">
-                            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                <span style="font-size: 0.85rem; font-weight: 800; color: var(--jo-black);">
-                                    <i class="fa-solid fa-award" style="color: var(--gold);"></i> الأوسمة الممنوحة:
-                                </span>
-                                {% for badge in v.badges_list %}
-                                    <span class="volunteer-badge-ribbon">
-                                        {{ badge }}
-                                        <form action="{{ url_for('remove_badge', volunteer_id=v.id) }}" method="POST" style="display:inline; margin:0;">
-                                            <input type="hidden" name="badge_name" value="{{ badge }}">
-                                            <button type="submit" title="سحب الوسام" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:900; margin-right:4px;">&times;</button>
-                                        </form>
-                                    </span>
-                                {% else %}
-                                    <span style="font-size: 0.8rem; color: #94a3b8;">لا توجد أوسمة ممنوحة حالياً.</span>
-                                {% endfor %}
-                            </div>
-
-                            <form action="{{ url_for('assign_badge', volunteer_id=v.id) }}" method="POST" style="display: flex; gap: 8px; align-items: center; margin: 0;">
-                                <select name="badge_name" class="custom-input" style="padding: 4px 8px; font-size: 0.85rem; width: auto;" required>
-                                    <option value="">-- امنح وساماً يدوياً --</option>
-                                    <option value="وسام أول بصمة">وسام أول بصمة (النشاط الأول)</option>
-                                    <option value="وسام بطل الميدان">وسام بطل الميدان</option>
-                                    <option value="وسام الانضباط الذهبي">وسام الانضباط الذهبي</option>
-                                    <option value="وسام درع الطوارئ">وسام درع الطوارئ</option>
-                                </select>
-                                <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
-                            </form>
-                        </div>
-                    </details>
-                    {% else %}
-                    <p style="color: var(--jo-dark-gray); text-align: center; padding: 2rem;">لا يوجد متطوعين مسجلين في المنصة حتى الآن.</p>
-                    {% endfor %}
-                </div>
-
-        </div>
+            {% include 'partials/volunteers.html' %}
 
         <!-- ==================== 2. تبويب الفعاليات ورصد الساعات الميداني ==================== -->
         <div id="eventsTab" class="admin-tab-content">
@@ -1488,7 +1191,11 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
     <!-- PHASE 2: Chart.js Initialization -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            const data = {{ chart_data | tojson }};
+            
+        const data = {{ chart_data | tojson }};
+        const hoursData = {{ hours_chart_data | safe if hours_chart_data else 'null' }};
+        const activitiesData = {{ activities_chart_data | safe if activities_chart_data else 'null' }};
+
             if (!data) return;
 
             // True Black / Dark Premium Chart Config
@@ -1505,10 +1212,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             new Chart(ctxGrowth, {
                 type: 'line',
                 data: {
-                    labels: data.growth_labels,
+                    labels: hoursData ? hoursData.labels : data.growth_labels,
                     datasets: [{
                         label: 'النشاط الميداني',
-                        data: data.growth_data,
+                        data: hoursData ? hoursData.data : data.growth_data,
                         borderColor: '#22c55e',
                         backgroundColor: gradientGrowth,
                         borderWidth: 3,
@@ -1561,10 +1268,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             new Chart(ctxTeam, {
                 type: 'bar',
                 data: {
-                    labels: data.activity_labels,
+                    labels: activitiesData ? activitiesData.labels : data.activity_labels,
                     datasets: [{
                         label: 'عدد المشاركين',
-                        data: data.activity_data,
+                        data: activitiesData ? activitiesData.data : data.activity_data,
                         backgroundColor: 'rgba(56, 189, 248, 0.2)',
                         borderColor: '#38bdf8',
                         borderWidth: 2,

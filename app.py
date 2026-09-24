@@ -4,6 +4,11 @@ import random
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_talisman import Talisman
+from sqlalchemy.exc import IntegrityError
+
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -12,14 +17,32 @@ from openpyxl import Workbook
 
 app = Flask(__name__)
 
-# ==================== إعدادات الأمان وقاعدة البيانات ====================
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'lametna-production-secure-key-2026-xyz')
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[]
+)
 
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///lametna.db')
-if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+csp = {
+    'default-src': [
+        '\'self\'',
+        '\'unsafe-inline\'',
+        '\'unsafe-eval\'',
+        'https://cdn.jsdelivr.net',
+        'https://cdnjs.cloudflare.com',
+        'https://fonts.googleapis.com',
+        'https://fonts.gstatic.com',
+        'https://ka-f.fontawesome.com'
+    ],
+    'img-src': ['*', 'data:'],
+    'font-src': ['*', 'data:']
+}
+Talisman(app, content_security_policy=csp)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+
+import os
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-key')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -76,7 +99,7 @@ class Volunteer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    phone = db.Column(db.String(20), nullable=False)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     city = db.Column(db.String(50), default='عمان')
     age = db.Column(db.Integer, nullable=True)
@@ -389,17 +412,21 @@ def register():
         )
         
         db.session.add(new_volunteer)
+
         try:
             db.session.commit()
+            flash('تم تسجيلك بنجاح! طلبك الآن قيد المراجعة.', 'success')
+        except IntegrityError:
+            db.session.rollback()
+            flash('رقم الهاتف أو البريد الإلكتروني مسجل مسبقاً', 'danger')
         except Exception as e:
             db.session.rollback()
-            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-        flash('تم استلام طلب انتسابك بنجاح! سيتم تدقيقه من قبل الهيئة الإدارية.', 'success')
+            flash('حدث خطأ أثناء التسجيل، يرجى المحاولة لاحقاً', 'danger')
+            
         return redirect(url_for('index'))
 
-    return redirect(url_for('index'))
-
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per hour", exempt_when=lambda: request.method != 'POST')
 def login():
     if request.method == 'POST':
         identifier = request.form.get('email', '').strip().lower()
@@ -536,7 +563,11 @@ def profile():
 
     settings = get_settings()
     user = Volunteer.query.get_or_404(session['user_id'])
-    user_events = Event.query.order_by(Event.id.desc()).all()
+    user_
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template('partials/volunteers.html', volunteers=volunteers, settings=settings)
+
+    events = Event.query.order_by(Event.id.desc()).all()
     recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
     duties = Duty.query.filter_by(volunteer_id=user.id).order_by(Duty.due_date.asc()).all()
     user_registrations = EventRegistration.query.filter_by(volunteer_id=user.id).all()
@@ -777,6 +808,10 @@ def admin_dashboard():
     volunteers = vol_query.order_by(Volunteer.id.desc()).all()
     inquiries = Inquiry.query.order_by(Inquiry.id.desc()).all()
 
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render_template('partials/volunteers.html', volunteers=volunteers, settings=settings)
+
     events = Event.query.order_by(Event.id.desc()).all()
     recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
     albums = Album.query.order_by(Album.id.desc()).all()
@@ -788,25 +823,34 @@ def admin_dashboard():
     if not city_counts:
         city_counts = {"عمان": 120, "الزرقاء": 85, "إربد": 60, "البلقاء": 40, "أخرى": 15}
 
-    growth_labels = ['أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر']
-    growth_data = [max(1, len(all_volunteers)*2), max(1, len(events)*3), max(1, len(albums)*2), max(1, len(excuses)), max(1, len(all_volunteers)*3), max(1, len(events)*4)]
-
-    activity_labels = ['وقف ثريد', 'مسنين', 'بنك ملابس', 'أطفال', 'بيئي']
-    activity_data = [
-        EventRegistration.query.join(Event).filter(Event.title.ilike('%ثريد%')).count() or 0,
-        EventRegistration.query.join(Event).filter(Event.title.ilike('%مسن%')).count() or 0,
-        EventRegistration.query.join(Event).filter(Event.title.ilike('%ملابس%')).count() or 0,
-        EventRegistration.query.join(Event).filter(Event.title.ilike('%أطفال%')).count() or 0,
-        EventRegistration.query.join(Event).filter(Event.title.ilike('%بيئ%')).count() or 0,
-    ]
-    total_activities = len(events)
-
+    
+    # Real Chart Data
+    import collections
+    
+    # 1. Hours Growth Curve (by month of creation)
+    hours_dict = collections.defaultdict(int)
+    for v in Volunteer.query.all():
+        if v.created_at:
+            m = v.created_at.strftime('%Y-%m')
+            hours_dict[m] += (v.volunteer_hours or 0)
+    sorted_months = sorted(hours_dict.keys())[-6:] # last 6 months
+    growth_labels = sorted_months
+    growth_data = [hours_dict[m] for m in sorted_months]
+    if not growth_labels:
+        growth_labels = ['لا يوجد بيانات']
+        growth_data = [0]
+    
+    # 2. Activity Stats (Events by Title Category)
+    keywords = ['تنظيم', 'تدريب', 'طبي', 'ثقافي', 'بيئي']
+    activity_data = [Event.query.filter(Event.title.ilike(f'%{kw}%')).count() for kw in keywords]
+    total_activities = Event.query.count()
+    
     chart_data = {
         'city_labels': list(city_counts.keys()),
         'city_data': list(city_counts.values()),
         'growth_labels': growth_labels,
         'growth_data': growth_data,
-        'activity_labels': activity_labels,
+        'activity_labels': keywords,
         'activity_data': activity_data,
         'total_activities': total_activities
     }
@@ -822,6 +866,8 @@ def admin_dashboard():
         excuses=excuses,
         inquiries=inquiries,
         chart_data=chart_data,
+        hours_chart_data=json.dumps({"labels": growth_labels, "data": growth_data}),
+        activities_chart_data=json.dumps({"labels": keywords, "data": activity_data}),
         search_name=search_name,
         filter_city=filter_city,
         filter_skill=filter_skill,
