@@ -179,9 +179,11 @@
     </header>
 
     <!-- شريط الإعلانات -->
+    {% if sys_settings and sys_settings.is_banner_active and sys_settings.banner_text %}
     <div style="background: #facc15; color: #854d0e; text-align: center; padding: 10px; font-weight: bold; border-bottom: 2px solid #eab308; font-size: 0.95rem;">
-        أهلاً بكم في المنصة الرسمية لفريق لمتنا بصمة
+        {{ sys_settings.banner_text }}
     </div>
+    {% endif %}
 
     <!-- رسائل النظام -->    <!-- شريط رسائل الخادم -->
     <div class="container" style="max-width: 1200px; margin: 1.5rem auto 0; padding: 0 5%;">

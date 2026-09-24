@@ -2,7 +2,7 @@ import os
 import re
 import random
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -29,6 +29,13 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 db = SQLAlchemy(app)
 
 # ==================== نماذج قاعدة البيانات (Models) ====================
+
+
+class SystemSettings(db.Model):
+    __tablename__ = 'system_settings'
+    id = db.Column(db.Integer, primary_key=True)
+    banner_text = db.Column(db.String(500), default='أهلاً بكم في المنصة الرسمية لفريق لمتنا بصمة')
+    is_banner_active = db.Column(db.Boolean, default=False)
 
 class SiteSetting(db.Model):
     __tablename__ = 'site_settings'
@@ -270,6 +277,20 @@ class Inquiry(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ==================== دوال المساعدة ====================
+
+
+@app.context_processor
+def inject_sys_settings():
+    try:
+        sys_settings = SystemSettings.query.first()
+        if not sys_settings:
+            sys_settings = SystemSettings()
+            db.session.add(sys_settings)
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+        sys_settings = None
+    return dict(sys_settings=sys_settings)
 
 def get_settings():
     try:
@@ -1234,6 +1255,113 @@ def delete_gallery_item(item_id):
 
 # --- إدارة محتوى ومظهر الموقع (CMS) ---
 
+
+@app.route('/admin/settings/banner', methods=['POST'])
+def update_banner():
+    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    sys_settings = SystemSettings.query.first()
+    if not sys_settings:
+        sys_settings = SystemSettings()
+        db.session.add(sys_settings)
+    sys_settings.banner_text = request.form.get('banner_text', '')
+    sys_settings.is_banner_active = request.form.get('is_banner_active') == 'on'
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    flash('تم تحديث لوحة الإعلانات بنجاح', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/ajax/update_stat', methods=['POST'])
+def ajax_update_stat():
+    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    data = request.get_json()
+    vol_id = data.get('vol_id')
+    stat_type = data.get('type')
+    action = data.get('action')
+    v = Volunteer.query.get(vol_id)
+    if not v: return jsonify({'error': 'Not found'}), 404
+    
+    if stat_type == 'hours':
+        if action == 'increment': v.volunteer_hours = (v.volunteer_hours or 0) + 1
+        elif action == 'decrement' and (v.volunteer_hours or 0) >= 1: v.volunteer_hours = (v.volunteer_hours or 0) - 1
+    elif stat_type == 'events':
+        if action == 'increment': v.attended_events_count = (v.attended_events_count or 0) + 1
+        elif action == 'decrement' and (v.attended_events_count or 0) > 0: v.attended_events_count = (v.attended_events_count or 0) - 1
+    
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'hours': v.volunteer_hours, 'events': v.attended_events_count})
+    except Exception:
+        db.session.rollback()
+        return jsonify({'error': 'DB Error'}), 500
+
+@app.route('/admin/bulk_approve', methods=['POST'])
+def bulk_approve():
+    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    vol_ids = request.form.getlist('vol_ids')
+    for vid in vol_ids:
+        v = Volunteer.query.get(vid)
+        if v:
+            v.status = 'approved'
+            v.badge_number = None # Or assign next available if logic needed
+    try:
+        db.session.commit()
+        flash('تم اعتماد المتطوعين المحددين بنجاح', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('حدث خطأ', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/bulk_add_hours', methods=['POST'])
+def bulk_add_hours():
+    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    vol_ids = request.form.getlist('vol_ids')
+    hours = int(request.form.get('hours', 0))
+    for vid in vol_ids:
+        v = Volunteer.query.get(vid)
+        if v: v.volunteer_hours = (v.volunteer_hours or 0) + hours
+    try:
+        db.session.commit()
+        flash('تمت إضافة الساعات للمتطوعين المحددين', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('حدث خطأ', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/bulk_add_events', methods=['POST'])
+def bulk_add_events():
+    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    vol_ids = request.form.getlist('vol_ids')
+    events = int(request.form.get('events', 0))
+    for vid in vol_ids:
+        v = Volunteer.query.get(vid)
+        if v: v.attended_events_count = (v.attended_events_count or 0) + events
+    try:
+        db.session.commit()
+        flash('تمت إضافة الفعاليات للمتطوعين المحددين', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('حدث خطأ', 'error')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/bulk_evaluation', methods=['POST'])
+def bulk_evaluation():
+    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    vol_ids = request.form.getlist('vol_ids')
+    note = request.form.get('evaluation', '')
+    for vid in vol_ids:
+        v = Volunteer.query.get(vid)
+        if v:
+            v.admin_evaluation = (v.admin_evaluation + '\n' + note) if v.admin_evaluation else note
+    try:
+        db.session.commit()
+        flash('تم إضافة الملاحظة للمتطوعين المحددين', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('حدث خطأ', 'error')
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/admin/settings/update', methods=['POST'])
 def update_settings():
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
@@ -1281,6 +1409,9 @@ with app.app_context():
     db.create_all()
     
     migrations = [
+        ("system_settings", "banner_text", "VARCHAR(500)"),
+        ("system_settings", "is_banner_active", "BOOLEAN DEFAULT FALSE"),
+
         ("site_settings", "whatsapp_url", "VARCHAR(500)"),
         ("site_settings", "instagram_url", "VARCHAR(500)"),
         ("site_settings", "nahno_url", "VARCHAR(500)"),

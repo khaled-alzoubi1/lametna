@@ -450,6 +450,14 @@
                 <a href="{{ url_for('export_event_roster', event_id=0) }}" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
                     <i class="fa-solid fa-file-excel"></i> تصدير كشف Excel
                 </a>
+                
+                <button onclick="openAdminModal('bannerModal')" class="btn-ctrl-action" style="background: #dc3545; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
+                    <i class="fa-solid fa-bullhorn"></i> لوحة الإعلانات
+                </button>
+
+                <button onclick="openAdminModal('waBroadcastModal')" class="btn-ctrl-action" style="background: #28a745; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
+                    <i class="fa-brands fa-whatsapp"></i> رسالة واتساب مخصصة
+                </button>
                 <a href="{{ settings.whatsapp_url if settings.whatsapp_url and settings.whatsapp_url.startswith('http') else 'https://' + settings.whatsapp_url if settings.whatsapp_url else '#' }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
                     <i class="fa-brands fa-whatsapp"></i> مجتمع الواتساب
                 </a>
@@ -651,21 +659,13 @@
                                 {% else %}
                                     <div class="badge-counter-ctrl">
                                         <span class="counter-val-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
-                                        <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="إضافة فعالية">+</button>
-                                        </form>
-                                        <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="إنقاص فعالية">-</button>
-                                        </form>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'increment')">+</button>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'decrement')">-</button>
                                     </div>
                                     <div class="badge-counter-ctrl">
-                                        <span class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
-                                        <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="إضافة ساعة واحدة">+</button>
-                                        </form>
-                                        <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="خصم ساعة واحدة">-</button>
-                                        </form>
+                                        <span id="hours-count-{{ v.id }}" class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'increment')">+</button>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'decrement')">-</button>
                                     </div>
                                 {% endif %}
                                 <a href="{{ v.wa_link }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a; border-color: #86efac;" title="مراسلة فورية عبر واتساب">
@@ -806,32 +806,22 @@
                                     <!-- عداد الفعاليات المنجزة (+ / -) -->
                                     <div class="badge-counter-ctrl">
                                         <span class="counter-val-display">فعاليات: {{ v.attended_events_count|default(0) }}</span>
-                                        <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="إضافة فعالية">+</button>
-                                        </form>
-                                        <form action="{{ url_for('adjust_events', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="إنقاص فعالية">-</button>
-                                        </form>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'increment')">+</button>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'events', 'decrement')">-</button>
                                     </div>
 
                                     <!-- عداد الساعات المعتمدة (+1 / -1) -->
                                     <div class="badge-counter-ctrl">
-                                        <span class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
-                                        <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='increment') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="إضافة ساعة واحدة">+</button>
-                                        </form>
-                                        <form action="{{ url_for('adjust_hours', volunteer_id=v.id, action='decrement') }}" method="POST" style="margin: 0;">
-                                            <button type="submit" class="btn-step-arrow" title="خصم ساعة واحدة">-</button>
-                                        </form>
+                                        <span id="hours-count-{{ v.id }}" class="counter-val-display">ساعات: {{ v.volunteer_hours|default(0) }}</span>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'increment')">+</button>
+                                        <button type="button" class="btn-step-arrow" onclick="updateStat({{ v.id }}, 'hours', 'decrement')">-</button>
                                     </div>
                                 {% endif %}
                                 <a href="{{ v.wa_link }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a; border-color: #86efac;" title="مراسلة فورية عبر واتساب">
                                     <i class="fa-brands fa-whatsapp"></i> واتساب
                                 </a>
                                 {% if v.status == 'approved' %}
-                                <a href="https://wa.me/962{{ v.phone[1:] if v.phone.startswith('0') else v.phone }}?text=مرحباً%20{{ v.name }}،%20نبارك%20لك%20انضمامك%20لفريق%20لمتنا%20بصمة،%20رقمك%20الميداني%20هو%20{{ v.badge_number }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #fef08a; color: #854d0e; border-color: #fde047;" title="واتساب ترحيبي">
-                                    <i class="fa-brands fa-whatsapp"></i> ترحيب
-                                </a>
+                                
                                 <form action="{{ url_for('toggle_suspend', vol_id=v.id) }}" method="POST" style="margin: 0;">
                                     <button type="submit" class="btn-ctrl-action" style="background: {{ '#fee2e2' if not v.is_suspended else '#dcfce7' }}; color: {{ 'var(--jo-red)' if not v.is_suspended else 'var(--jo-green)' }};" title="{{ 'تجميد الحساب' if not v.is_suspended else 'فك تجميد الحساب' }}">
                                         <i class="fa-solid {{ 'fa-lock' if not v.is_suspended else 'fa-unlock' }}"></i> {{ 'تجميد' if not v.is_suspended else 'فك تجميد' }}
@@ -1569,5 +1559,40 @@
             });
         });
     </script>
+
+    <div id="bannerModal" class="admin-modal-overlay">
+        <div class="admin-modal-box">
+            <button class="close-modal-btn" onclick="closeAdminModal('bannerModal')">&times;</button>
+            <h3 style="margin-bottom: 15px; color: var(--jo-black);">إدارة لوحة الإعلانات</h3>
+            <form action="{{ url_for('update_banner') }}" method="POST">
+                <textarea name="banner_text" class="custom-input" rows="3" placeholder="نص الإعلان...">{{ sys_settings.banner_text if sys_settings else '' }}</textarea>
+                <label style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                    <input type="checkbox" name="is_banner_active" {% if sys_settings and sys_settings.is_banner_active %}checked{% endif %}>
+                    تفعيل لوحة الإعلانات
+                </label>
+                <button type="submit" class="btn-primary-block" style="margin-top: 15px;">حفظ</button>
+            </form>
+        </div>
+    </div>
+    <div id="waBroadcastModal" class="admin-modal-overlay">
+        <div class="admin-modal-box" style="max-width: 600px;">
+            <button class="close-modal-btn" onclick="closeAdminModal('waBroadcastModal')">&times;</button>
+            <h3 style="margin-bottom: 15px; color: var(--jo-black);">رسالة واتساب مخصصة للمحددين</h3>
+            <textarea id="waMessageText" class="custom-input" rows="4" placeholder="اكتب الرسالة هنا..."></textarea>
+            <button type="button" class="btn-primary-block" onclick="generateWALinks()" style="margin-top: 15px; background: #28a745;">توليد الروابط</button>
+            <div id="waLinksContainer" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+
+    <div id="bulkToolbar" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #1e293b; padding: 15px 25px; border-radius: 50px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 1000; align-items: center; gap: 15px; border: 2px solid #3b82f6;">
+        <span style="color: white; font-weight: bold; background: #3b82f6; padding: 5px 12px; border-radius: 20px;" id="bulkCountDisplay">0</span>
+        <form id="bulkApproveForm" action="{{ url_for('bulk_approve') }}" method="POST" style="margin:0;"><button type="submit" class="btn-ctrl-action" style="background:#10b981; color:white; border:none; padding: 8px 15px;">اعتماد المحدد</button></form>
+        <button type="button" class="btn-ctrl-action" style="background:#f59e0b; color:white; border:none; padding: 8px 15px;" onclick="promptBulk('hours')">إضافة ساعات</button>
+        <button type="button" class="btn-ctrl-action" style="background:#8b5cf6; color:white; border:none; padding: 8px 15px;" onclick="promptBulk('events')">إضافة فعاليات</button>
+        <button type="button" class="btn-ctrl-action" style="background:#ef4444; color:white; border:none; padding: 8px 15px;" onclick="promptBulk('evaluation')">ملاحظة إدارية</button>
+        <form id="bulkActionFormHidden" method="POST" style="display:none;"></form>
+    </div>
+
 </body>
 </html>
