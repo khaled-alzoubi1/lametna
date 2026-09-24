@@ -1,0 +1,11 @@
+="search_name" id="volunteerSearchInput" class="custom-input" placeholder="بحث بالاسم أو الهاتف..." value="{{ search_name }}">
+                </div>
+                <div>
+                    <select name="filter_city" id="filterCity" class="custom-input">
+                          <option value="">تصفية حسب المحافظة/الفريق</option>
+                          <option value="عمان"{% if filter_city == 'عمان' %} selected{% endif %}>عمان</option>
+                          <option value="اربد"{% if filter_city == 'اربد' %} selected{% endif %}>اربد</option>
+                          <option value="الزرقاء"{% if filter_city == 'الزرقاء' %} selected{% endif %}>الزرقاء</option>
+                          <option value="البلقاء (السلط)"{% if filter_city == 'البلقاء (السلط)' %} selected{% endif %}>البلقاء (السلط)</option>
+                          <option value="جرش"{% if filter_city == 'جرش' %} selected{% endif %}>جرش</option>
+                          <option value="أخرى"{% if filter_city == 'أخر

@@ -560,13 +560,14 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                 </div>
                 <div>
                     <select name="filter_city" id="filterCity" class="custom-input">
-                        <option value="">جميع المحافظات</option>
-                        <option value="عمان" {% if filter_city == 'عمان' %}selected{% endif %}>عمان</option>
-                        <option value="الزرقاء" {% if filter_city == 'الزرقاء' %}selected{% endif %}>الزرقاء</option>
-                        <option value="إربد" {% if filter_city == 'إربد' %}selected{% endif %}>إربد</option>
-                        <option value="البلقاء" {% if filter_city == 'البلقاء' %}selected{% endif %}>البلقاء</option>
-                        <option value="أخرى" {% if filter_city == 'أخرى' %}selected{% endif %}>أخرى</option>
-                    </select>
+                          <option value="">تصفية حسب المحافظة/الفريق</option>
+                          <option value="عمان"{% if filter_city == 'عمان' %} selected{% endif %}>عمان</option>
+                          <option value="اربد"{% if filter_city == 'اربد' %} selected{% endif %}>اربد</option>
+                          <option value="الزرقاء"{% if filter_city == 'الزرقاء' %} selected{% endif %}>الزرقاء</option>
+                          <option value="البلقاء (السلط)"{% if filter_city == 'البلقاء (السلط)' %} selected{% endif %}>البلقاء (السلط)</option>
+                          <option value="جرش"{% if filter_city == 'جرش' %} selected{% endif %}>جرش</option>
+                          <option value="أخرى"{% if filter_city == 'أخرى' %} selected{% endif %}>أخرى</option>
+                      </select>
                 </div>
                 <div>
                     <select name="filter_skill" id="filterSkill" class="custom-input">
@@ -1502,6 +1503,39 @@ function updateStat(volId, type, action) {
         alert('حدث خطأ في الاتصال');
     });
 }
+</script>
+
+
+<!-- AJAX Filter Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('searchForm');
+    if(searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(searchForm);
+            const params = new URLSearchParams(formData);
+            const url = searchForm.action + '?' + params.toString();
+            
+            fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('volunteersContainer').innerHTML = html;
+                
+                // Re-bind checkboxes for bulk logic
+                if(typeof updateBulkToolbar === 'function') {
+                    const newCheckboxes = document.querySelectorAll('.vol-select');
+                    newCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkToolbar));
+                }
+            })
+            .catch(err => console.error('AJAX Error:', err));
+        });
+    }
+});
 </script>
 
 </body>

@@ -1,0 +1,16 @@
+eEventWALinks() {
+    generateWALinks(`.vol-select-event[data-event-id="${currentEventId}"]:checked`, 'waEventLinksContainer', 'waEventMessageText');
+}
+
+function updateStat(volId, type, action) {
+    fetch('{{ url_for("ajax_update_stat") }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({vol_id: volId, type: type, action: action})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if(data.success) {
+            if(type === 'hours') {
+                let el = document.getElementById('hours-count-'+volId);
+                

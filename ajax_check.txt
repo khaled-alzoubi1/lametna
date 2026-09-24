@@ -1,0 +1,42 @@
+def admin_dashboard():
+    if not session.get('admin_logged_in'):
+        flash('غير مصرح لك بدخول لوحة التحكم.', 'danger')
+        return redirect(url_for('index'))
+
+    settings = get_settings()
+    admin_email = session.get('admin_email')
+    current_admin = Volunteer.query.filter_by(email=admin_email).first()
+    
+    # --- Task 6: Search & Filter ---
+    search_name = request.args.get('search_name', '').strip()
+    filter_city = request.args.get('filter_city', '').strip()
+    filter_skill = request.args.get('filter_skill', '').strip()
+    filter_gender = request.args.get('filter_gender', '').strip()
+    filter_event_id = request.args.get('event_id', '').strip()
+
+    vol_query = Volunteer.query
+    if search_name:
+        vol_query = vol_query.filter(
+            db.or_(
+                Volunteer.name.ilike(f'%{search_name}%'),
+                Volunteer.phone.ilike(f'%{search_name}%')
+            )
+        )
+    if filter_city:
+        vol_query = vol_query.filter(Volunteer.city.ilike(f'%{filter_city}%'))
+    if filter_skill:
+        vol_query = vol_query.filter(Volunteer.skills.ilike(f'%{filter_skill}%'))
+    if filter_gender:
+        vol_query = vol_query.filter(Volunteer.gender == filter_gender)
+    if filter_event_id and filter_event_id.isdigit():
+        vol_query = vol_query.join(EventRegistration).filter(
+            EventRegistration.event_id == int(filter_event_id),
+            EventRegistration.attended == True
+        )
+
+    volunteers = vol_query.order_by(Volunteer.id.desc()).all()
+    inquiries = Inquiry.query.order_by(Inquiry.id.desc()).all()
+
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return rende
