@@ -87,12 +87,31 @@ class Volunteer(db.Model):
     leader_notes = db.Column(db.Text, nullable=True)
     badges = db.Column(db.Text, default='')  # تخزين الأوسمة مفصولة بفواصل
     badge_number = db.Column(db.String(50), unique=True, nullable=True)
+    
+    # Phase 3 Columns
+    emergency_contact_name = db.Column(db.String(100), nullable=True)
+    emergency_contact_phone = db.Column(db.String(20), nullable=True)
+    is_suspended = db.Column(db.Boolean, default=False)
+    last_active = db.Column(db.DateTime, default=datetime.utcnow)
+    admin_evaluation = db.Column(db.Text, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # العلاقات التابعة
     duties = db.relationship('Duty', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     excuses = db.relationship('Excuse', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     registrations = db.relationship('EventRegistration', backref='volunteer', lazy=True, cascade="all, delete-orphan")
+
+    @db.orm.reconstructor
+    def enforce_admin_titles(self):
+        if self.email:
+            em = self.email.lower()
+            if em == 'lanooshabdo7@gmail.com':
+                self.position = 'رئيس الفريق'
+                self.is_leader = True
+            elif em == 'khaledsalzoubi1352006@gmail.com':
+                self.position = 'نائب رئيس الفريق'
+                self.is_leader = True
 
     @property
     def badges_list(self):
@@ -272,7 +291,18 @@ def robots_txt():
 @app.route('/')
 def index():
     settings = get_settings()
-    leaders = Volunteer.query.filter_by(is_leader=True).all()
+    valid_positions = ['ليدر', 'رئيس لجان', 'هيئة إدارية', 'رئيس الفريق', 'نائب رئيس الفريق']
+    admin_emails = ['lanooshabdo7@gmail.com', 'khaledsalzoubi1352006@gmail.com']
+
+    leaders = Volunteer.query.filter(
+        db.or_(
+            db.and_(
+                Volunteer.is_leader == True,
+                Volunteer.position.in_(valid_positions)
+            ),
+            db.func.lower(Volunteer.email).in_(admin_emails)
+        )
+    ).all()
     events = Event.query.order_by(Event.id.desc()).limit(4).all()
     albums = Album.query.order_by(Album.id.desc()).all()
     
@@ -325,15 +355,21 @@ def register():
             password_hash=generate_password_hash(request.form.get('password', '').strip()),
             city=request.form.get('city', 'عمان'),
             team=request.form.get('team', 'عمان'),
-           age=int(request.form.get('age')) if request.form.get('age') else None,
-        gender=request.form.get('gender'),
-        skills = ', '.join(request.form.getlist('skills')),
-        experience=request.form.get('experience', '').strip(),
-        status='pending'
-    )
+            age=int(request.form.get('age')) if request.form.get('age') else None,
+            gender=request.form.get('gender'),
+            skills = ', '.join(request.form.getlist('skills')),
+            experience=request.form.get('experience', '').strip(),
+            emergency_contact_name=request.form.get('emergency_contact_name', '').strip(),
+            emergency_contact_phone=request.form.get('emergency_contact_phone', '').strip(),
+            status='pending'
+        )
         
         db.session.add(new_volunteer)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
         flash('تم استلام طلب انتسابك بنجاح! سيتم تدقيقه من قبل الهيئة الإدارية.', 'success')
         return redirect(url_for('index'))
 
@@ -373,8 +409,19 @@ def login():
                     position=admin_credentials[identifier]['position']
                 )
                 db.session.add(admin_user)
-                db.session.commit()
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    db.session.rollback()
+                    flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
 
+            admin_user.last_active = datetime.utcnow()
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+            
             session.clear()
             session['admin_logged_in'] = True
             session['admin_email'] = identifier
@@ -384,6 +431,12 @@ def login():
 
         volunteer = Volunteer.query.filter_by(email=identifier).first()
         if volunteer and check_password_hash(volunteer.password_hash, password):
+            volunteer.last_active = datetime.utcnow()
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
             session.clear()
             session['user_id'] = volunteer.id
             flash(f'أهلاً بك مجدداً يا {volunteer.name}', 'success')
@@ -416,9 +469,30 @@ def contact_submit():
             message=message or 'لا يوجد نص'
         )
         db.session.add(inquiry)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('شكراً لتواصلك معنا، تم استلام استفسارك وسنقوم بالرد عليك في أقرب وقت.', 'success')
     return redirect(url_for('index'))
+
+@app.route('/org_chart')
+def org_chart():
+    settings = get_settings()
+    return render_template('org_chart.html', settings=settings)
+
+@app.route('/resources')
+def resources():
+    if 'user_id' not in session:
+        flash('يجب تسجيل الدخول أولاً للوصول لمركز الوثائق.', 'danger')
+        return redirect(url_for('login'))
+    user = Volunteer.query.get_or_404(session['user_id'])
+    if user.status != 'approved':
+        flash('مركز الوثائق متاح فقط للمتطوعين المعتمدين.', 'danger')
+        return redirect(url_for('profile'))
+    settings = get_settings()
+    return render_template('resources.html', settings=settings, user=user)
 
 # ==================== بوابة التحقق الميداني من الباجة عبر QR ====================
 
@@ -465,6 +539,10 @@ def update_profile():
     user.bio = request.form.get('bio')
     user.skills = request.form.get('skills', user.skills)
     user.experience = request.form.get('experience', user.experience)
+    if 'emergency_contact_name' in request.form:
+        user.emergency_contact_name = request.form.get('emergency_contact_name', '').strip()
+    if 'emergency_contact_phone' in request.form:
+        user.emergency_contact_phone = request.form.get('emergency_contact_phone', '').strip()
 
     # Handle physical file upload
     uploaded_file = request.files.get('profile_image')
@@ -489,7 +567,11 @@ def update_profile():
     if new_password:
         user.password_hash = generate_password_hash(new_password)
     
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم تحديث ملفك الشخصي بنجاح.', 'success')
     return redirect(url_for('profile'))
 
@@ -519,7 +601,11 @@ def rsvp_event(event_id):
 
     new_reg = EventRegistration(volunteer_id=user.id, event_id=ev.id)
     db.session.add(new_reg)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
 
     flash(f'تم حجز مقعدك بنجاح في: {ev.title}.', 'success')
     return redirect(request.referrer or url_for('profile'))
@@ -532,7 +618,11 @@ def cancel_rsvp(event_id):
     reg = EventRegistration.query.filter_by(volunteer_id=session['user_id'], event_id=event_id).first()
     if reg:
         db.session.delete(reg)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
         flash('تم إلغاء حجزك في الفعالية وفتح المقعد لمتطوع آخر.', 'info')
     return redirect(request.referrer or url_for('profile'))
 
@@ -564,7 +654,11 @@ def self_checkin():
         user.volunteer_hours = (user.volunteer_hours or 0) + hours_to_award
         user.attended_events_count = (user.attended_events_count or 0) + 1
         user.auto_assign_badges()
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
         flash(f'أحسنت! تم تأكيد حضورك بنجاح في "{ev.title}" وإضافة {hours_to_award} ساعات لرصيدك.', 'success')
     else:
         flash('كود التحضير غير صحيح! يرجى مراجعة مسؤول الميدان.', 'danger')
@@ -578,7 +672,11 @@ def delete_own_account():
 
     user = Volunteer.query.get_or_404(session['user_id'])
     db.session.delete(user)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     session.clear()
     flash('تم حذف حسابك نهائياً من المنصة.', 'info')
     return redirect(url_for('index'))
@@ -602,7 +700,11 @@ def submit_excuse():
         if reg:
             db.session.delete(reg)
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم رفع عذر عدم الحضور للإدارة وإلغاء حجز المقعد بنجاح.', 'success')
     return redirect(url_for('profile'))
 # ==================== لوحة تحكم الإدارة (Admin Dashboard & CMS) ====================
@@ -709,7 +811,11 @@ def update_admin_profile():
         photo_url = request.form.get('photo_url')
         if photo_url:
             admin_user.photo_url = photo_url
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
         flash('تم حفظ ملفك الإداري وصورتك بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -725,7 +831,11 @@ def checkin_rsvp_volunteer(reg_id):
         reg.volunteer.volunteer_hours = (reg.volunteer.volunteer_hours or 0) + hours_to_award
         reg.volunteer.attended_events_count = (reg.volunteer.attended_events_count or 0) + 1
         reg.volunteer.auto_assign_badges()
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
         flash(f'تم تحضير المتطوع {reg.volunteer.name} ومنحه {hours_to_award} ساعات.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -735,7 +845,11 @@ def remove_rsvp_volunteer(reg_id):
     reg = EventRegistration.query.get_or_404(reg_id)
     v_name = reg.volunteer.name
     db.session.delete(reg)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash(f'تم شطب المتطوع {v_name} من الفعالية وفتح المقعد تلقائياً.', 'info')
     return redirect(url_for('admin_dashboard'))
 
@@ -755,7 +869,11 @@ def approve_volunteer(volunteer_id):
         v.badge_number = submitted_number
 
     v.status = 'approved'
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash(f'تم اعتماد المتطوع {v.name}.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -764,7 +882,11 @@ def reject_volunteer(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
     v.status = 'rejected'
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash(f'تم رفض طلب {v.name}.', 'info')
     return redirect(url_for('admin_dashboard'))
 
@@ -791,9 +913,40 @@ def assign_leader():
     v.position = position
     if photo_url:
         v.photo_url = photo_url
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
 
     flash(f'تم تحديث بيانات {v.name} وتثبيته في المنصب.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/toggle_suspend/<int:vol_id>', methods=['POST'])
+def toggle_suspend(vol_id):
+    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    v = Volunteer.query.get_or_404(vol_id)
+    v.is_suspended = not v.is_suspended
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+    status_text = 'تجميد' if v.is_suspended else 'فك تجميد'
+    flash(f'تم {status_text} حساب {v.name} بنجاح.', 'success')
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/update_evaluation/<int:vol_id>', methods=['POST'])
+def update_evaluation(vol_id):
+    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    v = Volunteer.query.get_or_404(vol_id)
+    v.admin_evaluation = request.form.get('admin_evaluation')
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+    flash(f'تم تحديث التقييم الإداري للمتطوع {v.name}.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/remove_leader/<int:volunteer_id>', methods=['POST'])
@@ -802,7 +955,11 @@ def remove_leader(volunteer_id):
     v = Volunteer.query.get_or_404(volunteer_id)
     v.is_leader = False
     v.position = None
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash(f'تم إعفاء {v.name} من المنصب القيادي.', 'info')
     return redirect(url_for('admin_dashboard'))
 
@@ -816,7 +973,11 @@ def assign_badge(volunteer_id):
         if badge_name not in current_badges:
             current_badges.append(badge_name)
             v.badges = ','.join(current_badges)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
             flash(f'تم منح {v.name}: {badge_name}', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -829,7 +990,11 @@ def remove_badge(volunteer_id):
     if badge_name in current_badges:
         current_badges.remove(badge_name)
         v.badges = ','.join(current_badges)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
         flash(f'تم سحب وسام {badge_name} من المتطوع.', 'info')
     return redirect(url_for('admin_dashboard'))
 
@@ -842,7 +1007,11 @@ def adjust_events(volunteer_id, action):
         v.auto_assign_badges()
     elif action == 'decrement' and (v.attended_events_count or 0) > 0:
         v.attended_events_count = (v.attended_events_count or 0) - 1
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/adjust_hours/<int:volunteer_id>/<action>', methods=['POST'])
@@ -854,7 +1023,11 @@ def adjust_hours(volunteer_id, action):
         v.auto_assign_badges()
     elif action == 'decrement' and (v.volunteer_hours or 0) >= 1:
         v.volunteer_hours = (v.volunteer_hours or 0) - 1
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/reset_password/<int:volunteer_id>', methods=['POST'])
@@ -862,7 +1035,11 @@ def reset_volunteer_password(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
     v.password_hash = generate_password_hash('123456')
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash(f'تمت إعادة تعيين كلمة سر {v.name} إلى: 123456', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -872,7 +1049,11 @@ def delete_volunteer_admin(volunteer_id):
     v = Volunteer.query.get_or_404(volunteer_id)
     EventRegistration.query.filter_by(volunteer_id=v.id).delete()
     db.session.delete(v)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم حذف المتطوع وسجلاته بنجاح.', 'info')
     return redirect(url_for('admin_dashboard'))
 # --- إدارة الفعاليات والمهام والمعرض ---
@@ -892,7 +1073,11 @@ def add_event():
         secret_code=code
     )
     db.session.add(new_event)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash(f'تمت إضافة الفعالية بنجاح. كود التحضير السري هو: {code}', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -955,7 +1140,11 @@ def delete_event(event_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     ev = Event.query.get_or_404(event_id)
     db.session.delete(ev)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم حذف الفعالية.', 'info')
     return redirect(url_for('admin_dashboard'))
 
@@ -969,7 +1158,11 @@ def assign_duty():
         due_date=request.form.get('due_date')
     )
     db.session.add(new_duty)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم إسناد التكليف الميداني بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -994,7 +1187,11 @@ def add_gallery_item():
         new_album.cover_image_url = request.form.get('cover_image_url', '') # Fallback to URL if provided
 
     db.session.add(new_album)
-    db.session.commit() # Commit to get the album ID
+    try:
+        db.session.commit() # Commit to get the album ID
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     
     # 2. Handle Multi-Media Upload
     uploaded_files = request.files.getlist('album_media')
@@ -1014,7 +1211,11 @@ def add_gallery_item():
             )
             db.session.add(new_media)
             
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تمت إضافة الألبوم بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -1023,7 +1224,11 @@ def delete_gallery_item(item_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     album = Album.query.get_or_404(item_id)
     db.session.delete(album)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم حذف الألبوم.', 'info')
     return redirect(url_for('admin_dashboard'))
 
@@ -1062,7 +1267,11 @@ def update_settings():
     setting.card_title_excuse = request.form.get('card_title_excuse', setting.card_title_excuse)
     setting.card_title_transport = request.form.get('card_title_transport', setting.card_title_transport)
 
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم حفظ الإعدادات وعناوين وصور البطاقات بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -1092,7 +1301,12 @@ with app.app_context():
         ("volunteers", "experience", "TEXT"),
         ("events", "capacity", "INTEGER DEFAULT 10"),
         ("event_registrations", "attended", "BOOLEAN DEFAULT FALSE"),
-        ("events", "secret_code", "VARCHAR(10)")
+        ("events", "secret_code", "VARCHAR(10)"),
+        ("volunteers", "emergency_contact_name", "VARCHAR(100)"),
+        ("volunteers", "emergency_contact_phone", "VARCHAR(20)"),
+        ("volunteers", "is_suspended", "BOOLEAN DEFAULT FALSE"),
+        ("volunteers", "last_active", "DATETIME DEFAULT CURRENT_TIMESTAMP"),
+        ("volunteers", "admin_evaluation", "TEXT")
     ]
     for tbl, col, col_type in migrations:
         try:

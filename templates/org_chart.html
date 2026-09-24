@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الهيكل التنظيمي | فريق لمتنا بصمة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ settings.logo_url or url_for('static', filename='logo.png') }}?v=1">
+    <style>
+        :root {
+            --jo-green: #007A3D;
+            --jo-red: #CE1126;
+            --jo-black: #121212;
+            --jo-dark-gray: #1e293b;
+            --jo-white: #ffffff;
+            --jo-border: #334155;
+            --text-color: #f8fafc;
+            --bg-color: #0f172a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; }
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%; background: var(--jo-dark-gray); border-bottom: 2px solid var(--jo-red); }
+        .nav-brand { display: flex; align-items: center; gap: 10px; color: var(--jo-white); text-decoration: none; }
+        .nav-brand img { height: 45px; }
+        .nav-brand-title { font-weight: 900; font-size: 1.2rem; }
+        .nav-brand-title span { color: var(--jo-red); }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { color: var(--jo-white); text-decoration: none; font-weight: 700; }
+        .container { max-width: 1200px; margin: 3rem auto; padding: 0 5%; text-align: center; }
+        h1 { margin-bottom: 2rem; color: var(--jo-green); font-weight: 900; font-size: 2.2rem; }
+        
+        .org-tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .org-node {
+            background: var(--jo-dark-gray);
+            border: 2px solid var(--jo-border);
+            border-radius: 8px;
+            padding: 20px;
+            width: 250px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .org-node h3 { color: var(--jo-white); margin-bottom: 5px; }
+        .org-node p { color: var(--jo-red); font-weight: bold; font-size: 0.9rem; }
+        .node-president { border-color: var(--jo-green); border-width: 3px; }
+        .node-vp { border-color: #facc15; }
+        .org-branches { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
+            <div class="nav-brand-title">
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+            </div>
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
+        </ul>
+    </header>
+
+    <div class="container">
+        <h1>الهيكل التنظيمي للمبادرة</h1>
+        <div class="org-tree">
+            <div class="org-node node-president">
+                <h3>لين عبده</h3>
+                <p>رئيس الفريق</p>
+            </div>
+            <div><i class="fa-solid fa-arrow-down" style="font-size: 1.5rem; color: var(--jo-border);"></i></div>
+            <div class="org-node node-vp">
+                <h3>خالد سمير الزعبي</h3>
+                <p>نائب رئيس الفريق</p>
+            </div>
+            <div><i class="fa-solid fa-arrow-down" style="font-size: 1.5rem; color: var(--jo-border);"></i></div>
+            <div class="org-branches">
+                <div class="org-node">
+                    <h3>قادة اللجان</h3>
+                    <p>اللجنة الإعلامية، التنظيم، والتسويق</p>
+                </div>
+                <div class="org-node">
+                    <h3>قادة الميدان</h3>
+                    <p>إدارة الفرق والمحافظات</p>
+                </div>
+                <div class="org-node">
+                    <h3>المتطوعون المتميزون</h3>
+                    <p>نخبة المتطوعين</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

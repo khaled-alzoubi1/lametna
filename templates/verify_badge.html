@@ -35,6 +35,13 @@
 <body>
 
     <div class="verify-card">
+        {% if volunteer.is_suspended %}
+        <div style="padding: 3rem 1.5rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 4rem; color: var(--jo-red); margin-bottom: 1rem;"></i>
+            <h2 style="color: var(--jo-red); font-weight: 900; margin-bottom: 0.5rem;">عضوية مجمدة</h2>
+            <p style="font-size: 1.1rem; font-weight: 700;">هذا الحساب مجمد مؤقتاً لمخالفة التعليمات</p>
+        </div>
+        {% else %}
         <div class="verify-header">
             <img src="{{ settings.logo_url or url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
             <h3 style="font-size: 1.1rem; font-weight: 900;">المملكة الأردنية الهاشمية</h3>
@@ -79,6 +86,7 @@
         <div class="verify-footer">
             تم فحص هذا الكود إلكترونياً عبر البوابة المركزية الرسمية لمنصة لمتنا بصمة.
         </div>
+        {% endif %}
     </div>
 
 </body>

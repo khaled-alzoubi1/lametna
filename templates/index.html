@@ -118,6 +118,11 @@
         </nav>
     </header>
 
+    <!-- شريط الإعلانات -->
+    <div style="background: #facc15; color: #854d0e; text-align: center; padding: 10px; font-weight: bold; border-bottom: 2px solid #eab308; font-size: 0.95rem;">
+        أهلاً بكم في المنصة الرسمية لفريق لمتنا بصمة
+    </div>
+
     <!-- شريط رسائل النظام -->
     <div style="max-width: 1250px; margin: 1.2rem auto 0; padding: 0 5%;">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -701,6 +706,15 @@
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">الخبرة السابقة بالعمل التطوعي (اختياري)</label>
                     <textarea name="experience" class="custom-input" rows="2" placeholder="اذكر المبادرات التي شاركت بها..."></textarea>
                 </div>
+
+                <div class="custom-select-group" style="background: #fffbeb; padding: 12px; border-radius: var(--radius-sm); border: 1px dashed #fcd34d;">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 800; color: #b45309;"><i class="fa-solid fa-truck-medical"></i> جهة الطوارئ (اختياري)</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input type="text" name="emergency_contact_name" class="custom-input" placeholder="اسم جهة الطوارئ">
+                        <input type="tel" name="emergency_contact_phone" class="custom-input" placeholder="رقم هاتف جهة الطوارئ">
+                    </div>
+                </div>
+
                 </div>
                 <div class="custom-select-group">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">كلمة المرور للحساب</label>

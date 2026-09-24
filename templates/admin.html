@@ -348,7 +348,7 @@
         </a>
         <nav>
             <ul class="nav-links">
-                <li><a href="{{ url_for('index') }}" target="_blank"><i class="fa-solid fa-arrow-up-right-from-square"></i> عرض الموقع المباشر</a></li>
+                <li><a href="{{ url_for('index') }}" ><i class="fa-solid fa-arrow-up-right-from-square"></i> عرض الموقع المباشر</a></li>
                 <li><a href="{{ url_for('admin_dashboard') }}" class="active">لوحة التحكم</a></li>
                 <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل خروج</a></li>
             </ul>
@@ -481,16 +481,27 @@
                 <form action="{{ url_for('assign_leader') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 150px; gap: 12px; align-items: flex-end;">
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">اختر المتطوع المعتمد</label>
-                        <select name="volunteer_id" class="custom-input" required>
-                            <option value="">-- حدد المتطوع من القائمة --</option>
+                        <select name="volunteer_id" id="assignLeaderVolSelect" class="custom-input" required onchange="
+                            const opt = this.options[this.selectedIndex];
+                            const email = opt.getAttribute('data-email');
+                            const posSelect = document.getElementById('assignLeaderPosSelect');
+                            if(email === 'lanooshabdo7@gmail.com' || email === 'khaledsalzoubi1352006@gmail.com') {
+                                posSelect.style.pointerEvents = 'none';
+                                posSelect.style.opacity = '0.5';
+                            } else {
+                                posSelect.style.pointerEvents = 'auto';
+                                posSelect.style.opacity = '1';
+                            }
+                        ">
+                            <option value="" data-email="">-- حدد المتطوع من القائمة --</option>
                             {% for v in volunteers if v.status == 'approved' %}
-                                <option value="{{ v.id }}">{{ v.name }} - ({{ v.city }})</option>
+                                <option value="{{ v.id }}" data-email="{{ v.email|lower }}">{{ v.name }} - ({{ v.city }})</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">المسمى القيادي</label>
-                        <select name="position" class="custom-input" required>
+                        <select name="position" id="assignLeaderPosSelect" class="custom-input" required>
                             <option value="متطوع">متطوع</option>
                             <option value="متطوع متميز">متطوع متميز</option>
                             <option value="ليدر">ليدر</option>
@@ -622,7 +633,7 @@
                                     </form>
                                 {% endif %}
 
-                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
+                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}"  onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
                                     <i class="fa-solid fa-qrcode"></i> فحص الباجة
                                 </a>
                             </div>
@@ -739,6 +750,18 @@
                             <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة:</strong> {{ v.experience }}
                         </div>
                         {% endif %}
+                        
+                        {% if v.status == 'approved' %}
+                        <div style="margin-bottom: 15px; font-size: 0.85rem; color: #e2e8f0; background: #0f172a; padding: 10px; border-radius: 6px; border-right: 3px solid #3b82f6;">
+                            <div style="margin-bottom: 6px;"><i class="fa-solid fa-clock-rotate-left"></i> <strong>آخر ظهور:</strong> {{ v.last_active.strftime('%Y-%m-%d %H:%M') if v.last_active else 'غير متاح' }}</div>
+                            <div style="margin-bottom: 6px;"><i class="fa-solid fa-truck-medical text-red-400"></i> <strong>جهة طوارئ:</strong> {{ v.emergency_contact_name or 'لا يوجد' }} ({{ v.emergency_contact_phone or '-' }})</div>
+                            <form action="{{ url_for('update_evaluation', vol_id=v.id) }}" method="POST" style="margin-top: 10px; display: flex; gap: 8px;">
+                                <input type="text" name="admin_evaluation" value="{{ v.admin_evaluation or '' }}" placeholder="ملاحظات / تقييم إداري (مخفية عن المتطوع)" class="custom-input" style="flex: 1; padding: 6px; font-size: 0.8rem;">
+                                <button type="submit" class="btn-ctrl-action" style="background: #3b82f6; color: #fff; border: none; padding: 4px 10px;"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+                            </form>
+                        </div>
+                        {% endif %}
+
                         <!-- الحالة والمنصب القيادي والباجة -->
                             <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 {% if v.status == 'approved' %}
@@ -764,7 +787,7 @@
                                     </form>
                                 {% endif %}
 
-                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
+                                <a href="{{ url_for('verify_badge', volunteer_id=v.id) }}"  onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #f1f5f9; color: #334155;" title="فحص كود التحقق الميداني">
                                     <i class="fa-solid fa-qrcode"></i> فحص الباجة
                                 </a>
                             </div>
@@ -805,6 +828,16 @@
                                 <a href="{{ v.wa_link }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #dcfce7; color: #16a34a; border-color: #86efac;" title="مراسلة فورية عبر واتساب">
                                     <i class="fa-brands fa-whatsapp"></i> واتساب
                                 </a>
+                                {% if v.status == 'approved' %}
+                                <a href="https://wa.me/962{{ v.phone[1:] if v.phone.startswith('0') else v.phone }}?text=مرحباً%20{{ v.name }}،%20نبارك%20لك%20انضمامك%20لفريق%20لمتنا%20بصمة،%20رقمك%20الميداني%20هو%20{{ v.badge_number }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: #fef08a; color: #854d0e; border-color: #fde047;" title="واتساب ترحيبي">
+                                    <i class="fa-brands fa-whatsapp"></i> ترحيب
+                                </a>
+                                <form action="{{ url_for('toggle_suspend', vol_id=v.id) }}" method="POST" style="margin: 0;">
+                                    <button type="submit" class="btn-ctrl-action" style="background: {{ '#fee2e2' if not v.is_suspended else '#dcfce7' }}; color: {{ 'var(--jo-red)' if not v.is_suspended else 'var(--jo-green)' }};" title="{{ 'تجميد الحساب' if not v.is_suspended else 'فك تجميد الحساب' }}">
+                                        <i class="fa-solid {{ 'fa-lock' if not v.is_suspended else 'fa-unlock' }}"></i> {{ 'تجميد' if not v.is_suspended else 'فك تجميد' }}
+                                    </button>
+                                </form>
+                                {% endif %}
                                 <form action="{{ url_for('reset_volunteer_password', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
                                     <button type="submit" class="btn-ctrl-action" style="background: #f1f5f9; color: #475569;" title="إعادة تعيين كلمة السر إلى 123456">
                                         <i class="fa-solid fa-key"></i>
