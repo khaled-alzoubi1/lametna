@@ -587,10 +587,19 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                         <option value="أنثى" {% if filter_gender == 'أنثى' %}selected{% endif %}>أنثى</option>
                     </select>
                 </div>
+
+                <div>
+                    <select name="event_id" class="form-control mb-3 custom-input" style="width: 100%; border: 1px solid var(--jo-border); background: var(--jo-bg); color: var(--jo-light-gray); padding: 9px 12px; border-radius: var(--radius-sm);">
+                        <option value="">التصفية حسب التواجد في الفعاليات (الكل)</option>
+                        {% for event in recent_events %}
+                        <option value="{{ event.id }}" {% if request.args.get('event_id') == event.id|string %}selected{% endif %}>{{ event.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div>
                     <button type="submit" style="background: var(--jo-green); color: #fff; border: none; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 800; cursor: pointer; white-space: nowrap; width: 100%;"><i class="fa-solid fa-magnifying-glass"></i> بحث</button>
                 </div>
-                {% if search_name or filter_city or filter_skill or filter_gender %}
+                {% if search_name or filter_city or filter_skill or filter_gender or request.args.get('event_id') %}
                 <div>
                     <a href="{{ url_for('admin_dashboard') }}" style="background: #fee2e2; color: var(--jo-red); border: 1px solid #fca5a5; padding: 9px 16px; border-radius: var(--radius-sm); font-weight: 800; text-decoration: none; display: inline-block; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> مسح الفلاتر</a>
                 </div>

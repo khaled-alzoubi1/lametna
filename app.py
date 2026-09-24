@@ -351,6 +351,7 @@ def index():
         settings=settings,
         leaders=leaders,
         events=events,
+        recent_events=recent_events,
         albums=albums,
         top_volunteers=top_volunteers,
         stats=stats,
@@ -535,6 +536,7 @@ def profile():
     settings = get_settings()
     user = Volunteer.query.get_or_404(session['user_id'])
     user_events = Event.query.order_by(Event.id.desc()).all()
+    recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
     duties = Duty.query.filter_by(volunteer_id=user.id).order_by(Duty.due_date.asc()).all()
     user_registrations = EventRegistration.query.filter_by(volunteer_id=user.id).all()
     registered_event_ids = [r.event_id for r in user_registrations]
@@ -749,6 +751,7 @@ def admin_dashboard():
     filter_city = request.args.get('filter_city', '').strip()
     filter_skill = request.args.get('filter_skill', '').strip()
     filter_gender = request.args.get('filter_gender', '').strip()
+    filter_event_id = request.args.get('event_id', '').strip()
 
     vol_query = Volunteer.query
     if search_name:
@@ -764,11 +767,17 @@ def admin_dashboard():
         vol_query = vol_query.filter(Volunteer.skills.ilike(f'%{filter_skill}%'))
     if filter_gender:
         vol_query = vol_query.filter(Volunteer.gender == filter_gender)
+    if filter_event_id and filter_event_id.isdigit():
+        vol_query = vol_query.join(EventRegistration).filter(
+            EventRegistration.event_id == int(filter_event_id),
+            EventRegistration.attended == True
+        )
 
     volunteers = vol_query.order_by(Volunteer.id.desc()).all()
     inquiries = Inquiry.query.order_by(Inquiry.id.desc()).all()
 
     events = Event.query.order_by(Event.id.desc()).all()
+    recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
     albums = Album.query.order_by(Album.id.desc()).all()
     excuses = Excuse.query.order_by(Excuse.id.desc()).all()
 
@@ -807,6 +816,7 @@ def admin_dashboard():
         current_admin=current_admin,
         volunteers=volunteers,
         events=events,
+        recent_events=recent_events,
         albums=albums,
         excuses=excuses,
         inquiries=inquiries,
