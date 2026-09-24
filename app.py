@@ -346,6 +346,7 @@ def index():
     if 'user_id' in session:
         user_registered_event_ids = [r.event_id for r in EventRegistration.query.filter_by(volunteer_id=session['user_id']).all()]
 
+    recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
     return render_template(
         'index.html',
         settings=settings,
