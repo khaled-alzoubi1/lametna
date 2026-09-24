@@ -385,6 +385,20 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        gender = request.form.get('gender', '').strip()
+        
+        import re as regex
+        if not regex.match(r'^[\u0600-\u06FF\s]+$', name):
+            db.session.rollback()
+            flash('يرجى إدخال الاسم باللغة العربية فقط', 'danger')
+            return redirect(url_for('index'))
+            
+        if gender not in ['ذكر', 'أنثى']:
+            db.session.rollback()
+            flash('يرجى تحديد الجنس بشكل صحيح', 'danger')
+            return redirect(url_for('index'))
+
         email = request.form.get('email', '').strip().lower()
         phone = request.form.get('phone', '').strip()
         if Volunteer.query.filter_by(email=email).first():

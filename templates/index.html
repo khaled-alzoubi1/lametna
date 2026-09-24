@@ -639,7 +639,7 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الكامل</label>
-                        <input type="text" name="name" class="custom-input" placeholder="الاسم الرباعي" required>
+                        <input type="text" name="name" class="custom-input" placeholder="الاسم الرباعي" pattern="^[\u0600-\u06FF\s]+$" title="يرجى إدخال الاسم باللغة العربية فقط" required>
                     </div>
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
@@ -651,7 +651,6 @@
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">الجنس</label>
                         <select name="gender" class="custom-input" required>
-                            <option value="" disabled selected>اختر الجنس</option>
                             <option value="ذكر">ذكر</option>
                             <option value="أنثى">أنثى</option>
                         </select>
@@ -671,22 +670,27 @@
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة</label>
                         <select name="city" id="modalCitySelect" class="custom-input" required>
+
                             <option value="عمان">عمان</option>
                             <option value="الزرقاء">الزرقاء</option>
                             <option value="إربد">إربد</option>
                             <option value="البلقاء">البلقاء</option>
-                            <option value="أخرى">محافظة أخرى</option>
+                            <option value="السلط">السلط</option>
+                            <option value="مأدبا">مأدبا</option>
+                            <option value="أخرى">أخرى</option>
                         </select>
                     </div>
                     <div class="custom-select-group">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">الفريق المفضل</label>
                         <select name="team" id="modalTeamSelect" class="custom-input" required>
-                            <option value="" disabled selected>اختر الفريق المفضل</option>
-                            <option value="عمان">فريق عمان</option>
-                            <option value="الزرقاء">فريق الزرقاء</option>
-                            <option value="البلقاء">فريق البلقاء (السلط)</option>
-                            <option value="إربد">فريق إربد</option>
-                            <option value="أخرى">محافظة أخرى</option>
+
+                            <option value="عمان">عمان</option>
+                            <option value="الزرقاء">الزرقاء</option>
+                            <option value="إربد">إربد</option>
+                            <option value="البلقاء">البلقاء</option>
+                            <option value="السلط">السلط</option>
+                            <option value="مأدبا">مأدبا</option>
+                            <option value="أخرى">أخرى</option>
                         </select>
                     </div>
                 </div>
