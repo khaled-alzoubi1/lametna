@@ -497,13 +497,16 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1.2rem;">
                     <i class="fa-solid fa-user-shield" style="color: var(--jo-red);"></i> تعيين وتحديث الهيئة الإدارية وقادة الفرق
                 </h3>
-                <form action="{{ url_for('assign_leader') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 150px; gap: 12px; align-items: flex-end;">
+                <form id="assignLeaderForm" action="{{ url_for('assign_leader') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; align-items: flex-end;">
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">اختر المتطوع المعتمد</label>
                         <select name="volunteer_id" id="assignLeaderVolSelect" class="custom-input" required onchange="
                             const opt = this.options[this.selectedIndex];
                             const email = opt.getAttribute('data-email');
+                            const loc = opt.getAttribute('data-location');
                             const posSelect = document.getElementById('assignLeaderPosSelect');
+                            const locSelect = document.getElementById('assignLeaderLocSelect');
+                            if(locSelect && loc) { locSelect.value = loc; }
                             if(email === 'lanooshabdo7@gmail.com' || email === 'khaledsalzoubi1352006@gmail.com') {
                                 posSelect.style.pointerEvents = 'none';
                                 posSelect.style.opacity = '0.5';
@@ -514,7 +517,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                         ">
                             <option value="" data-email="">-- حدد المتطوع من القائمة --</option>
                             {% for v in volunteers if v.status == 'approved' %}
-                                <option value="{{ v.id }}" data-email="{{ v.email|lower }}">{{ v.name }} - ({{ v.city }})</option>
+                                <option value="{{ v.id }}" data-email="{{ v.email|lower }}" data-location="{{ v.city }}">{{ v.name }} - ({{ v.city }})</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -526,6 +529,18 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                             <option value="ليدر">ليدر</option>
                             <option value="رئيس لجان">رئيس لجان</option>
                             <option value="هيئة إدارية">هيئة إدارية</option>
+                        </select>
+                    </div>
+                                        <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">تغيير المحافظة/الفريق</label>
+                        <select name="location" id="assignLeaderLocSelect" class="form-select custom-input">
+                            <option value="">-- المحافظة الحالية --</option>
+                            <option value="عمان">عمان</option>
+                            <option value="اربد">اربد</option>
+                            <option value="الزرقاء">الزرقاء</option>
+                            <option value="البلقاء (السلط)">البلقاء (السلط)</option>
+                            <option value="جرش">جرش</option>
+                            <option value="أخرى">أخرى</option>
                         </select>
                     </div>
                     <div>

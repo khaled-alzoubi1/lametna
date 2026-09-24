@@ -1,0 +1,17 @@
+def assign_leader():
+    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    volunteer_id = request.form.get('volunteer_id', type=int)
+    position = request.form.get('position')
+    photo_url = request.form.get('photo_url')
+
+    v = Volunteer.query.get_or_404(volunteer_id)
+    
+    # Intercept incoming badge_number
+    submitted_number = request.form.get('badge_number')
+    if submitted_number:
+        submitted_number = submitted_number.strip()
+        existing = Volunteer.query.filter_by(badge_number=submitted_number).first()
+        if existing and existing.id != v.id:
+            flash('الرقم الميداني مسجل مسبقاً لمتطوع آخر. يرجى اختيار رقم مختلف.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+        v.badge_

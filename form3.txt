@@ -1,0 +1,34 @@
+url_for('assign_leader') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) 150px; gap: 12px; align-items: flex-end;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">اختر المتطوع المعتمد</label>
+                        <select name="volunteer_id" id="assignLeaderVolSelect" class="custom-input" required onchange="
+                            const opt = this.options[this.selectedIndex];
+                            const email = opt.getAttribute('data-email');
+                            const posSelect = document.getElementById('assignLeaderPosSelect');
+                            if(email === 'lanooshabdo7@gmail.com' || email === 'khaledsalzoubi1352006@gmail.com') {
+                                posSelect.style.pointerEvents = 'none';
+                                posSelect.style.opacity = '0.5';
+                            } else {
+                                posSelect.style.pointerEvents = 'auto';
+                                posSelect.style.opacity = '1';
+                            }
+                        ">
+                            <option value="" data-email="">-- حدد المتطوع من القائمة --</option>
+                            {% for v in volunteers if v.status == 'approved' %}
+                                <option value="{{ v.id }}" data-email="{{ v.email|lower }}">{{ v.name }} - ({{ v.city }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">المسمى القيادي</label>
+                        <select name="position" id="assignLeaderPosSelect" class="custom-input" required>
+                            <option value="متطوع">متطوع</option>
+                            <option value="متطوع متميز">متطوع متميز</option>
+                            <option value="ليدر">ليدر</option>
+                            <option value="رئيس لجان">رئيس لجان</option>
+                            <option value="هيئة إدارية">هيئة إدارية</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">رابط الصورة الشخصية (اختياري)</label>
+                        <input type="url" name="photo

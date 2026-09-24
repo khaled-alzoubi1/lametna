@@ -951,6 +951,12 @@ def approve_volunteer(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
     
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
+    
     # Intercept incoming badge_number
     submitted_number = request.form.get('badge_number')
     if submitted_number:
@@ -974,6 +980,12 @@ def approve_volunteer(volunteer_id):
 def reject_volunteer(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     v.status = 'rejected'
     try:
         db.session.commit()
@@ -991,6 +1003,12 @@ def assign_leader():
     photo_url = request.form.get('photo_url')
 
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     
     # Intercept incoming badge_number
     submitted_number = request.form.get('badge_number')
@@ -1013,6 +1031,11 @@ def assign_leader():
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
 
     flash(f'تم تحديث بيانات {v.name} وتثبيته في المنصب.', 'success')
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        from flask import jsonify
+        return jsonify({'success': True})
+    
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/toggle_suspend/<int:vol_id>', methods=['POST'])
@@ -1046,6 +1069,12 @@ def update_evaluation(vol_id):
 def remove_leader(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     v.is_leader = False
     v.position = None
     try:
@@ -1060,6 +1089,12 @@ def remove_leader(volunteer_id):
 def assign_badge(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     badge_name = request.form.get('badge_name', '').strip()
     if badge_name:
         current_badges = v.badges_list
@@ -1078,6 +1113,12 @@ def assign_badge(volunteer_id):
 def remove_badge(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     badge_name = request.form.get('badge_name', '').strip()
     current_badges = v.badges_list
     if badge_name in current_badges:
@@ -1095,6 +1136,12 @@ def remove_badge(volunteer_id):
 def adjust_events(volunteer_id, action):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     if action == 'increment':
         v.attended_events_count = (v.attended_events_count or 0) + 1
         v.auto_assign_badges()
@@ -1111,6 +1158,12 @@ def adjust_events(volunteer_id, action):
 def adjust_hours(volunteer_id, action):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     if action == 'increment':
         v.volunteer_hours = (v.volunteer_hours or 0) + 1
         v.auto_assign_badges()
@@ -1127,6 +1180,12 @@ def adjust_hours(volunteer_id, action):
 def reset_volunteer_password(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     v.password_hash = generate_password_hash('123456')
     try:
         db.session.commit()
@@ -1140,6 +1199,12 @@ def reset_volunteer_password(volunteer_id):
 def delete_volunteer_admin(volunteer_id):
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
     v = Volunteer.query.get_or_404(volunteer_id)
+    
+    new_location = request.form.get('location')
+    if new_location:
+        v.city = new_location
+        v.team = new_location  # Usually team and city are updated together here based on previous patches
+
     EventRegistration.query.filter_by(volunteer_id=v.id).delete()
     db.session.delete(v)
     try:
