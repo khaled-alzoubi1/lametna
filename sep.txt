@@ -1,8 +1,0 @@
-رين والمعتمدين -->
-                    {% if volunteers|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
-                    <hr style="border: 1px solid red; margin: 20px 0;">
-                    {% endif %}
-
-                    <!-- Loop 2: Approved volunteers -->
-                    {% for v in volunteers if v.status != 'pending' %}
-                    <details class="admin-swipe-c

@@ -1,7 +1,0 @@
-ت المتطوعين والأوسمة والتحكم بالساعات
-                </div>
-
-               <!-- شريط البحث والفلاتر المرتبطة بالخادم -->
-            <form method="GET" action="{{ url_for('admin_dashboard') }}" id="searchForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 10px; margin-bottom: 1.5rem; align-items: end;">
-                <div>
-                    <inp

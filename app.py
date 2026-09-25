@@ -6,7 +6,8 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_talisman import Talisman
+# [DEV] Flask-Talisman disabled — port 5000 HSTS cache poisoned; running on clean port 5001.
+# from flask_talisman import Talisman
 from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy import text
@@ -23,21 +24,24 @@ limiter = Limiter(
     default_limits=[]
 )
 
-csp = {
-    'default-src': [
-        '\'self\'',
-        '\'unsafe-inline\'',
-        '\'unsafe-eval\'',
-        'https://cdn.jsdelivr.net',
-        'https://cdnjs.cloudflare.com',
-        'https://fonts.googleapis.com',
-        'https://fonts.gstatic.com',
-        'https://ka-f.fontawesome.com'
-    ],
-    'img-src': ['*', 'data:'],
-    'font-src': ['*', 'data:']
-}
-Talisman(app, content_security_policy=csp)
+# [DEV] Talisman fully disabled. Uncomment block below for production.
+# csp = {
+#     'default-src': [
+#         '\'self\'',
+#         '\'unsafe-inline\'',
+#         '\'unsafe-eval\'',
+#         'https://cdn.jsdelivr.net',
+#         'https://cdnjs.cloudflare.com',
+#         'https://fonts.googleapis.com',
+#         'https://fonts.gstatic.com',
+#         'https://ka-f.fontawesome.com'
+#     ],
+#     'img-src': ['*', 'data:'],
+#     'font-src': ['*', 'data:']
+# }
+# DEV: force_https disabled locally to prevent ERR_SSL_PROTOCOL_ERROR / WRONG_VERSION_NUMBER.
+# Re-enable (remove force_https=False) before deploying to production.
+# Talisman(app, content_security_policy=csp, force_https=False)
 
 
 import os
@@ -50,6 +54,10 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__fil
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
 
 db = SQLAlchemy(app)
+
+# ==================== Blueprint Registration (Strangler Fig) ====================
+from controllers.certificates import certificates_bp
+app.register_blueprint(certificates_bp)
 
 # ==================== نماذج قاعدة البيانات (Models) ====================
 
@@ -598,23 +606,33 @@ def profile():
 
     settings = get_settings()
     user = Volunteer.query.get_or_404(session['user_id'])
-    user_
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        volunteers = Volunteer.query.filter_by(status='approved').all()
         return render_template('partials/volunteers.html', volunteers=volunteers, settings=settings)
 
-    events = Event.query.order_by(Event.id.desc()).all()
-    recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
     duties = Duty.query.filter_by(volunteer_id=user.id).order_by(Duty.due_date.asc()).all()
     user_registrations = EventRegistration.query.filter_by(volunteer_id=user.id).all()
     registered_event_ids = [r.event_id for r in user_registrations]
-    
+
+    # Build full event objects for events the user is registered in
+    user_event_ids = [r.event_id for r in user_registrations]
+    user_events = Event.query.filter(Event.id.in_(user_event_ids)).order_by(Event.id.desc()).all() if user_event_ids else []
+
+    # Map: event_id -> attended (bool) for certificate eligibility checks in template
+    attended_map = {r.event_id: r.attended for r in user_registrations}
+
+    now = datetime.now()
+
     return render_template(
         'profile.html',
         user=user,
         user_events=user_events,
         duties=duties,
         settings=settings,
-        registered_event_ids=registered_event_ids
+        registered_event_ids=registered_event_ids,
+        attended_map=attended_map,
+        now=now,
     )
 
 @app.route('/profile/update', methods=['POST'])
@@ -1632,5 +1650,5 @@ with app.app_context():
         db.session.rollback()
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    port = int(os.environ.get('PORT', 5001))  # [DEV] Shifted from 5000 (HSTS-poisoned) to 5001
+    app.run(host='0.0.0.0', port=port, debug=True)

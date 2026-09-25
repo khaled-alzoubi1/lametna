@@ -548,6 +548,19 @@
                             </form>
                         {% endif %}
                     </div>
+
+                    {# ── زر تحميل الشهادة ──────────────────────────────────────────────────── #}
+                    {# يظهر فقط إذا: (1) تم تأكيد الحضور، (2) انتهت الفعالية (time-lock على الخادم) #}
+                    {% if attended_map.get(ev.id) and ev.is_completed %}
+                    <div style="margin-top: 10px;">
+                        <a href="{{ url_for('certificates.generate', event_id=ev.id) }}"
+                           class="btn-rsvp-join"
+                           style="background: #7c3aed; border-color: #6d28d9; color: #fff; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 7px 16px; border-radius: 6px; font-weight: 800; font-size: 0.85rem;"
+                           title="تحميل شهادة المشاركة">
+                            <i class="fa-solid fa-certificate"></i> تحميل الشهادة
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
                 </div>
                     {% else %}
