@@ -348,7 +348,13 @@ def index():
             db.func.lower(Volunteer.email).in_(admin_emails)
         )
     ).all()
-    events = Event.query.order_by(Event.id.desc()).limit(4).all()
+    # --- Public homepage: only show upcoming/active events (exclude past dates) ---
+    all_public_events = Event.query.order_by(Event.id.desc()).all()
+    upcoming_events = [ev for ev in all_public_events if not ev.is_completed]
+
+    # Homepage event cards (max 4, upcoming only)
+    events = upcoming_events[:4]
+
     albums = Album.query.order_by(Album.id.desc()).all()
     
     top_volunteers = Volunteer.query.filter_by(status='approved')\
@@ -357,7 +363,7 @@ def index():
 
     volunteers_count = Volunteer.query.filter_by(status='approved').count()
     hours_count = db.session.query(db.func.sum(Volunteer.volunteer_hours)).scalar() or 0
-    events_count = Event.query.count()
+    events_count = Event.query.count()  # total count (including past) for stats display
 
     stats = {
         'volunteers_count': volunteers_count,
@@ -369,7 +375,9 @@ def index():
     if 'user_id' in session:
         user_registered_event_ids = [r.event_id for r in EventRegistration.query.filter_by(volunteer_id=session['user_id']).all()]
 
-    recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
+    # Volunteer profile event list: upcoming only (max 15) so they can still register
+    recent_events = upcoming_events[:15]
+
     return render_template(
         'index.html',
         settings=settings,
@@ -1233,15 +1241,27 @@ def delete_volunteer_admin(volunteer_id):
 @app.route('/admin/event/add', methods=['POST'])
 def add_event():
     if not session.get('admin_logged_in'): return redirect(url_for('index'))
-    capacity = request.form.get('capacity', type=int) or 10
-    event_hours = request.form.get('event_hours', type=int) or 3
+
+    # --- Safe explicit casting to prevent type mismatch on commit ---
+    raw_capacity = request.form.get('capacity', '').strip()
+    raw_hours    = request.form.get('event_hours', '').strip()
+    capacity     = int(raw_capacity) if raw_capacity.isdigit() else 10
+    event_hours  = int(raw_hours)    if raw_hours.isdigit()    else 3
+
+    # --- Sanitise required string fields (nullable=False columns must not be None) ---
+    title       = (request.form.get('title', '')       or '').strip() or 'فعالية بدون عنوان'
+    description = (request.form.get('description', '') or '').strip() or '-'
+    date        = (request.form.get('date', '')        or '').strip() or '-'
+    time        = (request.form.get('time', '')        or '').strip() or '-'
+    location    = (request.form.get('location', '')    or '').strip() or '-'
+
     code = str(random.randint(1000, 9999))
     new_event = Event(
-        title=request.form.get('title'),
-        description=request.form.get('description'),
-        date=request.form.get('date'),
-        time=request.form.get('time'),
-        location=request.form.get('location'),
+        title=title,
+        description=description,
+        date=date,
+        time=time,
+        location=location,
         capacity=capacity,
         event_hours=event_hours,
         secret_code=code
@@ -1251,6 +1271,7 @@ def add_event():
         db.session.commit()
         flash(f'تمت إضافة الفعالية بنجاح. كود التحضير السري هو: {code}', 'success')
     except Exception as e:
+        print(f"CRITICAL DB ERROR in add_event: {str(e)}")
         db.session.rollback()
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     return redirect(url_for('admin_dashboard'))
