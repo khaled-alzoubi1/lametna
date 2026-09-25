@@ -8,3 +8,4 @@ openpyxl
 Flask-Limiter
 Flask-Talisman
 psycopg[binary]
+Pillow
