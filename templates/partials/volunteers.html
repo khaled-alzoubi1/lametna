@@ -47,9 +47,15 @@
                                 {% endif %}
 
                                 {% if v.is_leader %}
+                                    {% if v.position == 'مدرب معتمد' %}
+                                    <span style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #fff; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);">
+                                        <i class="fa-solid fa-circle-check"></i> {{ v.position }}
+                                    </span>
+                                    {% else %}
                                     <span style="background: #e0f2fe; color: #0284c7; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
                                         <i class="fa-solid fa-star"></i> {{ v.position }}
                                     </span>
+                                    {% endif %}
                                     <form action="{{ url_for('remove_leader', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
                                         <button type="submit" title="إلغاء المنصب القيادي" style="background: none; border: none; color: #94a3b8; cursor: pointer;">&times;</button>
                                     </form>
@@ -125,6 +131,7 @@
                                     <option value="وسام بطل الميدان">وسام بطل الميدان</option>
                                     <option value="وسام الانضباط الذهبي">وسام الانضباط الذهبي</option>
                                     <option value="وسام درع الطوارئ">وسام درع الطوارئ</option>
+                                    <option value="وسام مدرب خيري معتمد">وسام مدرب خيري معتمد</option>
                                 </select>
                                 <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
                             </form>
@@ -196,9 +203,15 @@
                                 {% endif %}
 
                                 {% if v.is_leader %}
+                                    {% if v.position == 'مدرب معتمد' %}
+                                    <span style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #fff; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);">
+                                        <i class="fa-solid fa-circle-check"></i> {{ v.position }}
+                                    </span>
+                                    {% else %}
                                     <span style="background: #e0f2fe; color: #0284c7; font-weight: 800; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem;">
                                         <i class="fa-solid fa-star"></i> {{ v.position }}
                                     </span>
+                                    {% endif %}
                                     <form action="{{ url_for('remove_leader', volunteer_id=v.id) }}" method="POST" style="margin: 0;">
                                         <button type="submit" title="إلغاء المنصب القيادي" style="background: none; border: none; color: #94a3b8; cursor: pointer;">&times;</button>
                                     </form>
@@ -285,6 +298,7 @@
                                     <option value="وسام بطل الميدان">وسام بطل الميدان</option>
                                     <option value="وسام الانضباط الذهبي">وسام الانضباط الذهبي</option>
                                     <option value="وسام درع الطوارئ">وسام درع الطوارئ</option>
+                                    <option value="وسام مدرب خيري معتمد">وسام مدرب خيري معتمد</option>
                                 </select>
                                 <button type="submit" class="btn-ctrl-action btn-green-accept" style="padding: 5px 12px;">منح</button>
                             </form>

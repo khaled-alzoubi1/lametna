@@ -336,7 +336,7 @@ def robots_txt():
 @app.route('/')
 def index():
     settings = get_settings()
-    valid_positions = ['ليدر', 'رئيس لجان', 'هيئة إدارية', 'رئيس الفريق', 'نائب رئيس الفريق']
+    valid_positions = ['ليدر', 'رئيس لجان', 'هيئة إدارية', 'رئيس الفريق', 'نائب رئيس الفريق', 'مدرب معتمد']
     admin_emails = ['lanooshabdo7@gmail.com', 'khaledsalzoubi1352006@gmail.com']
 
     leaders = Volunteer.query.filter(
@@ -541,6 +541,19 @@ def contact_submit():
             flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('شكراً لتواصلك معنا، تم استلام استفسارك وسنقوم بالرد عليك في أقرب وقت.', 'success')
     return redirect(url_for('index'))
+
+@app.route('/delete_inquiry/<int:id>', methods=['POST'])
+def delete_inquiry(id):
+    if not session.get('admin_logged_in'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+    inquiry = Inquiry.query.get_or_404(id)
+    db.session.delete(inquiry)
+    try:
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/org_chart')
 def org_chart():
@@ -855,8 +868,9 @@ def admin_dashboard():
         growth_data = [0]
     
     # 2. Activity Stats (Events by Title Category)
-    keywords = ['تنظيم', 'تدريب', 'طبي', 'ثقافي', 'بيئي']
-    activity_data = [Event.query.filter(Event.title.ilike(f'%{kw}%')).count() for kw in keywords]
+    keywords = ["تنظيمي ولوجستي", "إغاثي وخيري", "بيئي وزراعي", "طبي وصحي", "تطوير وتدريب", "ثقافي واجتماعي", "إعلامي وتقني"]
+    # Filter by the first word for partial matching backward compatibility
+    activity_data = [Event.query.filter(Event.title.ilike(f'%{kw.split()[0]}%')).count() for kw in keywords]
     total_activities = Event.query.count()
     
     chart_data = {
@@ -1235,10 +1249,10 @@ def add_event():
     db.session.add(new_event)
     try:
         db.session.commit()
+        flash(f'تمت إضافة الفعالية بنجاح. كود التحضير السري هو: {code}', 'success')
     except Exception as e:
         db.session.rollback()
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-    flash(f'تمت إضافة الفعالية بنجاح. كود التحضير السري هو: {code}', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/event/<int:event_id>/export')

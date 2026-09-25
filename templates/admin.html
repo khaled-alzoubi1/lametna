@@ -469,7 +469,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                 <button data-bs-toggle="modal" data-bs-target="#waBulkModal" class="btn-ctrl-action" style="background: #28a745; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
                     <i class="fa-brands fa-whatsapp"></i> رسالة واتساب مخصصة
                 </button>
-                <a href="{{ settings.whatsapp_url if settings.whatsapp_url and settings.whatsapp_url.startswith('http') else 'https://' + settings.whatsapp_url if settings.whatsapp_url else '#' }}" target="_blank" onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
+                <a href="{{ settings.whatsapp_url if settings.whatsapp_url and settings.whatsapp_url.startswith('http') else 'https://' + settings.whatsapp_url if settings.whatsapp_url else 'javascript:void(0)' }}" {% if settings.whatsapp_url %}target="_blank"{% endif %} onclick="event.stopPropagation();" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
                     <i class="fa-brands fa-whatsapp"></i> مجتمع الواتساب
                 </a>
 
@@ -529,6 +529,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                             <option value="ليدر">ليدر</option>
                             <option value="رئيس لجان">رئيس لجان</option>
                             <option value="هيئة إدارية">هيئة إدارية</option>
+                            <option value="مدرب معتمد">مدرب معتمد</option>
                         </select>
                     </div>
                                         <div>
@@ -637,9 +638,24 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                         <input type="text" name="title" class="custom-input" placeholder="حملة وقف ثريد" required>
                     </div>
                     <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">تصنيف الفعالية</label>
+                        <select name="event_category" class="custom-input" required>
+                            <option value="تنظيمي ولوجستي">تنظيمي ولوجستي</option>
+                            <option value="إغاثي وخيري">إغاثي وخيري</option>
+                            <option value="بيئي وزراعي">بيئي وزراعي</option>
+                            <option value="طبي وصحي">طبي وصحي</option>
+                            <option value="تطوير وتدريب">تطوير وتدريب</option>
+                            <option value="ثقافي واجتماعي">ثقافي واجتماعي</option>
+                            <option value="إعلامي وتقني">إعلامي وتقني</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">عدد الساعات المخصصة</label>
+                        <input type="number" name="event_hours" placeholder="افتراضي 3" class="custom-input" min="1" max="24">
+                    </div>
+                    <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">العدد المطلوب للميدان</label>
-                        <input type="number" name="event_hours" placeholder="عدد الساعات المخصصة (افتراضي 3)" class="custom-input" min="1" max="24" style="margin-bottom: 10px;">
-<input type="number" name="capacity" class="custom-input" min="1" max="200" value="7" required>
+                        <input type="number" name="capacity" class="custom-input" min="1" max="200" value="7" required>
                     </div>
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">تاريخ الفعالية</label>
@@ -1000,7 +1016,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                     </div>
                     <div style="display: grid; gap: 12px; max-height: 600px; overflow-y: auto;">
                         {% for inq in inquiries %}
-                        <div style="background: var(--jo-light-gray); border-right: 4px solid #38bdf8; padding: 1.2rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                        <div id="inquiry-card-{{ inq.id }}" style="background: var(--jo-light-gray); border-right: 4px solid #38bdf8; padding: 1.2rem; border-radius: 4px; border: 1px solid var(--jo-border); position: relative;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
                                 <span style="font-weight: 800; color: var(--jo-black);">{{ inq.first_name }} {{ inq.last_name }}</span>
                                 <span style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ inq.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
@@ -1012,6 +1028,9 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                             <p style="color: #4a5568; margin: 0; line-height: 1.6; font-size: 0.95rem;">
                                 <strong>الرسالة:</strong> {{ inq.message }}
                             </p>
+                            <button onclick="deleteInquiry({{ inq.id }})" style="position: absolute; top: 12px; left: 12px; background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
                         </div>
                         {% else %}
                         <p style="color: var(--jo-dark-gray); text-align: center; padding: 1.5rem;">لا توجد استفسارات مسجلة بعد.</p>
@@ -1553,5 +1572,28 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+function deleteInquiry(id) {
+    if(!confirm('هل أنت متأكد من حذف هذا الاستفسار؟')) return;
+    fetch('/delete_inquiry/' + id, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            const card = document.getElementById('inquiry-card-' + id);
+            if(card) {
+                card.remove();
+            }
+        } else {
+            alert('حدث خطأ أثناء الحذف.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء الحذف.');
+    });
+}
+</script>
 </body>
 </html>
