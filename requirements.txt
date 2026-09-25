@@ -9,3 +9,5 @@ Flask-Limiter
 Flask-Talisman
 psycopg[binary]
 Pillow
+arabic-reshaper
+python-bidi
