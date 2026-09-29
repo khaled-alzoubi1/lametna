@@ -1,15 +1,32 @@
 import os
 import re
 import random
-from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify
+import secrets
+from datetime import datetime, timedelta
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify, render_template_string
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 # [DEV] Flask-Talisman disabled — port 5000 HSTS cache poisoned; running on clean port 5001.
 # from flask_talisman import Talisman
 from sqlalchemy.exc import IntegrityError
+import os
+from dotenv import load_dotenv
+import cloudinary
+import cloudinary.uploader
+from flask_wtf import CSRFProtect
+from storage import upload_file, is_cloudinary_configured, UploadError, ALLOWED_IMAGE_EXTENSIONS, ALLOWED_MEDIA_EXTENSIONS
 
+load_dotenv()
+
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True
+)
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -43,17 +60,56 @@ limiter = Limiter(
 # Re-enable (remove force_https=False) before deploying to production.
 # Talisman(app, content_security_policy=csp, force_https=False)
 
+# ── Environment detection ──────────────────────────────────────────────────
+_is_dev = os.environ.get('FLASK_ENV', 'production').lower() == 'development'
 
-import os
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fallback-dev-key')
+# ── Secret key: production MUST supply SECRET_KEY env var.
+# Crash loudly rather than silently use an insecure fallback.
+_secret_key = os.environ.get('SECRET_KEY')
+if not _secret_key:
+    if _is_dev:
+        # Dev-only: ephemeral random key (sessions reset on restart, which is acceptable in dev)
+        _secret_key = secrets.token_hex(32)
+    else:
+        raise RuntimeError(
+            "FATAL: SECRET_KEY environment variable is not set. "
+            "Provide a strong, unique secret before starting in production."
+        )
+
+app.config['SECRET_KEY'] = _secret_key
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# ── Session security ────────────────────────────────────────────────────────
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+# Secure flag is enabled in production; disabled in dev where HTTPS is not available
+app.config['SESSION_COOKIE_SECURE'] = not _is_dev
+# Sessions expire after 8 hours — forces re-authentication after long idle periods
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
+
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max upload
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max upload (covers video)
 
 db = SQLAlchemy(app)
+
+# ── CSRF protection (covers all state-changing browser form POSTs) ─────────
+csrf = CSRFProtect(app)
+
+# ── Cloudinary configuration check ──────────────────────────────────────────
+import logging as _logging
+_startup_logger = _logging.getLogger('storage')
+if not _is_dev and not all([
+    os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip(),
+    os.environ.get('CLOUDINARY_API_KEY', '').strip(),
+    os.environ.get('CLOUDINARY_API_SECRET', '').strip(),
+]):
+    _startup_logger.warning(
+        'PRODUCTION MEDIA WARNING: Cloudinary environment variables are not set. '
+        'File uploads will fail in production. Set CLOUDINARY_CLOUD_NAME, '
+        'CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET.'
+    )
+
 
 # ==================== Blueprint Registration (Strangler Fig) ====================
 from controllers.certificates import certificates_bp
@@ -202,6 +258,9 @@ class Event(db.Model):
     description = db.Column(db.Text, nullable=False)
     date = db.Column(db.String(50), nullable=False)
     time = db.Column(db.String(50), nullable=False)
+    # Safe path toward structured datetimes (nullable for now, no destructive migration)
+    starts_at = db.Column(db.DateTime, nullable=True)
+    ends_at = db.Column(db.DateTime, nullable=True)
     location = db.Column(db.String(150), nullable=False)
     capacity = db.Column(db.Integer, default=10)
     event_hours = db.Column(db.Integer, default=3)  # المقاعد المطلوبة للميدان
@@ -256,12 +315,58 @@ class Event(db.Model):
         # ينتهي التسجيل وتعتبر منجزة فقط بعد انتهاء يوم الفعالية بالكامل
         return event_date < today
 
+    @property
+    def is_today(self):
+        if not self.date:
+            return False
+        raw_date = str(self.date).strip()
+        today = datetime.now().date()
+        
+        event_date = None
+        for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d', '%d-%m-%Y'):
+            try:
+                event_date = datetime.strptime(raw_date, fmt).date()
+                break
+            except (ValueError, TypeError):
+                pass
+        
+        if not event_date:
+            try:
+                parts = re.split(r'[/.-]', raw_date)
+                if len(parts) >= 2:
+                    d, m = int(parts[0]), int(parts[1])
+                    y = int(parts[2]) if len(parts) > 2 else today.year
+                    event_date = datetime(y, m, d).date()
+            except Exception:
+                return False
+
+        if not event_date:
+            return False
+
+        return event_date == today
+
 class EventRegistration(db.Model):
     __tablename__ = 'event_registrations'
+    __table_args__ = (
+        db.UniqueConstraint('volunteer_id', 'event_id', name='uix_volunteer_event'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
     attended = db.Column(db.Boolean, default=False)  # حالة التحضير الميداني
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class HourLedger(db.Model):
+    """
+    Foundation for the future source of truth for volunteer hours.
+    Tracks every discrete mutation of hours (addition or subtraction).
+    """
+    __tablename__ = 'hour_ledger'
+    id = db.Column(db.Integer, primary_key=True)
+    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=False, index=True)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True, index=True)
+    hours = db.Column(db.Float, nullable=False)
+    reason = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Duty(db.Model):
@@ -308,9 +413,29 @@ class Inquiry(db.Model):
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# ==================== Business Logic Helpers ====================
+
+def mark_attendance_and_grant_hours(registration) -> int:
+    """
+    Business Logic: Awards hours and marks attendance.
+    Does NOT commit to the database; caller must wrap in a transaction.
+    Returns the number of hours awarded.
+    """
+    if registration.attended:
+        return 0
+    
+    registration.attended = True
+    ev = registration.event
+    vol = registration.volunteer
+    
+    hours_to_award = ev.event_hours if (ev and ev.event_hours) else 3
+    vol.volunteer_hours = (vol.volunteer_hours or 0) + hours_to_award
+    vol.attended_events_count = (vol.attended_events_count or 0) + 1
+    vol.auto_assign_badges()
+    
+    return hours_to_award
+
 # ==================== دوال المساعدة ====================
-
-
 @app.context_processor
 def inject_sys_settings():
     try:
@@ -335,6 +460,33 @@ def get_settings():
     except Exception:
         db.session.rollback()
         return SiteSetting()
+
+# ==================== Security: Admin Authorization Guard ====================
+# The two admin accounts are identified solely by their email addresses.
+# These must also be set in ADMIN_EMAILS env var for production.
+# They are kept here as the authoritative source-of-truth for the server-side check.
+_ADMIN_EMAILS = frozenset({
+    'lanooshabdo7@gmail.com',
+    'khaledsalzoubi1352006@gmail.com',
+})
+
+def is_admin_session() -> bool:
+    """Return True only when the current session belongs to one of the two designated admins.
+    This is the single authoritative check used on every admin-only route.
+    `admin_logged_in` flag alone is insufficient — we always verify the email too.
+    """
+    return bool(
+        session.get('admin_logged_in') and
+        session.get('admin_email', '').lower() in _ADMIN_EMAILS
+    )
+
+def _require_admin():
+    """Call at the top of any admin route. Returns a redirect response if unauthorized,
+    or None when the caller may proceed."""
+    if not is_admin_session():
+        flash('غير مصرح لك بدخول لوحة التحكم.', 'danger')
+        return redirect(url_for('index'))
+    return None
 
 # ==================== المسارات العامة ====================
 
@@ -380,8 +532,11 @@ def index():
     }
     
     user_registered_event_ids = []
+    user_attended_event_ids = []
     if 'user_id' in session:
-        user_registered_event_ids = [r.event_id for r in EventRegistration.query.filter_by(volunteer_id=session['user_id']).all()]
+        regs = EventRegistration.query.filter_by(volunteer_id=session['user_id']).all()
+        user_registered_event_ids = [r.event_id for r in regs]
+        user_attended_event_ids = [r.event_id for r in regs if r.attended]
 
     # Volunteer profile event list: upcoming only (max 15) so they can still register
     recent_events = upcoming_events[:15]
@@ -395,7 +550,8 @@ def index():
         albums=albums,
         top_volunteers=top_volunteers,
         stats=stats,
-        user_registered_event_ids=user_registered_event_ids
+        user_registered_event_ids=user_registered_event_ids,
+        user_attended_event_ids=user_attended_event_ids
     )
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -455,70 +611,103 @@ def register():
             
         return redirect(url_for('index'))
 
+
+# ── Admin credential bootstrap ─────────────────────────────────────────────
+# Passwords are NOT stored in source code. They live exclusively in the database
+# (as bcrypt hashes). The env vars below are used ONLY on first boot to create
+# the admin DB record when it does not yet exist.
+#
+# Required production env vars (set in Render):
+#   ADMIN1_EMAIL     e.g. lanooshabdo7@gmail.com
+#   ADMIN1_PASSWORD  (plain text — used once to seed the DB hash, then discarded)
+#   ADMIN1_NAME
+#   ADMIN1_PHONE
+#   ADMIN1_POSITION
+#   ADMIN2_EMAIL     e.g. khaledsalzoubi1352006@gmail.com
+#   ADMIN2_PASSWORD
+#   ADMIN2_NAME
+#   ADMIN2_PHONE
+#   ADMIN2_POSITION
+#
+# At runtime, authentication is ALWAYS checked against check_password_hash(db_hash, password).
+# If env vars are absent after first boot, existing DB hashes continue to work.
+
+def _bootstrap_admin(email, password, name, phone, position):
+    """Create admin volunteer DB record on first boot if it does not exist.
+    The password is immediately hashed; the plain-text value is never retained."""
+    if not email or not password:
+        return
+    existing = Volunteer.query.filter_by(email=email).first()
+    if existing:
+        return  # Already seeded — do not overwrite
+    admin_vol = Volunteer(
+        name=name or email,
+        email=email,
+        phone=phone or '0000000000',
+        password_hash=generate_password_hash(password),
+        city='عمان',
+        team='عمان',
+        status='approved',
+        is_leader=True,
+        position=position or 'إدارة',
+    )
+    db.session.add(admin_vol)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per hour", exempt_when=lambda: request.method != 'POST')
+# Rate limit: per submitted email address, not per IP.
+# This prevents shared venue Wi-Fi from locking out all volunteers
+# (many different emails behind one IP) while still blocking per-account brute-force.
+@limiter.limit(
+    "10 per 15 minutes",
+    key_func=lambda: request.form.get('email', '').strip().lower() or get_remote_address(),
+    exempt_when=lambda: request.method != 'POST',
+)
 def login():
     if request.method == 'POST':
         identifier = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
 
-        admin_credentials = {
-            'khaledsalzoubi1352006@gmail.com': {
-                'password': 'kh13s5alzoubi2006',
-                'name': 'خالد سمير الزعبي',
-                'position': 'نائب رئيس المبادرة'
-            },
-            'lanooshabdo7@gmail.com': {
-                'password': 'lanooshabdo7',
-                'name': 'لين عبده',
-                'position': 'رئيسة المبادرة'
-            }
-        }
-
-        if identifier in admin_credentials and admin_credentials[identifier]['password'] == password:
+        # ── Admin path: email must be in the _ADMIN_EMAILS whitelist ──────────
+        if identifier in _ADMIN_EMAILS:
             admin_user = Volunteer.query.filter_by(email=identifier).first()
-            if not admin_user:
-                admin_user = Volunteer(
-                    name=admin_credentials[identifier]['name'],
-                    email=identifier,
-                    phone='0793888086' if 'khaled' in identifier else '0796425003',
-                    password_hash=generate_password_hash(password),
-                    city='عمان',
-                    team='عمان',
-                    status='approved',
-                    is_leader=True,
-                    position=admin_credentials[identifier]['position']
-                )
-                db.session.add(admin_user)
+            if admin_user and check_password_hash(admin_user.password_hash, password):
+                admin_user.last_active = datetime.utcnow()
                 try:
                     db.session.commit()
-                except Exception as e:
+                except Exception:
                     db.session.rollback()
-                    flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
 
-            admin_user.last_active = datetime.utcnow()
-            try:
-                db.session.commit()
-            except Exception as e:
-                db.session.rollback()
-                flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-            
-            session.clear()
-            session['admin_logged_in'] = True
-            session['admin_email'] = identifier
-            session['user_id'] = admin_user.id
-            flash(f'أهلاً بكِ يا {admin_user.name} في لوحة التحكم الإدارية.' if 'lanoosh' in identifier else f'أهلاً بك يا {admin_user.name} في لوحة التحكم الإدارية.', 'success')
-            return redirect(url_for('admin_dashboard'))
+                session.clear()
+                session.permanent = True          # respect PERMANENT_SESSION_LIFETIME
+                session['admin_logged_in'] = True
+                session['admin_email'] = identifier
+                session['user_id'] = admin_user.id
+                greeting = 'أهلاً بكِ يا' if admin_user.gender == 'أنثى' else 'أهلاً بك يا'
+                flash(f'{greeting} {admin_user.name} في لوحة التحكم الإدارية.', 'success')
+                return redirect(url_for('admin_dashboard'))
 
+            # Do not reveal whether the email exists
+            flash('بيانات الدخول غير صحيحة، يرجى التحقق من البريد وكلمة المرور.', 'danger')
+            return redirect(url_for('index'))
+
+        # ── Volunteer path ────────────────────────────────────────────────────
         volunteer = Volunteer.query.filter_by(email=identifier).first()
         if volunteer and check_password_hash(volunteer.password_hash, password):
+            if volunteer.is_suspended:
+                flash('تم تعليق حسابك. تواصل مع الإدارة للاستفسار.', 'danger')
+                return redirect(url_for('index'))
             volunteer.last_active = datetime.utcnow()
             try:
                 db.session.commit()
-            except Exception as e:
+            except Exception:
                 db.session.rollback()
-                flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
             session.clear()
+            session.permanent = True              # respect PERMANENT_SESSION_LIFETIME
             session['user_id'] = volunteer.id
             flash(f'أهلاً بك مجدداً يا {volunteer.name}', 'success')
             return redirect(url_for('profile'))
@@ -527,6 +716,7 @@ def login():
         return redirect(url_for('index'))
 
     return redirect(url_for('index'))
+
 
 @app.route('/logout')
 def logout():
@@ -560,7 +750,7 @@ def contact_submit():
 
 @app.route('/delete_inquiry/<int:id>', methods=['POST'])
 def delete_inquiry(id):
-    if not session.get('admin_logged_in'):
+    if not is_admin_session():
         return jsonify({'success': False, 'error': 'Unauthorized'}), 403
     inquiry = Inquiry.query.get_or_404(id)
     db.session.delete(inquiry)
@@ -614,13 +804,11 @@ def profile():
     duties = Duty.query.filter_by(volunteer_id=user.id).order_by(Duty.due_date.asc()).all()
     user_registrations = EventRegistration.query.filter_by(volunteer_id=user.id).all()
     registered_event_ids = [r.event_id for r in user_registrations]
-
-    # Build full event objects for events the user is registered in
-    user_event_ids = [r.event_id for r in user_registrations]
-    user_events = Event.query.filter(Event.id.in_(user_event_ids)).order_by(Event.id.desc()).all() if user_event_ids else []
-
-    # Map: event_id -> attended (bool) for certificate eligibility checks in template
     attended_map = {r.event_id: r.attended for r in user_registrations}
+
+    user_events = Event.query.filter(Event.id.in_(registered_event_ids)).order_by(Event.id.desc()).all() if registered_event_ids else []
+    
+    past_attended_events = [ev for ev in user_events if attended_map.get(ev.id) and ev.is_completed]
 
     now = datetime.now()
 
@@ -633,6 +821,7 @@ def profile():
         registered_event_ids=registered_event_ids,
         attended_map=attended_map,
         now=now,
+        past_attended_events=past_attended_events
     )
 
 @app.route('/profile/update', methods=['POST'])
@@ -653,34 +842,32 @@ def update_profile():
     if 'emergency_contact_phone' in request.form:
         user.emergency_contact_phone = request.form.get('emergency_contact_phone', '').strip()
 
-    # Handle physical file upload
+    # Handle profile photo upload via storage adapter (Cloudinary / local-dev fallback)
     uploaded_file = request.files.get('profile_image')
     if uploaded_file and uploaded_file.filename:
-        allowed_ext = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-        ext = uploaded_file.filename.rsplit('.', 1)[-1].lower() if '.' in uploaded_file.filename else ''
-        if ext in allowed_ext:
-            safe_name = secure_filename(f"vol_{user.id}_{uploaded_file.filename}")
-            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-            save_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
-            uploaded_file.save(save_path)
-            user.photo_url = url_for('static', filename=f'uploads/{safe_name}')
-        else:
-            flash('صيغة الصورة غير مدعومة. استخدم PNG, JPG, GIF, أو WEBP.', 'danger')
+        try:
+            photo_url = upload_file(uploaded_file, folder='profile_photos',
+                                    allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
+            user.photo_url = photo_url
+        except UploadError as e:
+            flash(str(e), 'danger')
+            return redirect(url_for('profile'))
     else:
         # Fallback to URL if no file uploaded
-        photo_url = request.form.get('photo_url')
-        if photo_url:
-            user.photo_url = photo_url
-    
+        photo_url_field = request.form.get('photo_url')
+        if photo_url_field:
+            user.photo_url = photo_url_field
+
     new_password = request.form.get('new_password', '').strip()
     if new_password:
         user.password_hash = generate_password_hash(new_password)
-    
+
     try:
         db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+        return redirect(url_for('profile'))
     flash('تم تحديث ملفك الشخصي بنجاح.', 'success')
     return redirect(url_for('profile'))
 
@@ -695,16 +882,29 @@ def rsvp_event(event_id):
         flash('يجب أن يكون حسابك معتمداً من الإدارة لتأكيد المشاركة.', 'danger')
         return redirect(request.referrer or url_for('profile'))
 
-    ev = Event.query.get_or_404(event_id)
+    # On PostgreSQL: lock the event row first so that concurrent requests serialize here.
+    # The duplicate check and capacity check must both happen inside the same transaction
+    # as the INSERT so no window exists between check and write.
+    # On SQLite: no row-level locking is available; the UNIQUE INDEX is the final defense.
+    is_sqlite = 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
+    if is_sqlite:
+        ev = Event.query.get_or_404(event_id)
+    else:
+        ev = Event.query.filter_by(id=event_id).with_for_update().first_or_404()
+
     if ev.is_completed:
         flash('عذراً، هذه الفعالية انتهت ومغلقة أمام التسجيل الميداني.', 'danger')
         return redirect(request.referrer or url_for('profile'))
+
+    # Both checks use a fresh DB count to avoid ORM session cache stale reads.
+    # These queries run INSIDE the FOR UPDATE transaction on Postgres.
     existing_reg = EventRegistration.query.filter_by(volunteer_id=user.id, event_id=ev.id).first()
     if existing_reg:
         flash('أنت مسجل مسبقاً في هذا النشاط الميداني.', 'info')
         return redirect(request.referrer or url_for('profile'))
 
-    if ev.is_full:
+    current_count = EventRegistration.query.filter_by(event_id=ev.id).count()
+    if current_count >= ev.capacity:
         flash('اكتمل العدد المطلوب للميدان في هذه الفعالية.', 'danger')
         return redirect(request.referrer or url_for('profile'))
 
@@ -712,11 +912,15 @@ def rsvp_event(event_id):
     db.session.add(new_reg)
     try:
         db.session.commit()
-    except Exception as e:
+        flash(f'تم حجز مقعدك بنجاح في: {ev.title}.', 'success')
+    except IntegrityError:
+        # Final defense: the UNIQUE INDEX catches any race that bypassed the app-level check.
+        db.session.rollback()
+        flash('أنت مسجل مسبقاً في هذا النشاط الميداني.', 'info')
+    except Exception:
         db.session.rollback()
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
 
-    flash(f'تم حجز مقعدك بنجاح في: {ev.title}.', 'success')
     return redirect(request.referrer or url_for('profile'))
 
 @app.route('/events/cancel_rsvp/<int:event_id>', methods=['POST'])
@@ -758,21 +962,51 @@ def self_checkin():
 
     # مطابقة الكود السري
     if ev.secret_code and entered_code == str(ev.secret_code).strip():
-        reg.attended = True
-        hours_to_award = 3  # الساعات الافتراضية للنشاط
-        user.volunteer_hours = (user.volunteer_hours or 0) + hours_to_award
-        user.attended_events_count = (user.attended_events_count or 0) + 1
-        user.auto_assign_badges()
+        hours_to_award = mark_attendance_and_grant_hours(reg)
         try:
             db.session.commit()
-        except Exception as e:
+        except Exception:
             db.session.rollback()
             flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+            return redirect(request.referrer or url_for('profile'))
         flash(f'أحسنت! تم تأكيد حضورك بنجاح في "{ev.title}" وإضافة {hours_to_award} ساعات لرصيدك.', 'success')
     else:
         flash('كود التحضير غير صحيح! يرجى مراجعة مسؤول الميدان.', 'danger')
 
     return redirect(request.referrer or url_for('profile'))
+
+@app.route('/verify_attendance_code/<int:event_id>', methods=['POST'])
+def verify_attendance_code(event_id):
+    if 'user_id' not in session:
+        flash('يرجى تسجيل الدخول أولاً.', 'danger')
+        return redirect(url_for('index'))
+
+    entered_code = request.form.get('secret_code', '').strip()
+    ev = Event.query.get_or_404(event_id)
+    user = Volunteer.query.get_or_404(session['user_id'])
+
+    reg = EventRegistration.query.filter_by(volunteer_id=user.id, event_id=ev.id).first()
+    if not reg:
+        flash('يجب أن تكون مسجلاً بالفعالية لتأكيد حضورك.', 'danger')
+        return redirect(request.referrer or url_for('index'))
+
+    if reg.attended:
+        flash('تم تسجيل حضورك مسبقاً في هذه الفعالية.', 'info')
+        return redirect(request.referrer or url_for('index'))
+
+    if ev.secret_code and entered_code == str(ev.secret_code).strip():
+        hours_to_award = mark_attendance_and_grant_hours(reg)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+            return redirect(request.referrer or url_for('index'))
+        flash(f'تم حضور الفعالية بنجاح وإضافة {hours_to_award} ساعات.', 'success')
+    else:
+        flash('كود التحضير غير صحيح! يرجى مراجعة مسؤول الميدان.', 'danger')
+
+    return redirect(request.referrer or url_for('index'))
 
 @app.route('/profile/delete', methods=['POST'])
 def delete_own_account():
@@ -823,9 +1057,9 @@ from collections import Counter
 
 @app.route('/admin')
 def admin_dashboard():
-    if not session.get('admin_logged_in'):
-        flash('غير مصرح لك بدخول لوحة التحكم.', 'danger')
-        return redirect(url_for('index'))
+    denied = _require_admin()
+    if denied:
+        return denied
 
     settings = get_settings()
     admin_email = session.get('admin_email')
@@ -865,7 +1099,8 @@ def admin_dashboard():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template('partials/volunteers.html', volunteers=volunteers, settings=settings)
 
-    events = Event.query.order_by(Event.id.desc()).all()
+    from sqlalchemy.orm import joinedload
+    events = Event.query.options(joinedload(Event.registrations).joinedload(EventRegistration.volunteer)).order_by(Event.id.desc()).all()
     recent_events = Event.query.order_by(Event.id.desc()).limit(15).all()
     albums = Album.query.order_by(Album.id.desc()).all()
     excuses = Excuse.query.order_by(Excuse.id.desc()).all()
@@ -931,8 +1166,12 @@ def admin_dashboard():
 
 @app.route('/admin/profile/update', methods=['POST'])
 def update_admin_profile():
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
 
     admin_email = session.get('admin_email')
     admin_user = Volunteer.query.filter_by(email=admin_email).first()
@@ -956,25 +1195,32 @@ def update_admin_profile():
 
 @app.route('/admin/rsvp/checkin/<int:reg_id>', methods=['POST'])
 def checkin_rsvp_volunteer(reg_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     reg = EventRegistration.query.get_or_404(reg_id)
     if not reg.attended:
-        reg.attended = True
-        hours_to_award = reg.event.event_hours if reg.event and reg.event.event_hours else 3
-        reg.volunteer.volunteer_hours = (reg.volunteer.volunteer_hours or 0) + hours_to_award
-        reg.volunteer.attended_events_count = (reg.volunteer.attended_events_count or 0) + 1
-        reg.volunteer.auto_assign_badges()
+        hours_to_award = mark_attendance_and_grant_hours(reg)
         try:
             db.session.commit()
-        except Exception as e:
+        except Exception:
             db.session.rollback()
             flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+            return redirect(url_for('admin_dashboard'))
         flash(f'تم تحضير المتطوع {reg.volunteer.name} ومنحه {hours_to_award} ساعات.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/rsvp/remove/<int:reg_id>', methods=['POST'])
 def remove_rsvp_volunteer(reg_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     reg = EventRegistration.query.get_or_404(reg_id)
     v_name = reg.volunteer.name
     db.session.delete(reg)
@@ -988,7 +1234,12 @@ def remove_rsvp_volunteer(reg_id):
 
 @app.route('/admin/approve/<int:volunteer_id>', methods=['POST'])
 def approve_volunteer(volunteer_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1018,7 +1269,12 @@ def approve_volunteer(volunteer_id):
 
 @app.route('/admin/reject/<int:volunteer_id>', methods=['POST'])
 def reject_volunteer(volunteer_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1037,7 +1293,12 @@ def reject_volunteer(volunteer_id):
 
 @app.route('/admin/assign_leader', methods=['POST'])
 def assign_leader():
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     volunteer_id = request.form.get('volunteer_id', type=int)
     position = request.form.get('position')
     photo_url = request.form.get('photo_url')
@@ -1080,7 +1341,12 @@ def assign_leader():
 
 @app.route('/admin/toggle_suspend/<int:vol_id>', methods=['POST'])
 def toggle_suspend(vol_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(vol_id)
     v.is_suspended = not v.is_suspended
     try:
@@ -1094,7 +1360,12 @@ def toggle_suspend(vol_id):
 
 @app.route('/admin/update_evaluation/<int:vol_id>', methods=['POST'])
 def update_evaluation(vol_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(vol_id)
     v.admin_evaluation = request.form.get('admin_evaluation')
     try:
@@ -1107,7 +1378,12 @@ def update_evaluation(vol_id):
 
 @app.route('/admin/remove_leader/<int:volunteer_id>', methods=['POST'])
 def remove_leader(volunteer_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1127,7 +1403,12 @@ def remove_leader(volunteer_id):
 
 @app.route('/admin/badge/assign/<int:volunteer_id>', methods=['POST'])
 def assign_badge(volunteer_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1151,7 +1432,12 @@ def assign_badge(volunteer_id):
 
 @app.route('/admin/badge/remove/<int:volunteer_id>', methods=['POST'])
 def remove_badge(volunteer_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1174,7 +1460,12 @@ def remove_badge(volunteer_id):
 
 @app.route('/admin/adjust_events/<int:volunteer_id>/<action>', methods=['POST'])
 def adjust_events(volunteer_id, action):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1196,7 +1487,12 @@ def adjust_events(volunteer_id, action):
 
 @app.route('/admin/adjust_hours/<int:volunteer_id>/<action>', methods=['POST'])
 def adjust_hours(volunteer_id, action):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1218,26 +1514,139 @@ def adjust_hours(volunteer_id, action):
 
 @app.route('/admin/reset_password/<int:volunteer_id>', methods=['POST'])
 def reset_volunteer_password(volunteer_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+    if denied:
+        return denied
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
         v.team = new_location  # Usually team and city are updated together here based on previous patches
 
-    v.password_hash = generate_password_hash('123456')
     try:
         db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-    flash(f'تمت إعادة تعيين كلمة سر {v.name} إلى: 123456', 'success')
+
+    # Generate a secure, single-use, time-limited token
+    # We include a portion of the current password_hash.
+    # When the password is reset, the hash changes, invalidating the token automatically.
+    s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    token = s.dumps({'id': v.id, 'hash': v.password_hash[-10:]})
+    
+    reset_link = url_for('handle_reset_password', token=token, _external=True)
+    
+    flash(f'تم إنشاء رابط إعادة تعيين كلمة سر {v.name}. الرابط صالح لمدة ساعة ويستخدم لمرة واحدة فقط: {reset_link}', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def handle_reset_password(token):
+    s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    try:
+        # Token expires in 1 hour (3600 seconds)
+        payload = s.loads(token, max_age=3600)
+    except SignatureExpired:
+        flash('انتهت صلاحية رابط إعادة التعيين.', 'danger')
+        return redirect(url_for('index'))
+    except BadSignature:
+        flash('رابط إعادة التعيين غير صالح.', 'danger')
+        return redirect(url_for('index'))
+
+    v = Volunteer.query.get(payload['id'])
+    if not v or v.password_hash[-10:] != payload['hash']:
+        flash('تم استخدام هذا الرابط مسبقاً أو أنه غير صالح.', 'danger')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not new_password or new_password != confirm_password:
+            flash('كلمة المرور غير متطابقة أو فارغة.', 'danger')
+            return redirect(url_for('handle_reset_password', token=token))
+            
+        if len(new_password) < 6:
+            flash('يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.', 'danger')
+            return redirect(url_for('handle_reset_password', token=token))
+
+        v.password_hash = generate_password_hash(new_password)
+        try:
+            db.session.commit()
+            flash('تم تعيين كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول.', 'success')
+            return redirect(url_for('index'))
+        except Exception:
+            db.session.rollback()
+            flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+
+    # A simple, self-contained HTML form using inline styles consistent with the platform
+    # avoiding the need for an external template file.
+    html = '''
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>إعادة تعيين كلمة المرور</title>
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <style>
+            .reset-container { max-width: 400px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .reset-container h2 { text-align: center; color: var(--primary-color, #2b3990); margin-bottom: 20px; }
+            .reset-container .form-group { margin-bottom: 15px; }
+            .reset-container label { display: block; margin-bottom: 5px; font-weight: bold; }
+            .reset-container input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+            .reset-container button { width: 100%; padding: 10px; background-color: var(--primary-color, #2b3990); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+            .reset-container button:hover { opacity: 0.9; }
+            .flash-messages { list-style: none; padding: 0; }
+            .flash-messages li { padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+            .flash-messages .danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+            .flash-messages .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        </style>
+    </head>
+    <body>
+        <div class="reset-container">
+            <h2>إعادة تعيين كلمة المرور</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                  <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label for="new_password">كلمة المرور الجديدة</label>
+                    <input type="password" id="new_password" name="new_password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">تأكيد كلمة المرور</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                </div>
+                <button type="submit">حفظ كلمة المرور</button>
+            </form>
+        </div>
+    </body>
+    </html>
+    '''
+    return render_template_string(html)
+
+
 
 @app.route('/admin/delete_volunteer/<int:volunteer_id>', methods=['POST'])
 def delete_volunteer_admin(volunteer_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     v = Volunteer.query.get_or_404(volunteer_id)
     
     new_location = request.form.get('location')
@@ -1258,7 +1667,12 @@ def delete_volunteer_admin(volunteer_id):
 
 @app.route('/admin/event/add', methods=['POST'])
 def add_event():
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
 
     # --- Safe explicit casting to prevent type mismatch on commit ---
     raw_capacity = request.form.get('capacity', '').strip()
@@ -1296,8 +1710,12 @@ def add_event():
 
 @app.route('/admin/event/<int:event_id>/export')
 def export_event_roster(event_id):
-    if not session.get('admin_logged_in'):
-        return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
 
     wb = Workbook()
     ws = wb.active
@@ -1350,7 +1768,12 @@ def export_event_roster(event_id):
 
 @app.route('/admin/event/delete/<int:event_id>', methods=['POST'])
 def delete_event(event_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     ev = Event.query.get_or_404(event_id)
     db.session.delete(ev)
     try:
@@ -1363,7 +1786,12 @@ def delete_event(event_id):
 
 @app.route('/admin/duty/assign', methods=['POST'])
 def assign_duty():
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     new_duty = Duty(
         volunteer_id=request.form.get('volunteer_id', type=int),
         title=request.form.get('title'),
@@ -1381,60 +1809,81 @@ def assign_duty():
 
 @app.route('/admin/gallery/add', methods=['POST'])
 def add_gallery_item():
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     
     # 1. Create the Album
     new_album = Album(
         title=request.form.get('title'),
         category=request.form.get('category', 'عام')
     )
-    
-    # Handle Cover Image Upload
+
+    # Handle Cover Image Upload via storage adapter
     cover_file = request.files.get('cover_image')
     if cover_file and cover_file.filename:
-        safe_name = secure_filename(f"cover_{datetime.now().strftime('%Y%m%d%H%M%S')}_{cover_file.filename}")
-        os.makedirs(app.config.get('UPLOAD_FOLDER', 'static/uploads'), exist_ok=True)
-        cover_file.save(os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), safe_name))
-        new_album.cover_image_url = url_for('static', filename=f'uploads/{safe_name}')
+        try:
+            new_album.cover_image_url = upload_file(
+                cover_file, folder='gallery_covers',
+                allowed_extensions=ALLOWED_IMAGE_EXTENSIONS
+            )
+        except UploadError as e:
+            flash(str(e), 'danger')
+            return redirect(url_for('admin_dashboard'))
     else:
-        new_album.cover_image_url = request.form.get('cover_image_url', '') # Fallback to URL if provided
+        new_album.cover_image_url = request.form.get('cover_image_url', '')
 
     db.session.add(new_album)
     try:
-        db.session.commit() # Commit to get the album ID
-    except Exception as e:
+        db.session.commit()  # Commit to get the album ID
+    except Exception:
         db.session.rollback()
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-    
-    # 2. Handle Multi-Media Upload
+        return redirect(url_for('admin_dashboard'))
+
+    # 2. Handle Multi-Media Upload via storage adapter
     uploaded_files = request.files.getlist('album_media')
+    failed_files = []
     for file in uploaded_files:
         if file and file.filename:
-            safe_name = secure_filename(f"media_{new_album.id}_{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
-            os.makedirs(app.config.get('UPLOAD_FOLDER', 'static/uploads'), exist_ok=True)
-            file.save(os.path.join(app.config.get('UPLOAD_FOLDER', 'static/uploads'), safe_name))
-            
-            ext = safe_name.rsplit('.', 1)[-1].lower()
-            media_type = 'video' if ext in ['mp4', 'webm', 'ogg', 'mov'] else 'image'
-            
-            new_media = AlbumMedia(
-                album_id=new_album.id,
-                media_url=url_for('static', filename=f'uploads/{safe_name}'),
-                media_type=media_type
-            )
-            db.session.add(new_media)
-            
+            try:
+                media_url = upload_file(file, folder='gallery_media',
+                                        allowed_extensions=ALLOWED_MEDIA_EXTENSIONS)
+                ext = file.filename.rsplit('.', 1)[-1].lower()
+                media_type = 'video' if ext in {'mp4', 'webm', 'ogg', 'mov'} else 'image'
+                new_media = AlbumMedia(
+                    album_id=new_album.id,
+                    media_url=media_url,
+                    media_type=media_type
+                )
+                db.session.add(new_media)
+            except UploadError as e:
+                failed_files.append(file.filename)
+
     try:
         db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-    flash('تمت إضافة الألبوم بنجاح.', 'success')
+        flash('حدث خطأ في قاعدة البيانات أثناء حفظ الوسائط، يرجى المحاولة لاحقاً', 'error')
+        return redirect(url_for('admin_dashboard'))
+
+    if failed_files:
+        flash(f'تم إنشاء الألبوم لكن فشل رفع {len(failed_files)} ملفات: {", ".join(failed_files)}', 'warning')
+    else:
+        flash('تمت إضافة الألبوم بنجاح.', 'success')
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/gallery/delete/<int:item_id>', methods=['POST'])
 def delete_gallery_item(item_id):
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     album = Album.query.get_or_404(item_id)
     db.session.delete(album)
     try:
@@ -1450,7 +1899,10 @@ def delete_gallery_item(item_id):
 
 @app.route('/admin/settings/banner', methods=['POST'])
 def update_banner():
-    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    if not is_admin_session():
+
+        return jsonify({'error': 'Unauthorized'}), 403
+
     sys_settings = SystemSettings.query.first()
     if not sys_settings:
         sys_settings = SystemSettings()
@@ -1466,7 +1918,10 @@ def update_banner():
 
 @app.route('/admin/ajax/update_stat', methods=['POST'])
 def ajax_update_stat():
-    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    if not is_admin_session():
+
+        return jsonify({'error': 'Unauthorized'}), 403
+
     data = request.get_json()
     vol_id = data.get('vol_id')
     stat_type = data.get('type')
@@ -1490,7 +1945,10 @@ def ajax_update_stat():
 
 @app.route('/admin/bulk_approve', methods=['POST'])
 def bulk_approve():
-    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    if not is_admin_session():
+
+        return jsonify({'error': 'Unauthorized'}), 403
+
     vol_ids = request.form.getlist('vol_ids')
     for vid in vol_ids:
         v = Volunteer.query.get(vid)
@@ -1507,7 +1965,10 @@ def bulk_approve():
 
 @app.route('/admin/bulk_add_hours', methods=['POST'])
 def bulk_add_hours():
-    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    if not is_admin_session():
+
+        return jsonify({'error': 'Unauthorized'}), 403
+
     vol_ids = request.form.getlist('vol_ids')
     hours = int(request.form.get('hours', 0))
     for vid in vol_ids:
@@ -1523,7 +1984,10 @@ def bulk_add_hours():
 
 @app.route('/admin/bulk_add_events', methods=['POST'])
 def bulk_add_events():
-    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    if not is_admin_session():
+
+        return jsonify({'error': 'Unauthorized'}), 403
+
     vol_ids = request.form.getlist('vol_ids')
     events = int(request.form.get('events', 0))
     for vid in vol_ids:
@@ -1539,7 +2003,10 @@ def bulk_add_events():
 
 @app.route('/admin/bulk_evaluation', methods=['POST'])
 def bulk_evaluation():
-    if not session.get('admin_logged_in'): return jsonify({'error': 'Unauthorized'}), 403
+    if not is_admin_session():
+
+        return jsonify({'error': 'Unauthorized'}), 403
+
     vol_ids = request.form.getlist('vol_ids')
     note = request.form.get('evaluation', '')
     for vid in vol_ids:
@@ -1556,7 +2023,12 @@ def bulk_evaluation():
 
 @app.route('/admin/settings/update', methods=['POST'])
 def update_settings():
-    if not session.get('admin_logged_in'): return redirect(url_for('index'))
+    denied = _require_admin()
+
+    if denied:
+
+        return denied
+
     setting = get_settings()
 
     setting.site_name = request.form.get('site_name')
@@ -1630,7 +2102,9 @@ with app.app_context():
         ("volunteers", "emergency_contact_phone", "VARCHAR(20)"),
         ("volunteers", "is_suspended", "BOOLEAN DEFAULT FALSE"),
         ("volunteers", "last_active", "DATETIME DEFAULT CURRENT_TIMESTAMP"),
-        ("volunteers", "admin_evaluation", "TEXT")
+        ("volunteers", "admin_evaluation", "TEXT"),
+        ("events", "starts_at", "DATETIME"),
+        ("events", "ends_at", "DATETIME")
     ]
     for tbl, col, col_type in migrations:
         try:
@@ -1642,6 +2116,28 @@ with app.app_context():
         except Exception:
             db.session.rollback()
 
+    # Apply Unique Constraint on EventRegistration
+    duplicates = db.session.execute(text("""
+        SELECT volunteer_id, event_id, COUNT(*)
+        FROM event_registrations
+        GROUP BY volunteer_id, event_id
+        HAVING COUNT(*) > 1
+    """)).fetchall()
+
+    if duplicates:
+        app.logger.error(
+            f"CRITICAL DATA INTEGRITY ISSUE: Found {len(duplicates)} duplicate registration(s). "
+            f"Cannot safely create unique index 'uix_volunteer_event'. "
+            f"Please resolve duplicates manually."
+        )
+    else:
+        try:
+            db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uix_volunteer_event ON event_registrations (volunteer_id, event_id);"))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Failed to create unique index 'uix_volunteer_event': {e}")
+
     try:
         if not SiteSetting.query.first():
             db.session.add(SiteSetting())
@@ -1649,6 +2145,28 @@ with app.app_context():
     except Exception:
         db.session.rollback()
 
+    # ── Bootstrap admin accounts from env vars on first boot ──────────────────
+    # These env vars are ONLY used to create the initial DB record.
+    # Once the record exists, these env vars are no longer consulted for auth.
+    try:
+        _bootstrap_admin(
+            email=os.environ.get('ADMIN1_EMAIL', ''),
+            password=os.environ.get('ADMIN1_PASSWORD', ''),
+            name=os.environ.get('ADMIN1_NAME', ''),
+            phone=os.environ.get('ADMIN1_PHONE', ''),
+            position=os.environ.get('ADMIN1_POSITION', ''),
+        )
+        _bootstrap_admin(
+            email=os.environ.get('ADMIN2_EMAIL', ''),
+            password=os.environ.get('ADMIN2_PASSWORD', ''),
+            name=os.environ.get('ADMIN2_NAME', ''),
+            phone=os.environ.get('ADMIN2_PHONE', ''),
+            position=os.environ.get('ADMIN2_POSITION', ''),
+        )
+    except Exception:
+        pass  # Bootstrap failures should not prevent startup
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))  # [DEV] Shifted from 5000 (HSTS-poisoned) to 5001
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # debug mode is only enabled in development; never in production
+    app.run(host='0.0.0.0', port=port, debug=_is_dev)

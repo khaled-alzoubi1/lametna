@@ -63,6 +63,7 @@
 }
 </style>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم الإدارية | {{ current_admin.name if current_admin else 'إدارة المبادرة' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -737,7 +738,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                                             {% else %}
                                                 <form action="{{ url_for('checkin_rsvp_volunteer', reg_id=reg.id) }}" method="POST" style="margin: 0; display: flex; gap: 4px; align-items: center;">
                                                     <input type="number" name="hours" value="3" min="1" max="24" style="width: 50px; padding: 4px; border: 1px solid var(--jo-border); border-radius: 4px; text-align: center; font-weight: 700;" title="عدد الساعات المستحقة للفعالية">
-                                                    <button type="submit" class="btn-checkin" title="اعتماد الحضور وإضافة الساعات فوراً"><i class="fa-solid fa-check"></i> تحضير</button>
+                                                    <button type="submit" class="btn-checkin" title="اعتماد الحضور وإضافة الساعات فوراً"><i class="fa-solid fa-check"></i> حضور</button>
                                                 </form>
                                             {% endif %}
 
@@ -1595,5 +1596,79 @@ function deleteInquiry(id) {
     });
 }
 </script>
+
+    <!-- CSRF auto-injection: adds hidden csrf_token to every form before submit -->
+    <script>
+    (function () {
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken) return;
+        var token = csrfToken.getAttribute('content');
+
+        // Inject into all current forms
+        document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function (form) {
+            if (!form.querySelector('input[name="csrf_token"]')) {
+                var inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'csrf_token';
+                inp.value = token;
+                form.appendChild(inp);
+            }
+        });
+
+        // Inject into dynamically added forms via MutationObserver
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (m) {
+                m.addedNodes.forEach(function (node) {
+                    if (node.nodeType !== 1) return;
+                    var forms = node.tagName === 'FORM' ? [node] : Array.from(node.querySelectorAll('form'));
+                    forms.forEach(function (form) {
+                        var method = (form.getAttribute('method') || '').toUpperCase();
+                        if (method === 'POST' && !form.querySelector('input[name="csrf_token"]')) {
+                            var inp = document.createElement('input');
+                            inp.type = 'hidden';
+                            inp.name = 'csrf_token';
+                            inp.value = token;
+                            form.appendChild(inp);
+                        }
+                    });
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Patch fetch to include X-CSRFToken header on non-GET requests
+        var origFetch = window.fetch;
+        window.fetch = function (url, opts) {
+            opts = opts || {};
+            var method = (opts.method || 'GET').toUpperCase();
+            if (method !== 'GET' && method !== 'HEAD') {
+                opts.headers = opts.headers || {};
+                if (opts.headers instanceof Headers) {
+                    if (!opts.headers.has('X-CSRFToken')) {
+                        opts.headers.set('X-CSRFToken', token);
+                    }
+                } else {
+                    opts.headers['X-CSRFToken'] = opts.headers['X-CSRFToken'] || token;
+                }
+            }
+            return origFetch(url, opts);
+        };
+
+        // Patch XMLHttpRequest
+        var origOpen = XMLHttpRequest.prototype.open;
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method) {
+            this._method = method;
+            return origOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function () {
+            var m = (this._method || '').toUpperCase();
+            if (m !== 'GET' && m !== 'HEAD') {
+                try { this.setRequestHeader('X-CSRFToken', token); } catch (e) {}
+            }
+            return origSend.apply(this, arguments);
+        };
+    })();
+    </script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 <head>
     <meta name="google-site-verification" content="uzHWTGOPZN4ayfxFgvaA806UCsfv23uIgBpXzxzfhRM" />
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ settings.site_name if settings and settings.site_name else 'فريق لمتنا بصمة | المنصة التطوعية الرسمية' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -441,9 +442,23 @@
                                 </button>
                             {% elif session.get('user_id') %}
                                 {% if event.id in user_registered_event_ids %}
-                                    <form action="{{ url_for('cancel_rsvp', event_id=event.id) }}" method="POST" style="margin:0;">
-                                        <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد">إلغاء حضوري</button>
-                                    </form>
+                                    {% if event.id in user_attended_event_ids %}
+                                        <button class="btn-rsvp-join" disabled style="opacity: 0.8; cursor: not-allowed; background: #10b981; border: 1px solid #059669;">
+                                            <i class="fa-solid fa-check-circle"></i> حاضر
+                                        </button>
+                                    {% else %}
+                                        <div style="display: flex; gap: 8px; align-items: center; justify-content: center;">
+                                            <form action="{{ url_for('cancel_rsvp', event_id=event.id) }}" method="POST" style="margin:0;">
+                                                <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد">إلغاء حضوري</button>
+                                            </form>
+                                            {% if event.is_today %}
+                                                <form action="{{ url_for('verify_attendance_code', event_id=event.id) }}" method="POST" style="margin:0; display:flex; gap:4px;">
+                                                    <input type="text" name="secret_code" placeholder="أدخل كود الفعالية" required style="padding: 4px; border: 1px solid var(--jo-border); border-radius: 4px; text-align: center; width: 120px;">
+                                                    <button type="submit" class="btn-rsvp-join" style="padding: 4px 10px;"><i class="fa-solid fa-check"></i> حضور</button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
                                 {% elif event.is_full %}
                                     <button class="btn-rsvp-join" disabled style="opacity: 0.5; cursor: not-allowed;">اكتمل التسجيل</button>
                                 {% else %}
@@ -934,5 +949,79 @@
         </div>
     </footer>
 
+
+    <!-- CSRF auto-injection: adds hidden csrf_token to every form before submit -->
+    <script>
+    (function () {
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken) return;
+        var token = csrfToken.getAttribute('content');
+
+        // Inject into all current forms
+        document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function (form) {
+            if (!form.querySelector('input[name="csrf_token"]')) {
+                var inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'csrf_token';
+                inp.value = token;
+                form.appendChild(inp);
+            }
+        });
+
+        // Inject into dynamically added forms via MutationObserver
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (m) {
+                m.addedNodes.forEach(function (node) {
+                    if (node.nodeType !== 1) return;
+                    var forms = node.tagName === 'FORM' ? [node] : Array.from(node.querySelectorAll('form'));
+                    forms.forEach(function (form) {
+                        var method = (form.getAttribute('method') || '').toUpperCase();
+                        if (method === 'POST' && !form.querySelector('input[name="csrf_token"]')) {
+                            var inp = document.createElement('input');
+                            inp.type = 'hidden';
+                            inp.name = 'csrf_token';
+                            inp.value = token;
+                            form.appendChild(inp);
+                        }
+                    });
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Patch fetch to include X-CSRFToken header on non-GET requests
+        var origFetch = window.fetch;
+        window.fetch = function (url, opts) {
+            opts = opts || {};
+            var method = (opts.method || 'GET').toUpperCase();
+            if (method !== 'GET' && method !== 'HEAD') {
+                opts.headers = opts.headers || {};
+                if (opts.headers instanceof Headers) {
+                    if (!opts.headers.has('X-CSRFToken')) {
+                        opts.headers.set('X-CSRFToken', token);
+                    }
+                } else {
+                    opts.headers['X-CSRFToken'] = opts.headers['X-CSRFToken'] || token;
+                }
+            }
+            return origFetch(url, opts);
+        };
+
+        // Patch XMLHttpRequest
+        var origOpen = XMLHttpRequest.prototype.open;
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method) {
+            this._method = method;
+            return origOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function () {
+            var m = (this._method || '').toUpperCase();
+            if (m !== 'GET' && m !== 'HEAD') {
+                try { this.setRequestHeader('X-CSRFToken', token); } catch (e) {}
+            }
+            return origSend.apply(this, arguments);
+        };
+    })();
+    </script>
 </body>
 </html>

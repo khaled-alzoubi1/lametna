@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة المتطوع | {{ user.name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -481,14 +482,14 @@
                 </div>
             </div>
 
-            <!-- ج. تبويب الفعاليات والتسجيل بنقرة واحدة -->
+            <!-- ج. سجل المشاركات والشهادات -->
             <div id="eventsTab" class="profile-tab-content">
                 <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> {{ settings.card_title_events }}
+                    <i class="fa-solid fa-award" style="color: var(--jo-green);"></i> سجل المشاركات والشهادات
                 </h4>
                 
                 <div class="fintech-timeline">
-                    {% for ev in user_events %}
+                    {% for ev in past_attended_events %}
                     <div class="timeline-node">
                         <div>
                             <div class="event-meta">
@@ -497,74 +498,19 @@
                                 <span><i class="fa-solid fa-location-dot"></i> {{ ev.location }}</span>
                             </div>
                             <h3 style="margin-bottom: 6px;">{{ ev.title }}</h3>
-                            <p class="event-desc">{{ ev.description }}</p>
                         </div>
 
-                        <div class="rsvp-status-box">
-                    <div>
-                        <span style="font-size: 0.85rem; font-weight: 800; color: var(--jo-black);">
-                            المطلوب للميدان: {{ ev.capacity }} متطوعين
-                        </span>
-                        {% if ev.is_completed %}
-                            <span class="rsvp-pill" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
-                                <i class="fa-solid fa-circle-check"></i> فعالية منجزة
-                            </span>
-                        {% elif ev.is_full %}
-                            <span class="rsvp-pill rsvp-pill-full"><i class="fa-solid fa-lock"></i> اكتمل الفريق</span>
-                        {% else %}
-                            <span class="rsvp-pill rsvp-pill-active"><i class="fa-solid fa-user-check"></i> متبقي {{ ev.remaining_seats }} مقاعد</span>
-                        {% endif %}
+                        <div class="rsvp-status-box" style="justify-content: center;">
+                            <a href="{{ url_for('certificates.generate', event_id=ev.id) }}"
+                               class="btn-rsvp-join"
+                               style="background: #7c3aed; border-color: #6d28d9; color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; padding: 7px 16px; border-radius: 6px; font-weight: 800; font-size: 0.95rem; width: 100%;"
+                               title="تحميل شهادة المشاركة">
+                                <i class="fa-solid fa-certificate"></i> تحميل الشهادة
+                            </a>
+                        </div>
                     </div>
-
-                    <div>
-                        {% if ev.is_completed %}
-                            <button class="btn-rsvp-join" disabled style="opacity: 0.65; cursor: not-allowed; background: #64748b; border: 1px solid #475569;">
-                                <i class="fa-solid fa-check-double"></i> انتهت الفعالية
-                            </button>
-                        {% elif ev.id in registered_event_ids %}
-                            <div style="display: flex; flex-direction: column; gap: 8px;">
-                                <form action="{{ url_for('cancel_rsvp', event_id=ev.id) }}" method="POST" style="margin:0;">
-                                    <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد">
-                                        <i class="fa-solid fa-calendar-xmark"></i> إلغاء مشاركتي
-                                    </button>
-                                </form>
-                                <!-- خانة إدخال كود التحضير السري الميداني -->
-                                <form action="{{ url_for('self_checkin') }}" method="POST" style="display: flex; gap: 6px; align-items: center;">
-                                    <input type="hidden" name="event_id" value="{{ ev.id }}">
-                                    <input type="text" name="secret_code" maxlength="4" placeholder="رمز التحضير" required 
-                                           style="width: 110px; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: monospace; text-align: center; font-size: 0.9rem;">
-                                    <button type="submit" style="background: #15803d; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.8rem;">
-                                        تأكيد الحضور
-                                    </button>
-                                </form>
-                            </div>
-                        {% elif ev.is_full %}
-                            <button class="btn-rsvp-join" disabled style="opacity: 0.5; cursor: not-allowed;">اكتمل العدد المطلوب</button>
-                        {% else %}
-                            <form action="{{ url_for('rsvp_event', event_id=ev.id) }}" method="POST" style="margin:0;">
-                                <button type="submit" class="btn-rsvp-join">
-                                    <i class="fa-solid fa-check"></i> تأكيد حضوري للنشاط
-                                </button>
-                            </form>
-                        {% endif %}
-                    </div>
-
-                    {# ── زر تحميل الشهادة ──────────────────────────────────────────────────── #}
-                    {# يظهر فقط إذا: (1) تم تأكيد الحضور، (2) انتهت الفعالية (time-lock على الخادم) #}
-                    {% if attended_map.get(ev.id) and ev.is_completed %}
-                    <div style="margin-top: 10px;">
-                        <a href="{{ url_for('certificates.generate', event_id=ev.id) }}"
-                           class="btn-rsvp-join"
-                           style="background: #7c3aed; border-color: #6d28d9; color: #fff; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 7px 16px; border-radius: 6px; font-weight: 800; font-size: 0.85rem;"
-                           title="تحميل شهادة المشاركة">
-                            <i class="fa-solid fa-certificate"></i> تحميل الشهادة
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-                </div>
                     {% else %}
-                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد فعاليات مجدولة حالياً.</p>
+                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد شهادات أو مشاركات سابقة مسجلة لك حالياً.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -805,6 +751,80 @@
                 e.target.style.display = 'none';
             }
         };
+    </script>
+
+    <!-- CSRF auto-injection: adds hidden csrf_token to every form before submit -->
+    <script>
+    (function () {
+        var csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (!csrfToken) return;
+        var token = csrfToken.getAttribute('content');
+
+        // Inject into all current forms
+        document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function (form) {
+            if (!form.querySelector('input[name="csrf_token"]')) {
+                var inp = document.createElement('input');
+                inp.type = 'hidden';
+                inp.name = 'csrf_token';
+                inp.value = token;
+                form.appendChild(inp);
+            }
+        });
+
+        // Inject into dynamically added forms via MutationObserver
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (m) {
+                m.addedNodes.forEach(function (node) {
+                    if (node.nodeType !== 1) return;
+                    var forms = node.tagName === 'FORM' ? [node] : Array.from(node.querySelectorAll('form'));
+                    forms.forEach(function (form) {
+                        var method = (form.getAttribute('method') || '').toUpperCase();
+                        if (method === 'POST' && !form.querySelector('input[name="csrf_token"]')) {
+                            var inp = document.createElement('input');
+                            inp.type = 'hidden';
+                            inp.name = 'csrf_token';
+                            inp.value = token;
+                            form.appendChild(inp);
+                        }
+                    });
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+
+        // Patch fetch to include X-CSRFToken header on non-GET requests
+        var origFetch = window.fetch;
+        window.fetch = function (url, opts) {
+            opts = opts || {};
+            var method = (opts.method || 'GET').toUpperCase();
+            if (method !== 'GET' && method !== 'HEAD') {
+                opts.headers = opts.headers || {};
+                if (opts.headers instanceof Headers) {
+                    if (!opts.headers.has('X-CSRFToken')) {
+                        opts.headers.set('X-CSRFToken', token);
+                    }
+                } else {
+                    opts.headers['X-CSRFToken'] = opts.headers['X-CSRFToken'] || token;
+                }
+            }
+            return origFetch(url, opts);
+        };
+
+        // Patch XMLHttpRequest
+        var origOpen = XMLHttpRequest.prototype.open;
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function (method) {
+            this._method = method;
+            return origOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function () {
+            var m = (this._method || '').toUpperCase();
+            if (m !== 'GET' && m !== 'HEAD') {
+                try { this.setRequestHeader('X-CSRFToken', token); } catch (e) {}
+            }
+            return origSend.apply(this, arguments);
+        };
+    })();
     </script>
 </body>
 </html>
