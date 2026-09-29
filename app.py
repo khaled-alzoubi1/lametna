@@ -2101,14 +2101,17 @@ with app.app_context():
         ("volunteers", "emergency_contact_name", "VARCHAR(100)"),
         ("volunteers", "emergency_contact_phone", "VARCHAR(20)"),
         ("volunteers", "is_suspended", "BOOLEAN DEFAULT FALSE"),
-        ("volunteers", "last_active", "DATETIME DEFAULT CURRENT_TIMESTAMP"),
+        ("volunteers", "last_active", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ("volunteers", "admin_evaluation", "TEXT"),
-        ("events", "starts_at", "DATETIME"),
-        ("events", "ends_at", "DATETIME")
+        ("events", "starts_at", "TIMESTAMP"),
+        ("events", "ends_at", "TIMESTAMP")
     ]
     for tbl, col, col_type in migrations:
         try:
             if "sqlite" in app.config['SQLALCHEMY_DATABASE_URI']:
+                # SQLite allows DATETIME, but translates TIMESTAMP properly anyway.
+                # SQLite ALTER TABLE does not support IF NOT EXISTS.
+                # So it will fail if it exists and be swallowed by except Exception.
                 db.session.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_type};"))
             else:
                 db.session.execute(text(f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {col_type};"))
