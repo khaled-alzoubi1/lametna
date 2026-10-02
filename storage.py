@@ -21,7 +21,7 @@ import os
 import logging
 
 from werkzeug.utils import secure_filename
-from flask import current_app
+from flask import current_app, url_for
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ def _upload_to_cloudinary(file_storage, folder: str) -> str:
 
 
 def _upload_to_local(file_storage, ext: str) -> str:
-    """Save file to local static/uploads/; return a /static/uploads/... URL path."""
+    """Save file to local static/uploads/; return url_for URL."""
     import secrets as _secrets
     upload_dir = current_app.config.get(
         'UPLOAD_FOLDER',
@@ -170,5 +170,4 @@ def _upload_to_local(file_storage, ext: str) -> str:
     unique_name = f'{rand}_{safe_name}'
     dest = os.path.join(upload_dir, unique_name)
     file_storage.save(dest)
-    # Return a root-relative URL path (works without a request context)
-    return f'/static/uploads/{unique_name}'
+    return url_for('static', filename=f'uploads/{unique_name}')

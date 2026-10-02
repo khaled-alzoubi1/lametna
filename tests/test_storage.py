@@ -255,7 +255,8 @@ def test_dev_without_cloudinary_saves_locally(tmp_path):
                     f.write(b'fakecontent')
 
             fs.save = fake_save
-            url = upload_file(fs, folder='photos', allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
+            with app.test_request_context():
+                url = upload_file(fs, folder='photos', allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
             assert url.startswith('/static/uploads/') or 'uploads' in url
             assert len(saved_paths) == 1
 

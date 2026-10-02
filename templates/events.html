@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الفعاليات الميدانية | لمتنا بصمة</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .events-page-wrapper { max-width: 1200px; margin: 40px auto; padding: 20px; }
+        
+        .events-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .events-header h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--jo-black);
+            margin-bottom: 15px;
+        }
+        
+        .events-grid-full {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .card-link-wrapper {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .card-link-wrapper:hover {
+            transform: translateY(-5px);
+        }
+
+        .event-card {
+            background: var(--jo-white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid var(--jo-border);
+            position: relative;
+        }
+        .event-card-img {
+            height: 220px;
+            width: 100%;
+            object-fit: cover;
+            border-bottom: 3px solid var(--jo-green);
+        }
+        .event-card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .event-card-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--jo-black);
+            margin-bottom: 10px;
+        }
+        .event-card-meta {
+            font-size: 0.9rem;
+            color: var(--jo-dark-gray);
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .event-card-meta i { width: 16px; text-align: center; margin-left: 5px; color: var(--jo-red); }
+        
+        .event-state-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            margin-top: auto;
+            text-align: center;
+        }
+        
+        /* Event Status Colors */
+        .state-completed { background: #dcfce7; color: #15803d; border: 1px solid #4ade80; }
+        .state-cancelled { background: #fee2e2; color: #b91c1c; border: 1px solid #f87171; }
+        .state-registered { background: #dbeafe; color: #1d4ed8; border: 1px solid #93c5fd; }
+        .state-waitlisted { background: #ffedd5; color: #c2410c; border: 1px solid #fdba74; }
+        .state-full { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .state-open { background: var(--jo-green); color: white; }
+        
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
+            <div class="nav-brand-title">
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+            </div>
+        </a>
+        <button class="nav-toggle-btn" onclick="document.getElementById('mobileNav').classList.toggle('mobile-nav-active')"><i class="fa-solid fa-bars"></i></button>
+        <nav>
+            <ul class="nav-links" id="mobileNav">
+                <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
+                <li><a href="{{ url_for('events_list') }}" class="active">الفعاليات</a></li>
+                {% if current_user %}
+                <li><a href="{{ url_for('profile') }}">بيت المتطوع</a></li>
+                <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل خروج</a></li>
+                {% else %}
+                <li><a href="{{ url_for('login') }}">تسجيل دخول</a></li>
+                <li><a href="{{ url_for('register') }}" class="btn-primary">عضوية جديدة</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="events-page-wrapper">
+        <div class="events-header reveal-up">
+            <h1>الفعاليات الميدانية</h1>
+            <p style="color: var(--jo-dark-gray); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">استكشف الفرص التطوعية المتاحة، وسجل حضورك لتصنع أثراً حقيقياً في المجتمع.</p>
+        </div>
+
+        <div class="events-grid-full">
+            {% for event in events %}
+            <a href="{{ url_for('event_detail', event_id=event.id) }}" class="card-link-wrapper reveal-up delay-100">
+                <article class="event-card">
+                    <img src="{{ event.photo_url if event.photo_url else (settings.card_img_events|default('https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80')) }}" alt="{{ event.title }}" class="event-card-img">
+                    
+                    <div class="event-card-body">
+                        <h2 class="event-card-title">{{ event.title }}</h2>
+                        <div class="event-card-meta">
+                            <span><i class="fa-regular fa-calendar"></i> {{ event.date }} &nbsp;&bull;&nbsp; {{ event.time }}</span>
+                            <span><i class="fa-solid fa-location-dot"></i> {{ event.location }}</span>
+                        </div>
+                        
+                        {% if event.is_cancelled %}
+                            <div class="event-state-badge state-cancelled"><i class="fa-solid fa-ban"></i> ملغاة</div>
+                        {% elif event.is_completed %}
+                            <div class="event-state-badge state-completed"><i class="fa-solid fa-check-double"></i> منتهية</div>
+                        {% elif current_user %}
+                            {% if event.id in user_registered_event_ids %}
+                                <div class="event-state-badge state-registered"><i class="fa-solid fa-clipboard-check"></i> مسجل للمشاركة</div>
+                            {% elif event.id in user_waitlisted_event_ids %}
+                                <div class="event-state-badge state-waitlisted"><i class="fa-solid fa-hourglass-half"></i> على قائمة الانتظار</div>
+                            {% elif event.is_full %}
+                                <div class="event-state-badge state-full"><i class="fa-solid fa-lock"></i> اكتمل العدد</div>
+                            {% else %}
+                                <div class="event-state-badge state-open"><i class="fa-solid fa-user-plus"></i> متاح للتسجيل</div>
+                            {% endif %}
+                        {% else %}
+                            {% if event.is_full %}
+                                <div class="event-state-badge state-full"><i class="fa-solid fa-lock"></i> اكتمل العدد</div>
+                            {% else %}
+                                <div class="event-state-badge state-open"><i class="fa-solid fa-user-plus"></i> متاح للتسجيل</div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </article>
+            </a>
+            {% else %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #f8fafc; border-radius: var(--radius-lg); border: 1px dashed var(--jo-border);">
+                <i class="fa-regular fa-calendar-xmark" style="font-size: 3rem; color: var(--jo-dark-gray); margin-bottom: 15px;"></i>
+                <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--jo-black);">لا توجد فعاليات مجدولة</h3>
+                <p style="color: var(--jo-dark-gray);">تابعنا باستمرار للاطلاع على الفرص التطوعية القادمة.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-bottom">
+            &copy; 2026 فريق لمتنا بصمة. كافة الحقوق محفوظة.
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

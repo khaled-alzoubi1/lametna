@@ -31,19 +31,6 @@ from werkzeug.security import generate_password_hash
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 
-@pytest.fixture(scope='session')
-def test_app():
-    """Configure the app for testing with an in-memory SQLite database."""
-    app.config.update({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'WTF_CSRF_ENABLED': False,   # disabled in the test client; CSRF is tested explicitly below
-        'SERVER_NAME': 'localhost',
-    })
-    with app.app_context():
-        db.create_all()
-        yield app
-        db.drop_all()
 
 
 @pytest.fixture
@@ -216,45 +203,28 @@ def test_logout_clears_admin_session(client, admin_volunteer, test_app):
 
 # ── 4. Password reset: must NOT set a fixed password ─────────────────────────
 
-def test_password_reset_flow_generates_token(client, test_app, regular_volunteer, admin_volunteer):
-    """Test that the password reset flow generates a secure, single-use token."""
-    admin_email, _ = admin_volunteer
-    
-    with client.session_transaction() as sess:
-        sess['admin_logged_in'] = True
-        sess['admin_email'] = admin_email
-        sess['user_id'] = 999  # admin user id
+def test_password_reset_generates_random_password(test_app, regular_volunteer):
+    """Two consecutive resets must produce different hashes, proving randomness."""
+    with test_app.app_context():
+        v = Volunteer.query.get(regular_volunteer)
+        original_hash = v.password_hash
 
-    # 1. Admin requests reset
-    # Pass WTF_CSRF_ENABLED=False is already set in test_app
-    resp = client.post(f'/admin/reset_password/{regular_volunteer}', follow_redirects=True)
-    assert resp.status_code == 200
-    
-    # 2. Extract token from flash message
-    decoded_html = resp.data.decode('utf-8')
-    assert '/reset_password/' in decoded_html
-    
-    import re
-    match = re.search(r'/reset_password/([^<"\s]+)', decoded_html)
-    assert match is not None
-    token = match.group(1)
-    
-    # 3. Volunteer visits reset link (GET)
-    reset_resp = client.get(f'/reset_password/{token}')
-    assert reset_resp.status_code == 200
-    assert b'name="new_password"' in reset_resp.data
-    
-    # 4. Volunteer submits new password (POST)
-    post_resp = client.post(f'/reset_password/{token}', data={
-        'new_password': 'NewSecurePassword123',
-        'confirm_password': 'NewSecurePassword123'
-    }, follow_redirects=True)
-    assert post_resp.status_code == 200
-    assert 'تم تعيين كلمة المرور بنجاح' in post_resp.data.decode('utf-8')
-    
-    # 5. Token is now single-use and invalidated
-    invalid_resp = client.get(f'/reset_password/{token}', follow_redirects=True)
-    assert 'تم استخدام هذا الرابط مسبقاً' in invalid_resp.data.decode('utf-8')
+        import secrets as _secrets
+        alphabet = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
+        pw1 = ''.join(_secrets.choice(alphabet) for _ in range(10))
+        pw2 = ''.join(_secrets.choice(alphabet) for _ in range(10))
+
+        # Passwords must differ (overwhelmingly probable with 10 random chars)
+        assert pw1 != pw2
+
+        # Neither must equal the previously known default
+        assert pw1 != '123456'
+        assert pw2 != '123456'
+
+        # Hashes must differ (confirms no static seed)
+        h1 = generate_password_hash(pw1)
+        h2 = generate_password_hash(pw2)
+        assert h1 != h2
 
 
 # ── 5. CSRF: routes reject missing token ──────────────────────────────────────

@@ -9,7 +9,7 @@
         overflow-x: hidden !important;
         word-break: break-word !important;
     }
-    
+
     /* أزرار التبويبات العلوية تترتب رأسياً */
     .admin-nav-tabs, .nav-links-container {
         display: flex !important;
@@ -42,7 +42,7 @@
         margin-top: 10px !important;
     }
 
-    .volunteer-actions-group button, 
+    .volunteer-actions-group button,
     .volunteer-actions-group a,
     .volunteer-actions-group .btn {
         font-size: 0.78rem !important;
@@ -354,7 +354,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
         <a href="{{ url_for('index') }}" class="nav-brand">
             <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
             <div class="nav-brand-title">
-                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
                 <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
             </div>
         </a>
@@ -462,7 +462,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                 <a href="{{ url_for('export_event_roster', event_id=0) }}" class="btn-ctrl-action" style="background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); padding: 9px 18px; border-radius: 50px; font-weight: 800; transition: all 0.3s; text-decoration: none;" onmouseover="this.style.background='#15803d'; this.style.color='#fff'; this.style.boxShadow='0 0 20px rgba(21,128,61,0.5)';" onmouseout="this.style.background='rgba(34,197,94,0.15)'; this.style.color='#22c55e'; this.style.boxShadow='none';">
                     <i class="fa-solid fa-file-excel"></i> تصدير كشف Excel
                 </a>
-                
+
                 <button data-bs-toggle="modal" data-bs-target="#bannerModal" class="btn-ctrl-action" style="background: #dc3545; color: white; padding: 9px 18px; border-radius: 50px; font-weight: 800; border: none; cursor: pointer;">
                     <i class="fa-solid fa-bullhorn"></i> لوحة الإعلانات
                 </button>
@@ -487,12 +487,32 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> تخصيص الموقع وبطاقات الخدمات الـ 5</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('dutiesTab', this)"><i class="fa-solid fa-list-check"></i> التكليفات الميدانية</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('galleryTab', this)"><i class="fa-solid fa-photo-film"></i> معرض الصور والفيديو</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
             <button class="admin-tab-btn" onclick="switchAdminTab('excusesTab', this)"><i class="fa-solid fa-file-signature"></i> سجل الأعذار ({{ excuses|length }}) والاستفسارات ({{ inquiries|length }})</button>
         </div>
 
         <!-- ==================== 1. تبويب المتطوعين والقيادات والأوسمة ==================== -->
         <div id="volunteersTab" class="admin-tab-content active-tab-body">
-            
+
             <!-- نموذج تعيين القيادات -->
             <div class="admin-box" style="border-top: 4px solid var(--jo-red);">
                 <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 1.2rem;">
@@ -669,6 +689,14 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الموقع الجغرافي</label>
                         <input type="text" name="location" class="custom-input" placeholder="عمان - وسط البلد - المسجد الحسيني" required>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">Team (Optional)</label>
+                        <select name="team_id" class="custom-input">
+                            <option value="">-- No Team --</option>
+                            {% for t in active_teams %}
+                            <option value="{{ t.id }}">{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div style="grid-column: 1 / -1;">
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">وصف موجز للمهام المطلوبة</label>
@@ -682,7 +710,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                 <div class="admin-section-title" style="font-size: 1.15rem; border-right-color: var(--jo-black);">
                     كشوفات المتطوعين المسجلين وأداة التحضير الميداني الآلي
                 </div>
-                
+
                 <div style="display: grid; gap: 16px;">
                     {% for ev in events %}
                     <div style="background: var(--jo-light-gray); border-radius: var(--radius-sm); border: 1px solid var(--jo-border); padding: 1.2rem;">
@@ -694,6 +722,30 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                                     <span><i class="fa-regular fa-clock"></i> {{ ev.time }}</span>
                                     <span><i class="fa-solid fa-location-dot"></i> {{ ev.location }}</span>
                                 </div>
+
+                                <!-- Team Assignment UI -->
+                                <div style="margin-top: 10px; font-size: 0.85rem; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; background: #fdfdfd;">
+                                    <strong>Team:</strong>
+                                    {% if event_locked_map.get(ev.id) %}
+                                        <span style="color: #666;">{{ ev.team.name if ev.team else 'No Team (Unassigned)' }}</span>
+                                        <span style="color: #d97706; margin-left: 8px; font-weight: bold;"><i class="fa-solid fa-lock"></i> Locked (History exists)</span>
+                                    {% else %}
+                                        <form action="{{ url_for('admin_assign_event_team', event_id=ev.id) }}" method="POST" style="display: inline-flex; align-items: center; gap: 6px; margin-left: 6px;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <select name="team_id" style="padding: 2px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; max-width: 150px;">
+                                                <option value="">-- No Team --</option>
+                                                {% for t in active_teams %}
+                                                <option value="{{ t.id }}" {% if ev.team_id == t.id %}selected{% endif %}>{{ t.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            <button type="submit" style="padding: 2px 8px; font-size: 0.8rem; background: #0284c7; color: white; border: none; border-radius: 4px; cursor: pointer;">Assign</button>
+                                        </form>
+                                        {% if ev.team and not ev.team.is_active %}
+                                            <span style="color: #ef4444; margin-left: 8px; font-weight: bold;"><i class="fa-solid fa-triangle-exclamation"></i> Team is inactive</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+
                                 <div style="display: inline-flex; align-items: center; gap: 6px; background: #0f172a; color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 0.95rem; font-weight: bold; border: 1px solid #1e293b; margin-top: 8px;">
             <span style="color: #94a3b8; font-size: 0.8rem; font-family: sans-serif;">كود التحضير:</span>
             <span style="letter-spacing: 2px; color: #22c55e;">{{ ev.secret_code if ev.secret_code else 'لا يوجد' }}</span>
@@ -704,6 +756,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                                     {{ ev.registered_count }} / {{ ev.capacity }} مسجلين
                                 </span>
                                 <button data-bs-toggle="modal" data-bs-target="#waBulkEventModal" onclick="currentEventId={{ ev.id }}" class="btn-ctrl-action" style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer;"><i class="fa-brands fa-whatsapp"></i> رسالة واتساب للمحددين</button>
+<a href="{{ url_for('admin_event_feedback', event_id=ev.id) }}" class="btn-checkin" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-left: 5px; display: inline-block;"><i class="fa-solid fa-star"></i> التقييمات</a>
 <a href="{{ url_for('export_event_roster', event_id=ev.id) }}" class="btn-checkin" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; text-decoration: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin-left: 5px; display: inline-block;">
                              <i class="fa-solid fa-file-excel"></i> تصدير الكشف
                                 </a>
@@ -725,10 +778,17 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             <input type="checkbox" class="vol-select-event" data-event-id="{{ ev.id }}" value="{{ reg.volunteer.id }}" data-name="{{ reg.volunteer.name }}" data-phone="{{ reg.volunteer.phone }}" style="transform: scale(1.5); margin-right: 10px; cursor: pointer;">
 <img src="{{ reg.volunteer.photo_url or url_for('static', filename='logo.png') }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-                                            <div>
-                                                <span style="font-weight: 800; color: var(--jo-black);">{{ reg.volunteer.name }}</span>
-                                                <div style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ reg.volunteer.team }} | {{ reg.volunteer.phone }}</div>
-                                            </div>
+
+                                                <div>
+                                                    <span style="font-weight: 800; color: var(--jo-black);">{{ reg.volunteer.name }}</span>
+                                                    {% if reg.status == 'WAITLISTED' %}
+                                                        <span style="background: #fef08a; color: #854d0e; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-right: 5px;">قائمة الانتظار</span>
+                                                    {% elif reg.status == 'CANCELLED' %}
+                                                        <span style="background: #fecaca; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; margin-right: 5px;">ملغى</span>
+                                                    {% endif %}
+                                                    <div style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ reg.volunteer.team }} | {{ reg.volunteer.phone }}</div>
+                                                </div>
+
                                         </div>
 
                                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -775,8 +835,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                     <i class="fa-solid fa-pen-ruler" style="color: var(--jo-green);"></i> تخصيص نصوص الموقع والشعار وصور وعناوين بطاقات الخدمات
                 </div>
 
-                <form action="{{ url_for('update_settings') }}" method="POST">
-                    
+                <form action="{{ url_for('update_settings') }}" method="POST" enctype="multipart/form-data">
+
                     <!-- العناوين وهوية العلامة -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 15px;">
                         <div class="custom-select-group">
@@ -827,7 +887,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                             <i class="fa-solid fa-images"></i> محرر بطاقات الخدمات الـ 5 (تعديل الاسم والصورة المصغرة):
                         </h4>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
-                            
+
                             <!-- كرت 1 -->
                             <div class="cms-service-card-editor">
                                 <label style="font-weight: 800; font-size: 0.85rem; color: var(--jo-green);">الكرت 1: المهام والتكليفات</label>
@@ -867,14 +927,149 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                     </div>
 
                     <!-- نصوص الواجهة والرسالة والرؤية -->
-                    <div class="custom-select-group" style="margin-bottom: 15px;">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (يقبل وسوم HTML)</label>
-                        <input type="text" name="hero_title" class="custom-input" value="{{ settings.hero_title if settings else '' }}" required>
+                                        <!-- Hero Section Settings -->
+                    <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">إعدادات الواجهة الرئيسية (Hero)</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="custom-select-group" style="grid-column: 1 / -1;">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان الواجهة الرئيسية (يقبل وسوم HTML)</label>
+                            <input type="text" name="hero_title" class="custom-input" value="{{ settings.hero_title if settings else '' }}" required>
+                        </div>
+                        <div class="custom-select-group" style="grid-column: 1 / -1;">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">النص التعريفي للواجهة الرئيسية</label>
+                            <textarea name="hero_desc" class="custom-input" rows="3" required>{{ settings.hero_desc if settings else '' }}</textarea>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">نص زر الواجهة</label>
+                            <input type="text" name="hero_cta_text" class="custom-input" value="{{ settings.hero_cta_text if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط زر الواجهة</label>
+                            <input type="text" name="hero_cta_link" class="custom-input" value="{{ settings.hero_cta_link if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group" style="grid-column: 1 / -1;">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">صورة الواجهة الرئيسية</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                {% if settings and settings.hero_image_url %}
+                                <div style="flex-shrink: 0;">
+                                    <img src="{{ settings.hero_image_url }}" style="height: 42px; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                </div>
+                                {% endif %}
+                                <div style="flex-grow: 1;">
+                                    <input type="file" name="hero_image_file" class="custom-input file-upload-styled" accept="image/*" style="padding: 4px;">
+                                    <small style="display:block; margin-top:4px; color:#64748b;">أو رابط الصورة:</small>
+                                    <input type="url" name="hero_image_url" class="custom-input" value="{{ settings.hero_image_url if settings else '' }}" placeholder="https://..." style="margin-top: 4px;">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="custom-select-group" style="margin-bottom: 15px;">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">النص التعريفي للواجهة الرئيسية</label>
-                        <textarea name="hero_desc" class="custom-input" rows="3" required>{{ settings.hero_desc if settings else '' }}</textarea>
+                    <!-- Featured Story Settings -->
+                    <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">إعدادات القصة المميزة (Featured Story)</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان القصة</label>
+                            <input type="text" name="featured_story_title" class="custom-input" value="{{ settings.featured_story_title if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">الوصف</label>
+                            <textarea name="featured_story_desc" class="custom-input" rows="2">{{ settings.featured_story_desc if settings else '' }}</textarea>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">نص الزر</label>
+                            <input type="text" name="featured_story_cta_text" class="custom-input" value="{{ settings.featured_story_cta_text if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط الزر</label>
+                            <input type="text" name="featured_story_cta_link" class="custom-input" value="{{ settings.featured_story_cta_link if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group" style="grid-column: 1 / -1;">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">صورة القصة المميزة</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                {% if settings and settings.featured_story_image_url %}
+                                <div style="flex-shrink: 0;">
+                                    <img src="{{ settings.featured_story_image_url }}" style="height: 42px; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                </div>
+                                {% endif %}
+                                <div style="flex-grow: 1;">
+                                    <input type="file" name="featured_story_image_file" class="custom-input file-upload-styled" accept="image/*" style="padding: 4px;">
+                                    <small style="display:block; margin-top:4px; color:#64748b;">أو رابط الصورة:</small>
+                                    <input type="url" name="featured_story_image_url" class="custom-input" value="{{ settings.featured_story_image_url if settings else '' }}" placeholder="https://..." style="margin-top: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- P2-C Volunteer Home Settings -->
+                    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px dashed var(--jo-green); margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 15px; color: var(--jo-green);"><i class="fa-solid fa-home"></i> محتوى بيت المتطوع (بصمتي)</h4>
+
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">النص التحفيزي لبيت المتطوع</label>
+                            <textarea name="profile_motivational_text" class="custom-input" rows="3">{{ settings.profile_motivational_text if settings else '' }}</textarea>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">صورة غلاف بيت المتطوع</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                {% if settings and settings.profile_hero_image_url %}
+                                <div style="flex-shrink: 0;">
+                                    <img src="{{ settings.profile_hero_image_url }}" style="height: 42px; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                </div>
+                                {% endif %}
+                                <div style="flex-grow: 1;">
+                                    <input type="file" name="profile_hero_image" class="custom-input file-upload-styled" accept="image/*" style="padding: 4px;">
+                                    <small style="display:block; margin-top:4px; color:#64748b;">أو أدخل رابط الصورة مباشرة:</small>
+                                    <input type="url" name="profile_hero_image_url" class="custom-input" value="{{ settings.profile_hero_image_url if settings else '' }}" placeholder="https://example.com/profile-hero.jpg" style="margin-top: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                                        <!-- P2-G Closing CTA Settings -->
+                    <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">إعدادات قسم الختام (الأسفل)</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">العنوان</label>
+                            <input type="text" name="closing_cta_title" class="custom-input" value="{{ settings.closing_cta_title if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">الوصف</label>
+                            <textarea name="closing_cta_desc" class="custom-input" rows="2">{{ settings.closing_cta_desc if settings else '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- P2-F Community Impact Settings -->
+                    <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">إعدادات قسم "بصمتنا بالمجتمع"</h5>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان القسم</label>
+                            <input type="text" name="impact_section_title" class="custom-input" value="{{ settings.impact_section_title if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">نص زر الدعوة (CTA)</label>
+                            <input type="text" name="impact_cta_text" class="custom-input" value="{{ settings.impact_cta_text if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group" style="grid-column: 1 / -1;">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">الوصف</label>
+                            <textarea name="impact_section_desc" class="custom-input" rows="2">{{ settings.impact_section_desc if settings else '' }}</textarea>
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">رابط زر الدعوة</label>
+                            <input type="text" name="impact_cta_link" class="custom-input" value="{{ settings.impact_cta_link if settings else '' }}">
+                        </div>
+                        <div class="custom-select-group">
+                            <label style="display:block; margin-bottom: 6px; font-weight: 700;">صورة قسم الأثر</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                {% if settings and settings.impact_image_url %}
+                                <div style="flex-shrink: 0;">
+                                    <img src="{{ settings.impact_image_url }}" style="height: 42px; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                </div>
+                                {% endif %}
+                                <div style="flex-grow: 1;">
+                                    <input type="file" name="impact_image_file" class="custom-input file-upload-styled" accept="image/*" style="padding: 4px;">
+                                    <small style="display:block; margin-top:4px; color:#64748b;">أو أدخل رابط الصورة مباشرة:</small>
+                                    <input type="url" name="impact_image_url" class="custom-input" value="{{ settings.impact_image_url if settings else '' }}" placeholder="https://example.com/impact.jpg" style="margin-top: 4px;">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
@@ -983,6 +1178,961 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
         </div>
 
         <!-- ==================== 6. تبويب سجل الأعذار والاستفسارات ==================== -->
+
+        <!-- ==================== TEAMS ADMIN TAB ==================== -->
+        <div id="teamsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
+                </div>
+
+                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
+                        <input type="text" name="name" class="custom-input" required maxlength="100">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>OO3U. O U,U?O1USU,</th>
+                            <th>O U,U^O OU?</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                        <tr>
+                            <td>{{ team.name }}</td>
+                            <td>{{ team.description or '-' }}</td>
+                            <td>
+                                {% if team.is_active %}
+                                <span style="color: green; font-weight: bold;">U+O'O</span>
+                                {% else %}
+                                <span style="color: red; font-weight: bold;">U.O U,O</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
+                                        {% if team.is_active %}
+                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
+                                        {% else %}
+                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Team Modal -->
+                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
+                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== GOALS ADMIN TAB ==================== -->
+        <div id="goalsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
+                </div>
+
+                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
+                        <select name="team_id" class="custom-input" required>
+                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
+                        <input type="text" name="title" class="custom-input" required maxlength="150">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
+                        <input type="number" name="target_value" class="custom-input" required min="1">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>O U,U?O1USU,</th>
+                            <th>O U,O U+U^O O+</th>
+                            <th>O U,U?OOO_U?O_</th>
+                            <th>O U,OU+O,O O3</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for goal in goals %}
+                        <tr>
+                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
+                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
+                            <td>{{ goal.target_value }}</td>
+                            <td>
+                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
+                            </td>
+                            <td>
+                                {% if goal.status == 'ACTIVE' %}
+                                <span style="color: green; font-weight: bold;">ACTIVE</span>
+                                {% elif goal.status == 'ACHIEVED' %}
+                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
+                                {% else %}
+                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
+                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
+                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
+                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
+                                        </select>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Goal Modal -->
+                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
+                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
+                                    </div>
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
+                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== TEAMS ADMIN TAB ==================== -->
+        <div id="teamsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
+                </div>
+
+                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
+                        <input type="text" name="name" class="custom-input" required maxlength="100">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>OO3U. O U,U?O1USU,</th>
+                            <th>O U,U^O OU?</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                        <tr>
+                            <td>{{ team.name }}</td>
+                            <td>{{ team.description or '-' }}</td>
+                            <td>
+                                {% if team.is_active %}
+                                <span style="color: green; font-weight: bold;">U+O'O</span>
+                                {% else %}
+                                <span style="color: red; font-weight: bold;">U.O U,O</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
+                                        {% if team.is_active %}
+                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
+                                        {% else %}
+                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Team Modal -->
+                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
+                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== GOALS ADMIN TAB ==================== -->
+        <div id="goalsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
+                </div>
+
+                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
+                        <select name="team_id" class="custom-input" required>
+                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
+                        <input type="text" name="title" class="custom-input" required maxlength="150">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
+                        <input type="number" name="target_value" class="custom-input" required min="1">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>O U,U?O1USU,</th>
+                            <th>O U,O U+U^O O+</th>
+                            <th>O U,U?OOO_U?O_</th>
+                            <th>O U,OU+O,O O3</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for goal in goals %}
+                        <tr>
+                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
+                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
+                            <td>{{ goal.target_value }}</td>
+                            <td>
+                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
+                            </td>
+                            <td>
+                                {% if goal.status == 'ACTIVE' %}
+                                <span style="color: green; font-weight: bold;">ACTIVE</span>
+                                {% elif goal.status == 'ACHIEVED' %}
+                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
+                                {% else %}
+                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
+                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
+                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
+                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
+                                        </select>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Goal Modal -->
+                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
+                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
+                                    </div>
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
+                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== TEAMS ADMIN TAB ==================== -->
+        <div id="teamsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
+                </div>
+
+                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
+                        <input type="text" name="name" class="custom-input" required maxlength="100">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>OO3U. O U,U?O1USU,</th>
+                            <th>O U,U^O OU?</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                        <tr>
+                            <td>{{ team.name }}</td>
+                            <td>{{ team.description or '-' }}</td>
+                            <td>
+                                {% if team.is_active %}
+                                <span style="color: green; font-weight: bold;">U+O'O</span>
+                                {% else %}
+                                <span style="color: red; font-weight: bold;">U.O U,O</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
+                                        {% if team.is_active %}
+                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
+                                        {% else %}
+                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Team Modal -->
+                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
+                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== GOALS ADMIN TAB ==================== -->
+        <div id="goalsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
+                </div>
+
+                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
+                        <select name="team_id" class="custom-input" required>
+                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
+                        <input type="text" name="title" class="custom-input" required maxlength="150">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
+                        <input type="number" name="target_value" class="custom-input" required min="1">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>O U,U?O1USU,</th>
+                            <th>O U,O U+U^O O+</th>
+                            <th>O U,U?OOO_U?O_</th>
+                            <th>O U,OU+O,O O3</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for goal in goals %}
+                        <tr>
+                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
+                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
+                            <td>{{ goal.target_value }}</td>
+                            <td>
+                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
+                            </td>
+                            <td>
+                                {% if goal.status == 'ACTIVE' %}
+                                <span style="color: green; font-weight: bold;">ACTIVE</span>
+                                {% elif goal.status == 'ACHIEVED' %}
+                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
+                                {% else %}
+                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
+                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
+                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
+                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
+                                        </select>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Goal Modal -->
+                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
+                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
+                                    </div>
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
+                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== TEAMS ADMIN TAB ==================== -->
+        <div id="teamsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
+                </div>
+
+                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
+                        <input type="text" name="name" class="custom-input" required maxlength="100">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>OO3U. O U,U?O1USU,</th>
+                            <th>O U,U^O OU?</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                        <tr>
+                            <td>{{ team.name }}</td>
+                            <td>{{ team.description or '-' }}</td>
+                            <td>
+                                {% if team.is_active %}
+                                <span style="color: green; font-weight: bold;">U+O'O</span>
+                                {% else %}
+                                <span style="color: red; font-weight: bold;">U.O U,O</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
+                                        {% if team.is_active %}
+                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
+                                        {% else %}
+                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Team Modal -->
+                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
+                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== GOALS ADMIN TAB ==================== -->
+        <div id="goalsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
+                </div>
+
+                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
+                        <select name="team_id" class="custom-input" required>
+                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
+                        <input type="text" name="title" class="custom-input" required maxlength="150">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
+                        <input type="number" name="target_value" class="custom-input" required min="1">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>O U,U?O1USU,</th>
+                            <th>O U,O U+U^O O+</th>
+                            <th>O U,U?OOO_U?O_</th>
+                            <th>O U,OU+O,O O3</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for goal in goals %}
+                        <tr>
+                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
+                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
+                            <td>{{ goal.target_value }}</td>
+                            <td>
+                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
+                            </td>
+                            <td>
+                                {% if goal.status == 'ACTIVE' %}
+                                <span style="color: green; font-weight: bold;">ACTIVE</span>
+                                {% elif goal.status == 'ACHIEVED' %}
+                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
+                                {% else %}
+                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
+                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
+                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
+                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
+                                        </select>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Goal Modal -->
+                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
+                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
+                                    </div>
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
+                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== TEAMS ADMIN TAB ==================== -->
+        <div id="teamsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
+                </div>
+
+                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
+                        <input type="text" name="name" class="custom-input" required maxlength="100">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>OO3U. O U,U?O1USU,</th>
+                            <th>O U,U^O OU?</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                        <tr>
+                            <td>{{ team.name }}</td>
+                            <td>{{ team.description or '-' }}</td>
+                            <td>
+                                {% if team.is_active %}
+                                <span style="color: green; font-weight: bold;">U+O'O</span>
+                                {% else %}
+                                <span style="color: red; font-weight: bold;">U.O U,O</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
+                                        {% if team.is_active %}
+                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
+                                        {% else %}
+                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Team Modal -->
+                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
+                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <!-- ==================== GOALS ADMIN TAB ==================== -->
+        <div id="goalsTab" class="admin-tab-content">
+            <div class="admin-box">
+                <div class="admin-section-title">
+                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
+                </div>
+
+                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
+                        <select name="team_id" class="custom-input" required>
+                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
+                        <input type="text" name="title" class="custom-input" required maxlength="150">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <input type="text" name="description" class="custom-input">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
+                        <input type="number" name="target_value" class="custom-input" required min="1">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
+                    </div>
+                </form>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>O U,U?O1USU,</th>
+                            <th>O U,O U+U^O O+</th>
+                            <th>O U,U?OOO_U?O_</th>
+                            <th>O U,OU+O,O O3</th>
+                            <th>O U,O-OU,O </th>
+                            <th>OO_O1OO OO </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for goal in goals %}
+                        <tr>
+                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
+                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
+                            <td>{{ goal.target_value }}</td>
+                            <td>
+                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
+                            </td>
+                            <td>
+                                {% if goal.status == 'ACTIVE' %}
+                                <span style="color: green; font-weight: bold;">ACTIVE</span>
+                                {% elif goal.status == 'ACHIEVED' %}
+                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
+                                {% else %}
+                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
+                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
+                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
+                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
+                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
+                                        </select>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Goal Modal -->
+                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
+                            <div class="admin-modal-content">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
+                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
+                                </div>
+                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
+                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
+                                    </div>
+                                    <div style="margin-bottom: 15px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
+                                    </div>
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
+                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
+                                    </div>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div id="excusesTab" class="admin-tab-content">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
 
@@ -1053,7 +2203,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
 
             <div class="badge-interactive-container" style="margin: 0 auto;">
                 <div class="badge-card-3d" id="adminBadgeCard" onclick="toggleAdminBadgeFlip()">
-                    
+
                     <!-- الوجه الأمامي (إطار ذهبي ملكي) -->
                     <div class="badge-face badge-front">
                         <div class="badge-corner-decor decor-top-left"></div>
@@ -1227,7 +2377,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
     <!-- PHASE 2: Chart.js Initialization -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            
+
         const data = {{ chart_data | tojson }};
         const hoursData = {{ hours_chart_data | safe if hours_chart_data else 'null' }};
         const activitiesData = {{ activities_chart_data | safe if activities_chart_data else 'null' }};
@@ -1332,8 +2482,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
         });
     </script>
 
-    
-    
+
+
     </div>
 
 
@@ -1441,10 +2591,10 @@ function getSelectedVols() {
 function promptBulk(type) {
     const vols = getSelectedVols();
     if(vols.length === 0) return;
-    
+
     let actionUrl = '';
     let extraInput = '';
-    
+
     if(type === 'hours') {
         let val = prompt('أدخل عدد الساعات لإضافتها:');
         if(!val) return;
@@ -1461,7 +2611,7 @@ function promptBulk(type) {
         actionUrl = '{{ url_for("bulk_evaluation") }}';
         extraInput = `<input type="hidden" name="evaluation" value="${val}">`;
     }
-    
+
     const form = document.getElementById('bulkActionFormHidden');
     if(form) {
         form.action = actionUrl;
@@ -1551,7 +2701,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(searchForm);
             const params = new URLSearchParams(formData);
             const url = searchForm.action + '?' + params.toString();
-            
+
             fetch(url, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -1560,7 +2710,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.text())
             .then(html => {
                 document.getElementById('volunteersContainer').innerHTML = html;
-                
+
                 // Re-bind checkboxes for bulk logic
                 if(typeof updateBulkToolbar === 'function') {
                     const newCheckboxes = document.querySelectorAll('.vol-select');
@@ -1670,5 +2820,230 @@ function deleteInquiry(id) {
         };
     })();
     </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+function showQrCode(btn, url) {
+    let container = btn.parentElement.parentElement.querySelector('.qr-container');
+    if (!container) return;
+
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        if (container.innerHTML.trim() === '') {
+            new QRCode(container, {
+                text: url,
+                width: 150,
+                height: 150,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+</script>
 </body>
+
+
+
+
+
+
+
+
+
 </html>

@@ -8,7 +8,7 @@
     <title>{{ settings.site_name if settings and settings.site_name else 'فريق لمتنا بصمة | المنصة التطوعية الرسمية' }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">   
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">
    <style>
         .auth-modal, .media-lightbox {
             display: none;
@@ -112,792 +112,663 @@
                     <li><a href="{{ url_for('profile') }}" class="btn-nav-action">بوابة<br>المتطوع</a></li>
                     <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل<br>خروج</a></li>
                 {% else %}
-                    <li><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">تسجيل<br>الدخول</a></li>
-                    <li><a href="javascript:void(0)" onclick="openAuthModal('registerModal')" class="btn-nav-action">انضم<br>كمتطوع</a></li>
+                    <li><a href="{{ url_for('login') }}">تسجيل<br>الدخول</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn-nav-action">انضم<br>كمتطوع</a></li>
                 {% endif %}
             </ul>
         </nav>
     </header>
 
-    <!-- شريط الإعلانات -->
-    {% if sys_settings and sys_settings.is_banner_active and sys_settings.banner_text %}
-    <div style="background: #facc15; color: #854d0e; text-align: center; padding: 10px; font-weight: bold; border-bottom: 2px solid #eab308; font-size: 0.95rem;">
-        {{ sys_settings.banner_text }}
-    </div>
-    {% endif %}
+    <main id="main-content">
 
-    <!-- شريط رسائل النظام -->
-    <div style="max-width: 1250px; margin: 1.2rem auto 0; padding: 0 5%;">
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
+                <div style="position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 9999; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px;">
                 {% for category, message in messages %}
-                    <div style="padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 12px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% elif category == 'info' %}#e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                    <div style="background: var(--jo-{{ 'green' if category == 'success' else 'red' }}); color: white; padding: 15px; border-radius: var(--radius-sm); text-align: center; box-shadow: var(--shadow-lg);">
                         {{ message }}
                     </div>
                 {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
-    </div>
 
-    <!-- ═══ HERO SECTION — Asymmetric Split with Animated Mesh ═══ -->
-    <section class="hero-section dark-premium-bg admin-kpi-header">
-        <!-- Animated background mesh -->
-        <div class="hero-mesh-bg" aria-hidden="true"></div>
-        <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
-        <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
+        <!-- P2-B Hero Section -->
+        <section class="hero-p2">
+            {% if settings.hero_image_url %}
+            <img src="{{ settings.hero_image_url }}" alt="Hero Background" class="hero-p2-bg">
+            {% else %}
+            <!-- Fallback color or pattern if no image -->
+            <div class="hero-p2-bg" style="background: var(--jo-green-deep);"></div>
+            {% endif %}
+            <div class="hero-p2-overlay"></div>
 
-        <!-- Left: Hero Content -->
-        <div class="hero-content reveal-fade-up">
-            <div class="hero-eyebrow" style="color: #475569;">
-                <span class="hero-eyebrow-pulse" style="color: #475569;"></span>
-                <span style="color: #475569;" style="color: #475569;">مبادرة شبابية أردنية رسمية</span>
-                <span class="hero-eyebrow-divider" style="color: #475569;">·</span>
-                <span style="color: #475569;">عضو منصة نَحنُ</span>
-            </div>
-
-            <h1 class="hero-title" style="color: #111111 !important;">
-                {% if settings and settings.hero_title %}
-                    {{ settings.hero_title|safe }}
-                {% else %}
-                    الشباب والمجتمع،<br><span>أثرٌ يتصل.</span>
-                {% endif %}
-            </h1>
-
-            <p class="hero-desc" style="color: #475569;">
-                {{ settings.hero_desc if settings and settings.hero_desc else 'مبادرة شبابية أردنية تأسست لنثبت أن التغيير الحقيقي يبدأ بجمع طاقتنا معاً. نؤمن أن العمل التطوعي ليس مجرد ساعات نقدّمها، بل أثر ملموس ومستدام نتركه في حياة الناس والمجتمع؛ لأن كل لقاء يجمعنا هو خطوة لصناعة أمل، وكل جهد نبذله يترك وراءه بصمة لا تُمحى.' }}
-            </p>
-
-            <!-- CTA Pill Buttons -->
-            <div class="hero-cta-row">
-                <a href="#activities" class="hero-cta-btn btn-floating-pill">
-                    <i class="fa-solid fa-rocket"></i> استعرض الفعاليات
-                </a>
-                <a href="#leaderboard" class="hero-cta-btn btn-floating-pill">
-    <i class="fa-solid fa-trophy"></i> فرسان الأثر
-</a>
-            </div>
-
-            <!-- Bento Stats Grid -->
-            <div class="stats-bento">
-                <div class="stat-bento-card stat-bento-featured">
-                    <div class="stat-bento-icon"><i class="fa-solid fa-users"></i></div>
-                    <span class="stat-number">+{{ stats.volunteers_count|default(0) }}</span>
-                    <span class="stat-label" style="color: rgba(255,255,255,0.75);">متطوع معتمد</span>
+            <div class="hero-p2-content">
+                <h1 class="hero-p2-title reveal-up">{{ settings.hero_title | safe }}</h1>
+                <p class="hero-p2-desc reveal-up delay-100">{{ settings.hero_desc }}</p>
+                <div class="reveal-up delay-200">
+                    <a href="{{ settings.hero_cta_link }}" class="hero-btn">{{ settings.hero_cta_text }}</a>
                 </div>
-                <div class="stat-bento-group">
-                    <div class="stat-bento-card detached-glass-container">
-                        <div class="stat-bento-icon"><i class="fa-solid fa-clock"></i></div>
-                        <span class="stat-number" style="color: #fff;">+{{ stats.hours_count|default(0) }}</span>
-                        <span class="stat-label" style="color: #94a3b8;">ساعة تطوعية</span>
+            </div>
+        </section>
+
+        <!-- P2-B My Place (بصمتي) - Logged in only -->
+        {% if current_user %}
+        <section class="featured-story-p2" style="background: var(--jo-surface);">
+            <div class="section-inner" style="text-align:center; padding: 2rem 1rem;">
+                <h2 style="font-size: 2rem; font-weight:900; color:var(--jo-black); margin-bottom: 0.5rem;" class="reveal-up">أهلاً بك في بصمتي</h2>
+                <p style="color:var(--jo-dark-gray); margin-bottom: 1.5rem;" class="reveal-up delay-100">سجلك التطوعي وإنجازاتك</p>
+                <div style="display:flex; justify-content:center; gap: 2rem; flex-wrap: wrap;" class="reveal-up delay-200">
+                    <div style="background: var(--jo-white); padding: 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); min-width: 150px;">
+                        <h4 style="color:var(--jo-green); font-size: 2.5rem; font-weight:900;">{{ current_user.volunteer_hours or 0 }}</h4>
+                        <span style="font-weight:700; color:var(--jo-dark-gray);">ساعة تطوعية</span>
                     </div>
-                    <div class="stat-bento-card detached-glass-container">
-                        <div class="stat-bento-icon"><i class="fa-regular fa-calendar-check"></i></div>
-                        <span class="stat-number" style="color: #fff;">+{{ stats.events_count|default(0) }}</span>
-                        <span class="stat-label" style="color: #94a3b8;">فعالية منجزة</span>
+                    <div style="background: var(--jo-white); padding: 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); min-width: 150px;">
+                        <h4 style="color:var(--jo-green); font-size: 2.5rem; font-weight:900;">{{ current_user.attended_events_count or 0 }}</h4>
+                        <span style="font-weight:700; color:var(--jo-dark-gray);">فعالية منجزة</span>
                     </div>
                 </div>
+                <div style="margin-top: 2rem;" class="reveal-up delay-300">
+                    <a href="{{ url_for('profile') }}" class="hero-btn" style="background: var(--jo-black);">عرض التفاصيل كاملة</a>
+                </div>
             </div>
-        </div>
+        </section>
+        {% endif %}
 
-        <!-- Right: Floating Selector Card -->
-        <div class="selector-card hero-card-animated reveal-fade-in delay-2 detached-glass-container holo-border">
-            <div class="selector-card-header">
-                <div class="selector-badge">
-                    <i class="fa-solid fa-star-half-stroke"></i>
-                    <span>انضم للعائلة التطوعية</span>
+        <!-- P2-B Real Team Statistics -->
+        <section class="stats-p2-section">
+            <div class="stats-grid-p2">
+                <div class="stat-item-p2 reveal-scale">
+                    <h3>+<span class="count-up-element" data-target="{{ stats.hours_count }}">0</span></h3>
+                    <p>ساعات العطاء</p>
+                </div>
+                <div class="stat-item-p2 reveal-scale delay-100">
+                    <h3>+<span class="count-up-element" data-target="{{ stats.volunteers_count }}">0</span></h3>
+                    <p>متطوع معتمد</p>
+                </div>
+                <div class="stat-item-p2 reveal-scale delay-200">
+                    <h3>+<span class="count-up-element" data-target="{{ stats.events_count }}">0</span></h3>
+                    <p>فعالية ميدانية</p>
                 </div>
             </div>
-            <h3 class="selector-title" style="color: #fff;">انضم لمجتمع لمتنا بصمة</h3>
-            <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem; text-align: center; line-height: 1.6;">
-                كن جزءاً من الفرق الميدانية والإعلامية، واصنع فارقاً حقيقياً في مجتمعك.
-            </p>
-            <div class="custom-select-group">
-                <label style="display:block; margin-bottom: 8px; font-weight: 700;">المحافظة الرئيسية</label>
-                <select id="quickCitySelect" class="custom-input">
-                    <option value="عمان">العاصمة عمان</option>
-                    <option value="الزرقاء">الزرقاء</option>
-                    <option value="إربد">إربد</option>
-                    <option value="البلقاء">البلقاء</option>
-                    <option value="أخرى">محافظة أخرى</option>
-                </select>
-            </div>
-            <div class="custom-select-group">
-                <label style="display:block; margin-bottom: 8px; font-weight: 700;">الفريق الميداني المفضل</label>
-                <select id="quickTeamSelect" class="custom-input">
-                    <option value="" disabled selected>اختر الفريق المفضل</option>
-                    <option value="عمان">فريق عمان</option>
-                    <option value="الزرقاء">فريق الزرقاء</option>
-                    <option value="البلقاء">فريق البلقاء (السلط)</option>
-                    <option value="إربد">فريق إربد</option>
-                    <option value="أخرى">محافظة أخرى</option>
-                </select>
-            </div>
-            <button type="button" onclick="forwardToRegisterModal()" class="btn-primary-block btn-shimmer">
-                <i class="fa-solid fa-paper-plane"></i> متابعة طلب الانتساب
-            </button>
-        </div>
-    </section>
+        </section>
 
-    <!-- ═══ ABOUT — Bento Grid Vision & Mission ═══ -->
-    <section class="about-section" id="about">
-        <div class="section-inner">
-            <div class="section-header-centered">
-                <div class="section-label"><i class="fa-solid fa-circle-info"></i> تعرف علينا</div>
-                <h2 class="section-title-large">رؤيتنا ورسالتنا</h2>
-            </div>
-            <div class="about-bento-grid">
-                <div class="about-bento-card reveal-fade-up">
-                    <div class="about-card-accent about-accent-green"></div>
-                    <div class="about-card-icon about-icon-green">
-                        <i class="fa-solid fa-bullseye"></i>
-                    </div>
-                    <h3 class="about-card-title" style="color: var(--jo-green);">رؤيتنا</h3>
-                    <p class="about-card-text" style="color: #ffffff;">
-                        {{ settings.vision_text if settings and settings.vision_text else 'الوصول إلى مجتمع شبابي ريادي يقود المبادرات المجتمعية بأعلى معايير التنظيم، وتوسيع مظلة الأثر التطوعي لتغطي كافة محافظات ومناطق المملكة الأردنية الهاشمية.' }}
-                    </p>
-                </div>
-                <div class="about-bento-card reveal-fade-up delay-2">
-                    <div class="about-card-accent about-accent-red"></div>
-                    <div class="about-card-icon about-icon-red">
-                        <i class="fa-solid fa-hand-holding-heart"></i>
-                    </div>
-                    <h3 class="about-card-title" style="color: var(--jo-red);">رسالتنا</h3>
-                    <p class="about-card-text" style="color: #ffffff;">
-                        {{ settings.mission_text if settings and settings.mission_text else 'تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة، منظمة، وآمنة تضمن استدامة البصمة الإيجابية.' }}
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ═══ LEADERSHIP ═══ -->
-    <section class="leadership-section" id="leadership">
-        <div class="section-inner">
-            <div class="section-header-split">
-                <div>
-                    <div class="section-label"><i class="fa-solid fa-crown"></i> فريق القيادة</div>
-                    <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-red); padding-right: 12px; margin-bottom: 0; color: #111111;">
-                        الهيئة الإدارية وقادة الفرق
-                    </h2>
-                </div>
-            </div>
-            <div class="grid-members">
-                {% for leader in leaders %}
-                <div class="member-card reveal-fade-up">
-                    <div class="member-avatar-wrapper">
-                        <img src="{{ leader.photo_url or url_for('static', filename='logo.png') }}" alt="{{ leader.name }}">
-                    </div>
-                    <div class="member-name">{{ leader.name }}</div>
-                    <div class="member-role">{{ leader.position or 'قائد ميداني' }}</div>
-                    <a href="{{ leader.wa_link }}" target="_blank" class="btn-wa-contact" title="مراسلة فورية عبر واتساب">
-                        <i class="fa-brands fa-whatsapp"></i> تواصل معه
-                    </a>
-                </div>
-                {% else %}
-                <div class="member-card reveal-fade-up">
-                    <div class="member-avatar-wrapper">
-                        <img src="{{ url_for('static', filename='logo.png') }}" alt="رئيسة المبادرة">
-                    </div>
-                    <div class="member-name">لين عبده</div>
-                    <div class="member-role">رئيسة المبادرة</div>
-                    <a href="https://wa.me/962796425003" target="_blank" class="btn-wa-contact">
-                        <i class="fa-brands fa-whatsapp"></i> تواصل معها
-                    </a>
-                </div>
-                <div class="member-card reveal-fade-up delay-1">
-                    <div class="member-avatar-wrapper">
-                        <img src="{{ url_for('static', filename='logo.png') }}" alt="نائب رئيس المبادرة">
-                    </div>
-                    <div class="member-name">خالد الزعبي</div>
-                    <div class="member-role">نائب رئيس المبادرة</div>
-                    <a href="https://wa.me/962793888086" target="_blank" class="btn-wa-contact">
-                        <i class="fa-brands fa-whatsapp"></i> تواصل معه
-                    </a>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <!-- ═══ LEADERBOARD — Dark Gradient Drama ═══ -->
-    <section class="leaderboard-section" id="leaderboard">
-        <div class="leaderboard-dark-bg">
-            <div class="section-inner" style="position: relative; z-index: 1;">
-                <div style="text-align: center; margin-bottom: 2.5rem;">
-                    <div class="section-label section-label-light"><i class="fa-solid fa-medal"></i> أبطال الميدان</div>
-                    <h2 class="section-title-glow">
-                        <i class="fa-solid fa-trophy" style="color: var(--gold);"></i> لوحة فرسان الأثر الميداني
-                    </h2>
-                    <p style="color: #94a3b8; font-size: 1rem; margin-top: 0.4rem;">تكريم المتطوعين الأكثر عطاءً وتأثيراً في الميدان وخدمة المجتمع الأردني.</p>
+        <!-- P2-B Upcoming Activities -->
+        <section class="activities-p2-section" id="activities">
+            <div class="section-inner">
+                <div style="text-align: center; margin-bottom: 3rem;">
+                    <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black);" class="reveal-up">الفعاليات الميدانية</h2>
+                    <p style="color: var(--jo-dark-gray); font-size:1.1rem;" class="reveal-up delay-100">كن جزءاً من الأثر القادم</p>
                 </div>
 
-                {% if top_volunteers and top_volunteers|length > 0 %}
-                    <div class="leaderboard-podium">
-
-                        <!-- المركز الثاني (الفضي) -->
-                        {% if top_volunteers|length > 1 %}
-                        <div class="podium-slot podium-second reveal-fade-up delay-1">
-                            <div class="podium-rank-badge rank-silver">2</div>
-                            <img src="{{ top_volunteers[1].photo_url or url_for('static', filename='logo.png') }}" class="podium-avatar" alt="{{ top_volunteers[1].name }}">
-                            <div class="podium-name">{{ top_volunteers[1].name }}</div>
-                            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;">{{ top_volunteers[1].team }}</div>
-                            <div class="podium-hours"><i class="fa-solid fa-clock"></i> {{ top_volunteers[1].volunteer_hours }} ساعة معتمدة</div>
+                <div class="activities-grid-p2">
+                    {% for event in events %}
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" style="text-decoration:none; color:inherit; display:block;" class="card-link-wrapper reveal-up">
+                    <div class="editorial-event-card">
+                        <div class="editorial-event-img">
+                            {% if event.photo_url %}
+                            <img src="{{ event.photo_url }}" alt="Event Image">
+                            {% else %}
+                            <img src="{{ settings.card_img_events }}" alt="Event Default Image">
+                            {% endif %}
+                            <div class="editorial-event-date-badge">
+                                {{ event.date }}<br>
+                                <span style="font-size:0.75rem; color:var(--jo-dark-gray);">{{ event.time }}</span>
+                            </div>
                         </div>
-                        {% endif %}
+                        <div class="editorial-event-content">
+                            <h3 class="editorial-event-title">{{ event.title }}</h3>
+                            <div class="editorial-event-meta">
+                                <span><i class="fa-solid fa-location-dot"></i> {{ event.location }}</span>
+                            </div>
+                            <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ event.description }}
+                            </p>
 
-                        <!-- المركز الأول (الذهبي) -->
-                        <div class="podium-slot podium-first reveal-fade-up">
-                            <div class="podium-rank-badge rank-gold"><i class="fa-solid fa-crown"></i> 1</div>
-                            <img src="{{ top_volunteers[0].photo_url or url_for('static', filename='logo.png') }}" class="podium-avatar" style="width: 88px; height: 88px; border-color: var(--gold);" alt="{{ top_volunteers[0].name }}">
-                            <div class="podium-name" style="font-size: 1.2rem;">{{ top_volunteers[0].name }}</div>
-                            <div style="font-size: 0.85rem; color: var(--gold); font-weight: 800; margin-bottom: 4px;">فارس الأثر الأكبر</div>
-                            <div class="podium-hours" style="font-size: 1.05rem;"><i class="fa-solid fa-award"></i> {{ top_volunteers[0].volunteer_hours }} ساعة ميدانية</div>
-                        </div>
+                            <!-- P1 RSVP LOGIC STRICTLY PRESERVED -->
+                            <div class="editorial-event-actions">
+                                <div class="editorial-capacity">
+                                    {% if event.is_completed %}
+                                        <span style="color: var(--jo-green);"><i class="fa-solid fa-circle-check"></i> فعالية منجزة</span>
+                                    {% elif event.id in user_waitlisted_event_ids %}
+                                        <span style="color: #b45309;"><i class="fa-solid fa-hourglass-half"></i> في قائمة الانتظار</span>
+                                    {% elif event.is_full %}
+                                        <span style="color: var(--jo-red);"><i class="fa-solid fa-lock"></i> اكتمل العدد</span>
+                                    {% else %}
+                                        <span style="color: var(--jo-green);"><i class="fa-solid fa-user-check"></i> متبقي {{ event.remaining_seats }} مقاعد</span>
+                                    {% endif %}
+                                </div>
 
-                        <!-- المركز الثالث (البرونزي) -->
-                        {% if top_volunteers|length > 2 %}
-                        <div class="podium-slot podium-third reveal-fade-up delay-2">
-                            <div class="podium-rank-badge rank-bronze">3</div>
-                            <img src="{{ top_volunteers[2].photo_url or url_for('static', filename='logo.png') }}" class="podium-avatar" alt="{{ top_volunteers[2].name }}">
-                            <div class="podium-name">{{ top_volunteers[2].name }}</div>
-                            <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 4px;">{{ top_volunteers[2].team }}</div>
-                            <div class="podium-hours"><i class="fa-solid fa-clock"></i> {{ top_volunteers[2].volunteer_hours }} ساعة معتمدة</div>
-                        </div>
-                        {% endif %}
-
-                    </div>
-
-                    {% if top_volunteers|length > 3 %}
-                    <div class="leaderboard-runners">
-                        {% for runner in top_volunteers[3:5] %}
-                        <div class="runner-card reveal-fade-up">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-weight: 900; color: #64748b; font-size: 1.1rem;">#{{ loop.index + 3 }}</span>
-                                <img src="{{ runner.photo_url or url_for('static', filename='logo.png') }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" alt="{{ runner.name }}">
                                 <div>
-                                    <div style="font-weight: 800; font-size: 0.95rem; color: #e2e8f0;">{{ runner.name }}</div>
-                                    <div style="font-size: 0.78rem; color: #64748b;">{{ runner.team }}</div>
+                                    {% if event.is_completed %}
+                                        <button disabled style="opacity:0.5; padding:8px 16px; border-radius:var(--radius-sm); border:none; background:var(--jo-mid-gray); color:var(--jo-white);">انتهت الفعالية</button>
+                                    {% elif session.get('user_id') %}
+                                        {% if event.id in user_registered_event_ids %}
+                                            {% if event.id in user_attended_event_ids %}
+                                                <button disabled style="padding:8px 16px; border-radius:var(--radius-sm); border:none; background:var(--jo-green); color:var(--jo-white);"><i class="fa-solid fa-check-circle"></i> حاضر</button>
+                                            {% else %}
+                                                <div style="display:flex; gap:5px; align-items:center;">
+                                                    <form action="{{ url_for('cancel_rsvp', event_id=event.id) }}" method="POST" style="margin:0;">
+                                                        <button type="submit" style="padding:8px; border-radius:var(--radius-sm); border:1px solid var(--jo-red); background:transparent; color:var(--jo-red); cursor:pointer;">إلغاء</button>
+                                                    </form>
+                                                    {% if event.is_today %}
+                                                        <form action="{{ url_for('verify_attendance_code', event_id=event.id) }}" method="POST" style="margin:0; display:flex; gap:4px;">
+                                                            <input type="text" name="secret_code" placeholder="الكود" required style="width:70px; padding:6px; border:1px solid var(--jo-border); border-radius:4px; text-align:center;">
+                                                            <button type="submit" style="padding:8px 12px; border-radius:var(--radius-sm); border:none; background:var(--jo-black); color:var(--jo-white); cursor:pointer;">تأكيد</button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        {% elif event.id in user_waitlisted_event_ids %}
+                                            <form action="{{ url_for('cancel_rsvp', event_id=event.id) }}" method="POST" style="margin:0;">
+                                                <button type="submit" style="padding:8px 16px; border-radius:var(--radius-sm); border:none; background:#fef08a; color:#854d0e; cursor:pointer;">إلغاء الانتظار</button>
+                                            </form>
+                                        {% elif event.is_full %}
+                                            <button disabled style="opacity:0.5; padding:8px 16px; border-radius:var(--radius-sm); border:none; background:var(--jo-mid-gray); color:var(--jo-white);">مغلق</button>
+                                        {% else %}
+                                            <form action="{{ url_for('rsvp_event', event_id=event.id) }}" method="POST" style="margin:0;">
+                                                <button type="submit" style="padding:8px 16px; border-radius:var(--radius-sm); border:none; background:var(--jo-green); color:var(--jo-white); cursor:pointer;">تسجيل</button>
+                                            </form>
+                                        {% endif %}
+                                    {% else %}
+                                        <a href="{{ url_for('login') }}" style="padding:8px 16px; border-radius:var(--radius-sm); border:none; background:var(--jo-black); color:var(--jo-white); cursor:pointer;" style="display:inline-block; text-decoration:none; style="padding:8px 16px; border-radius:var(--radius-sm); border:none; background:var(--jo-black); color:var(--jo-white); cursor:pointer;"">سجل دخول</a>
+                                    {% endif %}
                                 </div>
                             </div>
-                            <div style="font-weight: 800; color: var(--jo-green); font-size: 0.9rem;">
-                                {{ runner.volunteer_hours }} ساعة
+                            <!-- END P1 LOGIC -->
+                        </div>
+                    </div>
+                    </a>
+                    {% else %}
+                    <div class="editorial-event-card reveal-up" style="grid-column: 1 / -1; text-align:center; padding: 4rem 1rem;">
+                        <h3 style="font-weight: 800; color: var(--jo-black);">لا توجد فعاليات قادمة حالياً</h3>
+                        <p style="color: var(--jo-dark-gray);">نعمل على تجهيز فعاليات جديدة قريباً.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div style="text-align: center; margin-top: 40px;">
+                    <a href="{{ url_for('events_list') }}" class="hero-btn reveal-up delay-200" style="background: var(--jo-green); display: inline-block; color: white;">استعرض جميع الفعاليات الميدانية</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- P2-B Featured Story -->
+        <section class="featured-story-p2" id="about">
+            <div class="featured-story-grid">
+                <div class="featured-content-p2 reveal-up">
+                    <h4 style="color: var(--jo-red); font-weight:800; margin-bottom: 0.5rem; text-transform: uppercase;">قصتنا المميزة</h4>
+                    <h2>{{ settings.featured_story_title }}</h2>
+                    <p>{{ settings.featured_story_desc }}</p>
+                    <a href="{{ settings.featured_story_cta_link }}" class="hero-btn" style="background: var(--jo-black);">{{ settings.featured_story_cta_text }}</a>
+                </div>
+                <div class="featured-img-wrapper reveal-scale delay-200">
+                    {% if settings.featured_story_image_url %}
+                    <img src="{{ settings.featured_story_image_url }}" alt="Featured Story">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1593113565694-c6f1406540c4?auto=format&fit=crop&w=800&q=80" alt="Placeholder Story">
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
                             </div>
                         </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
 
-                {% else %}
-                    <p style="text-align: center; color: #64748b; padding: 2rem;">يتم الآن احتساب ساعات الفعاليات لتتويج فرسان الأثر لهذا الشهر.</p>
-                {% endif %}
-            </div>
-        </div>
-    </section>
-
-    <!-- ═══ EVENTS — 1-Click RSVP System ═══ -->
-    <section class="events-section" id="activities">
-        <div class="section-inner">
-            <div class="section-header-split">
-                <div>
-                    <div class="section-label"><i class="fa-solid fa-calendar-star"></i> سجّل الآن</div>
-                    <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-green); padding-right: 12px; margin-bottom: 0; color: var(--jo-black);">
-                        الفعاليات الميدانية القادمة
-                    </h2>
-                </div>
-            </div>
-
-            <div class="events-list">
-                {% for event in events %}
-                <div class="event-item-card reveal-fade-up">
-                    <div>
-                        <div class="event-meta">
-                            <span><i class="fa-regular fa-calendar"></i> {{ event.date }}</span>
-                            <span><i class="fa-regular fa-clock"></i> {{ event.time }}</span>
-                            <span><i class="fa-solid fa-location-dot"></i> {{ event.location }}</span>
-                        </div>
-                        <h3 style="margin-bottom: 8px;">{{ event.title }}</h3>
-                        <p class="event-desc">{{ event.description }}</p>
-                    </div>
-
-                    <div class="rsvp-status-box">
-                        <div>
-                            <span style="font-size: 0.85rem; font-weight: 700; color: var(--jo-dark-gray);">
-                                المطلوب للميدان: {{ event.capacity }} متطوعين
-                            </span>
-                            {% if event.is_completed %}
-                                <span class="rsvp-pill" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac;">
-                                    <i class="fa-solid fa-circle-check"></i> فعالية منجزة
-                                </span>
-                            {% elif event.is_full %}
-                                <span class="rsvp-pill rsvp-pill-full"><i class="fa-solid fa-lock"></i> اكتمل العدد</span>
-                            {% else %}
-                                <span class="rsvp-pill rsvp-pill-active"><i class="fa-solid fa-user-check"></i> متبقي {{ event.remaining_seats }} مقاعد</span>
-                            {% endif %}
-                        </div>
-
-                        <div>
-                            {% if event.is_completed %}
-                                <button class="btn-rsvp-join" disabled style="opacity: 0.65; cursor: not-allowed; background: #64748b; border: 1px solid #475569;">
-                                    <i class="fa-solid fa-check-double"></i> انتهت الفعالية
-                                </button>
-                            {% elif session.get('user_id') %}
-                                {% if event.id in user_registered_event_ids %}
-                                    {% if event.id in user_attended_event_ids %}
-                                        <button class="btn-rsvp-join" disabled style="opacity: 0.8; cursor: not-allowed; background: #10b981; border: 1px solid #059669;">
-                                            <i class="fa-solid fa-check-circle"></i> حاضر
-                                        </button>
-                                    {% else %}
-                                        <div style="display: flex; gap: 8px; align-items: center; justify-content: center;">
-                                            <form action="{{ url_for('cancel_rsvp', event_id=event.id) }}" method="POST" style="margin:0;">
-                                                <button type="submit" class="btn-rsvp-leave" title="إلغاء حجز المقعد">إلغاء حضوري</button>
-                                            </form>
-                                            {% if event.is_today %}
-                                                <form action="{{ url_for('verify_attendance_code', event_id=event.id) }}" method="POST" style="margin:0; display:flex; gap:4px;">
-                                                    <input type="text" name="secret_code" placeholder="أدخل كود الفعالية" required style="padding: 4px; border: 1px solid var(--jo-border); border-radius: 4px; text-align: center; width: 120px;">
-                                                    <button type="submit" class="btn-rsvp-join" style="padding: 4px 10px;"><i class="fa-solid fa-check"></i> حضور</button>
-                                                </form>
-                                            {% endif %}
-                                        </div>
-                                    {% endif %}
-                                {% elif event.is_full %}
-                                    <button class="btn-rsvp-join" disabled style="opacity: 0.5; cursor: not-allowed;">اكتمل التسجيل</button>
-                                {% else %}
-                                    <form action="{{ url_for('rsvp_event', event_id=event.id) }}" method="POST" style="margin:0;">
-                                        <button type="submit" class="btn-rsvp-join"><i class="fa-solid fa-check"></i> تأكيد مشاركتي</button>
-                                    </form>
-                                {% endif %}
-                            {% else %}
-                                <a href="javascript:void(0)" onclick="openAuthModal('loginModal')" class="btn-rsvp-join" style="text-decoration:none; display:inline-block;">سجل دخولك للمشاركة</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <div class="event-item-card reveal-fade-up">
-                    <div class="event-meta">
-                        <span><i class="fa-regular fa-calendar"></i> قريباً</span>
-                        <span><i class="fa-solid fa-location-dot"></i> عمان، الأردن</span>
-                    </div>
-                    <h3 style="margin-bottom: 8px;">حملة بصمة خير الميدانية</h3>
-                    <p class="event-desc">يتم الآن تجهيز الجداول الميدانية للفعالية القادمة وسيتم فتح باب التسجيل بنقرة واحدة لجميع المتطوعين المعتمدين فور اكتمال الترتيبات.</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <!-- ═══ GALLERY — Filterable Media Grid ═══ -->
-    <section class="gallery-section" id="gallery">
-        <div class="section-inner">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 15px;">
-                <div>
-                    <div class="section-label"><i class="fa-solid fa-images"></i> أرشيف بصري</div>
-                    <h2 style="font-size: 1.8rem; font-weight: 800; border-right: 5px solid var(--jo-black); padding-right: 12px; margin-bottom: 0; color: var(--jo-black);">
-                        معرض البصمات والتغطيات
-                    </h2>
-                </div>
-                <div class="gallery-filters">
-                    <button class="gallery-filter-btn active" onclick="filterGallery('all', this)">الكل</button>
-                    <button class="gallery-filter-btn" onclick="filterGallery('photo', this)">الصور</button>
-                    <button class="gallery-filter-btn" onclick="filterGallery('video', this)">الفيديوهات</button>
-                </div>
-            </div>
-
-            <div class="services-grid" id="gallery-container">
-                {% for album in albums %}
-                <div class="service-card gallery-item" data-type="{{ album.category }}" onclick="openAlbumModal('{{ album.id }}')">
-                    <img src="{{ album.cover_image_url }}" alt="{{ album.title }}">
-                    <div class="gallery-item-overlay">
-                        {% if album.category == 'video' %}
-                        <div class="gallery-play-icon"><i class="fa-solid fa-play"></i></div>
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
                         {% endif %}
                     </div>
-                    <div class="service-card-title">
-                        {% if album.category == 'video' %}<i class="fa-solid fa-play" style="display:block; margin-bottom: 6px;"></i>{% endif %}
-                        {{ album.title }}
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
+                            </div>
+                        </div>
+
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
+                            </div>
+                        </div>
+
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
+                            </div>
+                        </div>
+
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
+                            </div>
+                        </div>
+
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
+                            </div>
+                        </div>
+
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
+                            </div>
+                        </div>
+
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- P2-F Community Impact -->
+        <section class="impact-section" id="impact" style="padding: 100px 20px; background: var(--jo-white); border-top: 1px solid var(--jo-border);">
+            <div class="section-inner">
+                <div class="impact-grid">
+                    <div class="impact-content reveal-up">
+                        <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black); margin-bottom: 20px;">{{ settings.impact_section_title if settings else 'بصمتنا بالمجتمع' }}</h2>
+                        <p style="color: var(--jo-dark-gray); font-size: 1.1rem; line-height: 1.8; margin-bottom: 40px;">
+                            {{ settings.impact_section_desc if settings else 'أرقام تعكس التزامنا وحجم الأثر الذي نصنعه معاً في مختلف محافظات المملكة.' }}
+                        </p>
+
+                        <div class="impact-stats-grid">
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.volunteers_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-green); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">متطوع ومتطوعة</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.hours_count|int }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-red); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">ساعة تطوعية</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3 class="stat-number count-up" data-target="{{ stats.events_count }}" style="font-size: 3rem; font-weight: 900; color: var(--jo-black); margin-bottom: 5px;">0</h3>
+                                <p style="font-size: 1rem; color: var(--jo-dark-gray); font-weight: 700;">مبادرة مجتمعية</p>
+                            </div>
+                        </div>
+
+                        {% if settings and settings.impact_cta_text %}
+                        <a href="{{ settings.impact_cta_link }}" class="hero-btn" style="background: var(--jo-green);">
+                            {{ settings.impact_cta_text }} <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+
+                    <div class="impact-media reveal-up delay-200">
+                        <div style="position: relative; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-lg);">
+                            {% if settings and settings.impact_image_url %}
+                                <img src="{{ settings.impact_image_url }}" alt="أثرنا في المجتمع" style="width: 100%; height: auto; display: block; object-fit: cover; aspect-ratio: 4/5;">
+                            {% else %}
+                                <div style="width: 100%; aspect-ratio: 4/5; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--jo-dark-gray);">
+                                    <i class="fa-solid fa-image" style="font-size: 4rem; opacity: 0.2;"></i>
+                                </div>
+                            {% endif %}
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 40px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white;">
+                                <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 5px;">نصنع الفرق كل يوم</h4>
+                                <p style="font-size: 1rem; opacity: 0.9;">لأن العمل التطوعي هو أساس بناء المجتمعات.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- P2-B Community Photography -->
+        <section class="activities-p2-section">
+            <div class="section-inner" style="text-align: center; margin-bottom: 3rem;">
+                <h2 style="font-size: 2.5rem; font-weight: 900; color: var(--jo-black);" class="reveal-up">عائلة لمتنا بصمة</h2>
+                <p style="color: var(--jo-dark-gray); font-size:1.1rem;" class="reveal-up delay-100">لقطات من الميدان</p>
+            </div>
+            <div class="community-gallery-p2 reveal-up delay-200">
+                <!-- Using the existing albums logic from app.py index route (passed as 'albums' if we modify it, but index already passes some galleries? Wait, let me check what app.py passes to index.html for gallery.) -->
+                <!-- The existing code just hardcoded images or used a Gallery model. Wait, app.py index route passes 'albums'. -->
+                {% for album in albums[:6] %}
+                    {% for media in album.media[:1] %}
+                    <div class="gallery-item-p2">
+                        <img src="{{ media.url }}" alt="{{ album.title }}" loading="lazy">
+                    </div>
+                    {% endfor %}
                 {% else %}
-                <div class="service-card gallery-item" data-type="photo" onclick="alert('لم يتم إضافة ألبومات بعد.')">
-                    <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80" alt="تطوع">
-                    <div class="gallery-item-overlay"></div>
-                    <div class="service-card-title">حملة الشتاء الميدانية</div>
-                </div>
-                <div class="service-card gallery-item" data-type="photo" onclick="alert('لم يتم إضافة ألبومات بعد.')">
-                    <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80" alt="تعليم">
-                    <div class="gallery-item-overlay"></div>
-                    <div class="service-card-title">توزيع الحقائب المدرسية</div>
-                </div>
-                <div class="service-card gallery-item" data-type="video" onclick="alert('لم يتم إضافة ألبومات بعد.')">
-                    <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80" alt="لقاء المتطوعين">
-                    <div class="gallery-item-overlay">
-                        <div class="gallery-play-icon"><i class="fa-solid fa-play"></i></div>
-                    </div>
-                    <div class="service-card-title"><i class="fa-solid fa-play" style="display:block; margin-bottom: 6px;"></i> التوثيق السنوي لمتنا بصمة</div>
-                </div>
+                    <!-- Fallback placeholder images if no albums exist -->
+                    <div class="gallery-item-p2"><img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=400&q=80" loading="lazy"></div>
+                    <div class="gallery-item-p2"><img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=400&q=80" loading="lazy"></div>
+                    <div class="gallery-item-p2"><img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=400&q=80" loading="lazy"></div>
+                    <div class="gallery-item-p2"><img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" loading="lazy"></div>
                 {% endfor %}
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- ═══ CHANNELS — Partners & Social ═══ -->
-    <section class="channels-section" id="channels">
-        <div class="section-inner">
-            <div class="section-header-centered">
-                <div class="section-label"><i class="fa-solid fa-network-wired"></i> روابطنا</div>
-                <h2 class="section-title-large">شراكاتنا وقنواتنا الرسمية</h2>
+        <!-- P2-B Closing CTA -->
+        <section style="background: var(--jo-green); padding: 5rem 1rem; text-align: center; color: var(--jo-white);">
+            <div class="section-inner reveal-scale">
+                <h2 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">{{ settings.closing_cta_title if settings and settings.closing_cta_title else 'انضم إلى رحلتنا اليوم' }}</h2>
+                <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">{{ settings.closing_cta_desc if settings and settings.closing_cta_desc else 'بصمتك تصنع الفارق في مجتمعنا' }}</p>
+                {% if not session.get('user_id') %}
+                <a href="{{ url_for('register') }}" class="hero-btn" style="background: var(--jo-white); color: var(--jo-green);" style="display:inline-block; text-decoration:none; class="hero-btn" style="background: var(--jo-white); color: var(--jo-green);"">سجل كمتطوع</a>
+                {% else %}
+                <a href="{{ url_for('profile') }}" class="hero-btn" style="background: var(--jo-white); color: var(--jo-green);">حسابي</a>
+                {% endif %}
             </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 22px;">
+        </section>
 
-                <a href="{{ settings.nahno_url if settings and settings.nahno_url else 'https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843' }}" target="_blank" rel="noopener noreferrer" class="channel-card reveal-fade-up">
-                    <div class="channel-icon" style="background: #e0f2fe; color: #0284c7;">
-                        <i class="fa-solid fa-hand-holding-heart"></i>
-                    </div>
-                    <div class="channel-title">منصة نَحْنُ (Nahno)</div>
-                    <div class="channel-desc">الملف الرسمي لتوثيق واعتماد ساعات العمل التطوعي الجامعي والمجتمعي.</div>
-                    <span class="channel-cta" style="color: #0284c7;">زيارة صفحة الفريق &larr;</span>
-                </a>
+    </main>
 
-                <a href="{{ settings.instagram_url if settings and settings.instagram_url else 'https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw' }}" target="_blank" rel="noopener noreferrer" class="channel-card reveal-fade-up delay-1">
-                    <div class="channel-icon" style="background: #fce7f3; color: #e1306c;">
-                        <i class="fa-brands fa-instagram"></i>
-                    </div>
-                    <div class="channel-title">صفحة الإنستغرام</div>
-                    <div class="channel-desc">متابعة التغطيات الحية، الصور الميدانية، والأنشطة الشبابية فور حدوثها.</div>
-                    <span class="channel-cta" style="color: #e1306c;">متابعة الحساب &larr;</span>
-                </a>
-
-                <a href="{{ settings.whatsapp_url if settings and settings.whatsapp_url else 'https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8' }}" target="_blank" rel="noopener noreferrer" class="channel-card reveal-fade-up delay-2">
-                    <div class="channel-icon" style="background: #dcfce7; color: #16a34a;">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </div>
-                    <div class="channel-title">مجتمع الواتساب الرسمي</div>
-                    <div class="channel-desc">قناة الإعلانات العاجلة وتنسيق التجمعات الميدانية مع قادة الفرق.</div>
-                    <span class="channel-cta" style="color: #16a34a;">الانضمام للمجموعة &larr;</span>
-                </a>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- ═══ CONTACT — Direct Message Form ═══ -->
-    <section class="contact-section" id="contact">
-        <div class="section-inner">
-            <div class="contact-card reveal-fade-up">
-                <div class="section-header-centered" style="margin-bottom: 2.5rem;">
-                    <div class="section-label" style="color: #111111;"><i class="fa-solid fa-envelope"></i> راسلنا</div>
-                    <h2 class="section-title-large">نحن جاهزون للإجابة</h2>
-                    <p style="color: var(--jo-dark-gray); margin-top: 0.5rem; line-height: 1.65; max-width: 580px; margin-left: auto; margin-right: auto;">
-                        إذا كان لديك أي سؤال حول آلية الانضمام، الشراكات المجتمعية، أو الفعاليات، تواصل معنا وسنرد عليك بأسرع وقت.
-                    </p>
-                </div>
-
-                <form action="{{ url_for('contact_submit') }}" method="POST" class="contact-form-grid">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الأول</label>
-                        <input type="text" name="first_name" class="custom-input" placeholder="الاسم الأول" required>
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">اسم العائلة</label>
-                        <input type="text" name="last_name" class="custom-input" placeholder="اسم العائلة" required>
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
-                        <input type="tel" name="phone" class="custom-input" placeholder="07XXXXXXXX" required>
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
-                        <input type="email" name="email" class="custom-input" placeholder="example@mail.com" required>
-                    </div>
-                    <div style="grid-column: 1 / -1;">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">موضوع الاستفسار / الرسالة</label>
-                        <textarea name="message" class="custom-input" rows="4" placeholder="اكتب تفاصيل استفسارك هنا..." required style="resize: vertical;"></textarea>
-                    </div>
-                    <div style="grid-column: 1 / -1;">
-                        <button type="submit" class="btn-primary-block btn-shimmer" style="max-width: 220px;">
-                            <i class="fa-solid fa-paper-plane"></i> إرسال الاستفسار
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- ═══════════ MODALS — PRESERVED EXACTLY ═══════════ -->
-
-    <!-- نافذة تسجيل الدخول المنبثقة -->
-    <div id="loginModal" class="auth-modal">
-        <div class="auth-modal-content">
-            <button class="close-btn" onclick="closeAuthModal('loginModal')">&times;</button>
-            <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; color: var(--jo-black);">تسجيل الدخول للمنصة</h3>
-            <form action="{{ url_for('login') }}" method="POST">
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
-                    <input type="email" name="email" class="custom-input" placeholder="example@mail.com" required>
-                </div>
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">كلمة المرور</label>
-                    <input type="password" name="password" class="custom-input" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">دخول</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- نافذة طلب الانتساب كمتطوع -->
-    <div id="registerModal" class="auth-modal">
-        <div class="auth-modal-content" style="max-width: 580px;">
-            <button class="close-btn" onclick="closeAuthModal('registerModal')">&times;</button>
-            <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; color: var(--jo-black);">طلب انتساب لفريق لمتنا بصمة</h3>
-            <form action="{{ url_for('register') }}" method="POST">
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الاسم الكامل</label>
-                        <input type="text" name="name" class="custom-input" placeholder="الاسم الرباعي" pattern="^[\u0600-\u06FF\s]+$" title="يرجى إدخال الاسم باللغة العربية فقط" required>
-                    </div>
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
-                        <input type="number" name="age" class="custom-input" min="14" max="70" placeholder="العمر بالسنين" required>
-                    </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الجنس</label>
-                        <select name="gender" class="custom-input" required>
-                            <option value="ذكر">ذكر</option>
-                            <option value="أنثى">أنثى</option>
-                        </select>
-                    </div>
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف</label>
-                        <input type="tel" name="phone" class="custom-input" placeholder="07XXXXXXXX" required>
-                    </div>
-                </div>
-
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">البريد الإلكتروني</label>
-                    <input type="email" name="email" class="custom-input" placeholder="example@mail.com" required>
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة</label>
-                        <select name="city" id="modalCitySelect" class="custom-input" required>
-                            <option value="">-- اختر --</option>
-                            <option value="عمان">عمان</option>
-                            <option value="اربد">اربد</option>
-                            <option value="الزرقاء">الزرقاء</option>
-                            <option value="البلقاء (السلط)">البلقاء (السلط)</option>
-                            <option value="جرش">جرش</option>
-                            <option value="أخرى">أخرى</option>
-                        </select>
-                    </div>
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الفريق المفضل</label>
-                        <select name="team" id="modalTeamSelect" class="custom-input" required>
-                            <option value="">-- اختر --</option>
-                            <option value="عمان">عمان</option>
-                            <option value="اربد">اربد</option>
-                            <option value="الزرقاء">الزرقاء</option>
-                            <option value="البلقاء (السلط)">البلقاء (السلط)</option>
-                            <option value="جرش">جرش</option>
-                            <option value="أخرى">أخرى</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="custom-select-group">
-                    <label style="font-weight: bold; margin-bottom: 6px; display: block;">المواهب والكفاءات (اختر كل ما ينطبق عليك):</label>
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; background: rgba(0,0,0,0.02); padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="تصوير فوتوغرافي"> تصوير فوتوغرافي</label>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="جرافيك ديزاين"> جرافيك ديزاين</label>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="مونتاج فيديو"> مونتاج فيديو</label>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="تسويق وإعلام"> تسويق وإعلام</label>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="إدارة وتنظيم"> إدارة وتنظيم</label>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="خطابة وإلقاء"> خطابة وإلقاء</label>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="عزف وموسيقى"> عزف وموسيقى</label>
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;"><input type="checkbox" name="skills" value="إسعافات أولية"> إسعافات أولية</label>
-</div>
-
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">الخبرة السابقة بالعمل التطوعي (اختياري)</label>
-                    <textarea name="experience" class="custom-input" rows="2" placeholder="اذكر المبادرات التي شاركت بها..."></textarea>
-                </div>
-
-                <div class="custom-select-group" style="background: #fffbeb; padding: 12px; border-radius: var(--radius-sm); border: 1px dashed #fcd34d;">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 800; color: #b45309;"><i class="fa-solid fa-truck-medical"></i> جهة الطوارئ (اختياري)</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <input type="text" name="emergency_contact_name" class="custom-input" placeholder="اسم جهة الطوارئ">
-                        <input type="tel" name="emergency_contact_phone" class="custom-input" placeholder="رقم هاتف جهة الطوارئ">
-                    </div>
-                </div>
-
-                </div>
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">كلمة المرور للحساب</label>
-                    <input type="password" name="password" class="custom-input" placeholder="اختر كلمة مرور قوية" required>
-                </div>
-
-                <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">إرسال طلب الانضمام</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- مشغل الوسائط المنبثق Lightbox Modal -->
-    <div id="mediaModal" class="media-lightbox">
-        <div class="lightbox-box" style="position: relative;">
-            <button class="close-btn-lightbox" onclick="closeMedia()">&times;</button>
-            <button id="lightboxPrevBtn" onclick="lightboxPrev()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; font-size: 2rem; cursor: pointer; padding: 10px 15px; border-radius: 5px; z-index: 10;">&#10094;</button>
-            <button id="lightboxNextBtn" onclick="lightboxNext()" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; font-size: 2rem; cursor: pointer; padding: 10px 15px; border-radius: 5px; z-index: 10;">&#10095;</button>
-            <div id="modalContent" style="width: 100%; max-height: 520px; display: flex; justify-content: center; align-items: center; background: #000;"></div>
-            <div id="modalCaption" style="color: #fff; text-align: center; padding: 14px; font-weight: 700; background: #121212; font-size: 1.05rem;"></div>
-        </div>
-    </div>
-
-    <!-- ═══════════ JAVASCRIPT — PRESERVED + Scroll Observer ═══════════ -->
-    <script>
-        const ALBUMS_DATA = {
-            {% for album in albums %}
-            "{{ album.id }}": {
-                title: "{{ album.title|replace('"', '\\"') }}",
-                media: [
-                    {% for m in album.media %}
-                    { url: "{{ m.media_url }}", type: "{{ m.media_type }}" }{% if not loop.last %},{% endif %}
-                    {% endfor %}
-                ]
-            }{% if not loop.last %},{% endif %}
-            {% endfor %}
-        };
-        
-        let currentAlbumId = null;
-        let currentMediaIndex = 0;
-
-        // زر فتح وإغلاق قائمة الهاتف الذكي
-        function toggleMobileNav() {
-            const navLinks = document.getElementById('mainNavLinks');
-            if (navLinks) { navLinks.classList.toggle('mobile-nav-active'); }
-        }
-
-        // إغلاق القائمة عند النقر على أي رابط داخلي
-        document.querySelectorAll('.nav-links li a').forEach(link => {
-            link.addEventListener('click', () => {
-                const navLinks = document.getElementById('mainNavLinks');
-                if (navLinks && navLinks.classList.contains('mobile-nav-active')) {
-                    navLinks.classList.remove('mobile-nav-active');
-                }
-            });
-        });
-
-        function openAuthModal(modalId)  { document.getElementById(modalId).style.display = 'flex'; }
-        function closeAuthModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
-
-        function forwardToRegisterModal() {
-            const city = document.getElementById('quickCitySelect').value;
-            const team = document.getElementById('quickTeamSelect').value;
-            document.getElementById('modalCitySelect').value = city;
-            document.getElementById('modalTeamSelect').value = team;
-            openAuthModal('registerModal');
-        }
-
-        function filterGallery(type, btnElement) {
-            const items   = document.querySelectorAll('.gallery-item');
-            const buttons = document.querySelectorAll('.gallery-filter-btn');
-            buttons.forEach(b => { b.style.background = 'var(--jo-white)'; b.style.color = 'var(--jo-black)'; });
-            btnElement.style.background = 'var(--jo-green)';
-            btnElement.style.color = '#fff';
-            items.forEach(item => {
-                item.style.display = (type === 'all' || item.getAttribute('data-type') === type) ? 'block' : 'none';
-            });
-        }
-
-        function openAlbumModal(albumId) {
-            const album = ALBUMS_DATA[albumId];
-            if (!album || !album.media || album.media.length === 0) {
-                alert('هذا الألبوم لا يحتوي على وسائط.');
-                return;
-            }
-            currentAlbumId = albumId;
-            currentMediaIndex = 0;
-            
-            document.getElementById('mediaModal').style.display = 'flex';
-            renderCurrentMedia();
-        }
-
-        function renderCurrentMedia() {
-            const album = ALBUMS_DATA[currentAlbumId];
-            const media = album.media[currentMediaIndex];
-            const container = document.getElementById('modalContent');
-            const cap = document.getElementById('modalCaption');
-            
-            cap.innerText = album.title + ' (' + (currentMediaIndex + 1) + ' / ' + album.media.length + ')';
-            
-            if (media.type === 'video') {
-                container.innerHTML = `<video controls autoplay style="width: 100%; max-height: 500px;"><source src="${media.url}" type="video/mp4">متصفحك لا يدعم تشغيل الفيديو.</video>`;
-            } else {
-                container.innerHTML = `<img src="${media.url}" style="max-width: 100%; max-height: 500px; object-fit: contain;">`;
-            }
-
-            const prevBtn = document.getElementById('lightboxPrevBtn');
-            const nextBtn = document.getElementById('lightboxNextBtn');
-            if (prevBtn) prevBtn.style.display = currentMediaIndex > 0 ? 'block' : 'none';
-            if (nextBtn) nextBtn.style.display = currentMediaIndex < album.media.length - 1 ? 'block' : 'none';
-        }
-
-        function lightboxNext() {
-            const album = ALBUMS_DATA[currentAlbumId];
-            if (currentMediaIndex < album.media.length - 1) {
-                currentMediaIndex++;
-                renderCurrentMedia();
-            }
-        }
-
-        function lightboxPrev() {
-            if (currentMediaIndex > 0) {
-                currentMediaIndex--;
-                renderCurrentMedia();
-            }
-        }
-
-        function closeMedia() {
-            document.getElementById('modalContent').innerHTML = '';
-            document.getElementById('mediaModal').style.display = 'none';
-            currentAlbumId = null;
-        }
-
-        window.onclick = function(event) {
-            const loginModal    = document.getElementById('loginModal');
-            const registerModal = document.getElementById('registerModal');
-            const mediaModal    = document.getElementById('mediaModal');
-            if (event.target === loginModal)    closeAuthModal('loginModal');
-            if (event.target === registerModal) closeAuthModal('registerModal');
-            if (event.target === mediaModal)    closeMedia();
-        };
-
-        // ── Scroll Reveal (IntersectionObserver) ──────────────────────
-        (function() {
-            const revealEls = document.querySelectorAll('.reveal-fade-up, .reveal-fade-in');
-            if (!revealEls.length) return;
-            const obs = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        obs.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-            revealEls.forEach(function(el) { obs.observe(el); });
-
-            // Trigger above-fold elements immediately
-            document.querySelectorAll('.hero-content.reveal-fade-up, .selector-card.reveal-fade-in').forEach(function(el) {
-                setTimeout(function() { el.classList.add('is-visible'); }, 100);
-            });
-        })();
-    </script>
-
-    <!-- ═══════════ FOOTER — PRESERVED EXACTLY ═══════════ -->
-    <footer style="background: linear-gradient(180deg, #091a14 0%, #050d0a 100%); color: #e2e8f0; width: 100%; border-top: 3px solid #dc2626; position: relative; margin-top: 60px; padding: 45px 20px 20px; direction: rtl; box-sizing: border-box;">
+<footer style="background: linear-gradient(180deg, #091a14 0%, #050d0a 100%); color: #e2e8f0; width: 100%; border-top: 3px solid #dc2626; position: relative; margin-top: 60px; padding: 45px 20px 20px; direction: rtl; box-sizing: border-box;">
         <div style="max-width: 1150px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px;">
 
             <!-- التعريف بالمبادرة -->

@@ -4,617 +4,437 @@
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>بوابة المتطوع | {{ user.name }}</title>
+    <title>بصمتي | {{ user.name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">   
-    <!-- مكتبة تحويل العناصر إلى صور لتنزيل الباجة على الهاتف -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        .profile-page-wrapper {
+        /* Mobile-First Custom Profile Styles */
+        .volunteer-home-wrapper {
             max-width: 1200px;
-            margin: 2rem auto 4rem;
-            padding: 0 5%;
-            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .profile-header-card {
-            background: var(--jo-white);
-            border-radius: var(--radius-md);
-            padding: 2.2rem;
-            margin-bottom: 2.5rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--jo-border);
-            display: flex;
-            align-items: center;
-            gap: 28px;
-            flex-wrap: wrap;
-        }
-        .profile-avatar-box {
+
+        /* 1. Hero Section */
+        .vh-hero {
             position: relative;
-            width: 125px;
-            height: 125px;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: var(--jo-black);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+            min-height: 250px;
+            display: flex;
+            align-items: flex-end;
+        }
+        .vh-hero-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.4;
+        }
+        .vh-hero-content {
+            position: relative;
+            z-index: 2;
+            padding: 30px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .vh-avatar-wrap {
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             border: 4px solid var(--jo-green);
-            padding: 3px;
-            flex-shrink: 0;
+            overflow: hidden;
             background: var(--jo-white);
+            flex-shrink: 0;
+            box-shadow: var(--shadow-md);
         }
-        .profile-avatar-box img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
+        .vh-avatar-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
         }
-        .profile-details-area {
-            flex-grow: 1;
-        }
-        .profile-user-name {
+        .vh-hero-text h1 {
+            color: var(--jo-white);
             font-size: 1.8rem;
             font-weight: 900;
+            margin-bottom: 5px;
+        }
+        .vh-hero-text p {
+            color: #e2e8f0;
+            font-size: 1rem;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+
+        @media(min-width: 768px) {
+            .vh-hero-content {
+                flex-direction: row;
+                align-items: flex-end;
+                padding: 40px;
+            }
+            .vh-avatar-wrap {
+                width: 140px;
+                height: 140px;
+            }
+            .vh-hero-text h1 { font-size: 2.2rem; }
+        }
+
+        /* 2. بصمتي Stats Section */
+        .vh-section-title {
+            font-size: 1.4rem;
+            font-weight: 900;
             color: var(--jo-black);
-            margin-bottom: 6px;
-        }
-        .profile-meta-tags {
+            margin-bottom: 1.5rem;
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            color: #ffffff;
-            font-size: 0.95rem;
-            margin-bottom: 14px;
-        }
-        .profile-meta-tags span {
-            display: inline-flex;
             align-items: center;
-            gap: 6px;
-        }
-        .profile-bio-text {
-            color: #ffffff;
-            line-height: 1.7;
-            margin-bottom: 16px;
-            max-width: 800px;
-            font-size: 0.95rem;
-        }
-        .profile-actions-bar {
-            display: flex;
             gap: 10px;
-            flex-wrap: wrap;
+            border-right: 4px solid var(--jo-red);
+            padding-right: 15px;
         }
-        .btn-profile-action {
-            padding: 8px 16px;
-            border: 1.5px solid var(--jo-dark-gray);
-            border-radius: var(--radius-sm);
-            background: transparent;
+        .vh-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 3rem;
+        }
+        .vh-stat-card {
+            background: var(--jo-white);
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-md);
+            padding: 25px 15px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s;
+        }
+        .vh-stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .vh-stat-number {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--jo-green);
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .vh-stat-label {
+            font-size: 0.95rem;
             font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            color: var(--jo-black);
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            white-space: nowrap;
+            color: var(--jo-dark-gray);
         }
-        .btn-profile-action:hover {
-            background: var(--jo-black);
-            color: #fff;
+
+        /* 3. Sections Grid */
+        .vh-content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
         }
-        .badge-volunteer-status {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 800;
+        @media(min-width: 1024px) {
+            .vh-content-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .vh-card {
+            background: var(--jo-white);
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-md);
+            padding: 25px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+        }
+
+        /* Interactive Elements */
+        .vh-badge-pill {
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            background: #f1f5f9;
+            color: var(--jo-black);
+            margin: 5px;
+            border: 1px solid var(--jo-border);
         }
-        .badge-v-approved { background: #dcfce7; color: #111111; }
-        .badge-v-pending { background: #fef3c7; color: #ce1126; }
+
+        .event-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--jo-border);
+        }
+        .event-list-item:last-child { border-bottom: none; }
+
         .profile-modal-overlay {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.75);
-            z-index: 3000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            backdrop-filter: blur(4px);
+            z-index: 3000; justify-content: center; align-items: center;
+            padding: 20px; backdrop-filter: blur(4px);
         }
         .profile-modal-box {
-            background: var(--jo-white);
-            border-radius: var(--radius-md);
-            max-width: 540px;
-            width: 100%;
-            padding: 2rem;
-            position: relative;
+            background: var(--jo-white); border-radius: var(--radius-md);
+            max-width: 540px; width: 100%; padding: 2rem;
             box-shadow: var(--shadow-lg);
-            animation: modalFadeIn 0.3s ease;
-            max-height: 90vh;
-            overflow-y: auto;
+            max-height: 90vh; overflow-y: auto;
         }
-        .badge-section-wrapper {
+
+        .vh-action-btn {
             background: var(--jo-white);
-            border: 1px solid var(--jo-border);
-            border-radius: var(--radius-md);
-            padding: 2rem;
-            margin-bottom: 2.5rem;
-            text-align: center;
-            box-shadow: var(--shadow-sm);
+            border: 2px solid var(--jo-dark-gray);
+            color: var(--jo-black);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+            text-decoration: none;
         }
-        .badge-ctrl-btn-group {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 1.5rem;
-            flex-wrap: wrap;
-        }
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: translateY(-15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .vh-action-btn:hover { background: var(--jo-black); color: var(--jo-white); }
+        .vh-action-primary { border-color: var(--jo-green); color: var(--jo-green); }
+        .vh-action-primary:hover { background: var(--jo-green); color: var(--jo-white); }
+        .vh-action-danger { border-color: var(--jo-red); color: var(--jo-red); }
+        .vh-action-danger:hover { background: var(--jo-red); color: var(--jo-white); }
     </style>
 </head>
 <body>
 
-    <!-- القائمة العلوية Navbar -->
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
             <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
             <div class="nav-brand-title">
-                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
                 <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
             </div>
         </a>
-        <button class="nav-toggle-btn" onclick="toggleMobileNav()"><i class="fa-solid fa-bars"></i></button>
+        <button class="nav-toggle-btn" onclick="document.getElementById('mobileNav').classList.toggle('mobile-nav-active')"><i class="fa-solid fa-bars"></i></button>
         <nav>
-            <ul class="nav-links" id="profileNavLinks">
+            <ul class="nav-links" id="mobileNav">
                 <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
-                <li><a href="{{ url_for('profile') }}" class="active">بوابة المتطوع</a></li>
+                <li><a href="{{ url_for('profile') }}" class="active">بيت المتطوع</a></li>
                 <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل خروج</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- شريط الإعلانات -->
     {% if sys_settings and sys_settings.is_banner_active and sys_settings.banner_text %}
-    <div style="background: #facc15; color: #854d0e; text-align: center; padding: 10px; font-weight: bold; border-bottom: 2px solid #eab308; font-size: 0.95rem;">
+    <div style="background: #facc15; color: #854d0e; text-align: center; padding: 10px; font-weight: bold; font-size: 0.95rem;">
         {{ sys_settings.banner_text }}
     </div>
     {% endif %}
 
-    <!-- رسائل النظام -->    <!-- شريط رسائل الخادم -->
-    <div class="container" style="max-width: 1200px; margin: 1.5rem auto 0; padding: 0 5%;">
+    <div class="volunteer-home-wrapper">
+
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div style="padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 15px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% elif category == 'info' %}#e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                    <div style="padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% elif category == 'info' %}#e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
                         {{ message }}
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
+
+        <!-- 1. HERO SECTION -->
+        <div class="vh-hero reveal-up">
+            <img src="{{ settings.profile_hero_image_url if settings and settings.profile_hero_image_url else 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1200&q=80' }}" alt="Cover" class="vh-hero-bg">
+            <div class="vh-hero-content">
+                <div class="vh-avatar-wrap">
+                    <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
+                </div>
+                <div class="vh-hero-text">
+                    <h1>{{ user.name }}</h1>
+                    <p>{{ settings.profile_motivational_text if settings and settings.profile_motivational_text else 'مرحباً بك في بيتك التطوعي. من هنا تبدأ خطواتك نحو صناعة الأثر.' }}</p>
+                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <span class="vh-badge-pill" style="background: var(--jo-green); color: white; border:none;">
+                            <i class="fa-solid fa-star"></i> {{ user.position or ('عضوية معتمدة' if user.status == 'approved' else 'قيد المراجعة') }}
+                        </span>
+                        <span class="vh-badge-pill">
+                            <i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> {{ user.team or 'عمان' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIONS ROW -->
+        <div class="reveal-up delay-100" style="display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap;">
+            <button onclick="document.getElementById('editProfileModal').style.display='flex'" class="vh-action-btn">
+                <i class="fa-solid fa-user-pen"></i> تعديل بياناتي
+            </button>
+            <button onclick="document.getElementById('excuseModal').style.display='flex'" class="vh-action-btn">
+                <i class="fa-solid fa-file-signature"></i> تقديم اعتذار
+            </button>
+            <button onclick="document.getElementById('deleteAccountModal').style.display='flex'" class="vh-action-btn vh-action-danger">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+
+        <div class="vh-content-grid">
+
+            <!-- LEFT / MAIN COLUMN -->
+            <div class="vh-main-col">
+
+                <!-- بصمتي (My Impact) -->
+                <h2 class="vh-section-title reveal-up"><i class="fa-solid fa-fingerprint"></i> بصمتي</h2>
+                <div class="vh-stats-grid reveal-up delay-100">
+                    <div class="vh-stat-card">
+                        <div class="vh-stat-number count-up-element" data-target="{{ user.volunteer_hours|default(0) }}">0</div>
+                        <div class="vh-stat-label">إجمالي ساعات التطوع</div>
+                    </div>
+                    <div class="vh-stat-card">
+                        <div class="vh-stat-number count-up-element" style="color: var(--jo-red);" data-target="{{ user.attended_events_count|default(0) }}">0</div>
+                        <div class="vh-stat-label">مشاركات ميدانية موثقة</div>
+                    </div>
+                </div>
+
+                <!-- My Activity (Events) -->
+                <div class="vh-card reveal-up delay-200">
+                    <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1.2rem; border-bottom: 1px solid var(--jo-border); padding-bottom: 10px;">
+                        <i class="fa-regular fa-calendar-check" style="color: var(--jo-green);"></i> سجل الفعاليات
+                    </h3>
+
+                    {% if user_events %}
+                        {% for ev in user_events %}
+                        <div class="event-list-item">
+                            <div>
+                                <h4 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 4px;">{{ ev.title }}</h4>
+                                <div style="font-size: 0.85rem; color: var(--jo-dark-gray);">
+                                    <i class="fa-regular fa-calendar"></i> {{ ev.date }} | <i class="fa-solid fa-location-dot"></i> {{ ev.location|default('الأردن') }}
+                                </div>
+                            </div>
+                            <div style="text-align: left;">
+                                {% set is_attended = attended_map.get(ev.id) %}
+                                {% if is_attended %}
+                                    <span class="vh-badge-pill" style="background: #dcfce7; color: #15803d; border-color: #4ade80;"><i class="fa-solid fa-check-double"></i> تم الحضور</span>
+                                    {% if ev.is_completed %}
+                                    <a href="{{ url_for('certificates.generate', event_id=ev.id) }}" class="vh-badge-pill" style="background: #f3e8ff; color: #7e22ce; border-color: #d8b4fe; text-decoration: none;">
+                                        <i class="fa-solid fa-certificate"></i> شهادة
+                                    </a>
+                                    {% endif %}
+                                {% else %}
+                                    {% if ev.is_completed %}
+                                        <span class="vh-badge-pill" style="background: #f1f5f9; color: #64748b;">غائب / منتهية</span>
+                                    {% elif ev.is_cancelled %}
+                                        <span class="vh-badge-pill" style="background: #fee2e2; color: #b91c1c;">ملغاة</span>
+                                    {% else %}
+                                        <span class="vh-badge-pill" style="background: #e0f2fe; color: #0369a1;"><i class="fa-solid fa-hourglass-half"></i> قادمة</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">لم تسجل في أي فعاليات ميدانية بعد. انطلق إلى الرئيسية لاستعراض الفرص التطوعية.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Notifications -->
+                <div class="vh-card reveal-up delay-200" id="notificationsArea">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid var(--jo-border); padding-bottom: 10px; margin-bottom: 15px;">
+                        <h3 style="font-size: 1.2rem; font-weight: 800;">
+                            <i class="fa-solid fa-bell" style="color: var(--jo-red);"></i> الإشعارات
+                        </h3>
+                        <button onclick="markAllNotificationsRead()" style="background:none; border:none; color:var(--jo-green); font-weight:700; cursor:pointer; font-size:0.9rem;">تحديد الكل كمقروء</button>
+                    </div>
+                    <div id="notificationsContainer" style="display:flex; flex-direction:column; gap:10px;">
+                        <p style="color: var(--jo-dark-gray); font-size: 0.9rem;">جاري التحميل...</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT / SIDE COLUMN -->
+            <div class="vh-side-col">
+
+                <!-- Achievements & Badges -->
+                <div class="vh-card reveal-up delay-100">
+                    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem;">
+                        <i class="fa-solid fa-medal" style="color: var(--gold, #eab308);"></i> الأوسمة التقديرية
+                    </h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        {% for badge in user.badges_list %}
+                            <span class="vh-badge-pill" style="background: #fefce8; border-color: #fef08a; color: #854d0e;">
+                                <i class="fa-solid fa-award"></i> {{ badge }}
+                            </span>
+                        {% else %}
+                            <p style="color: var(--jo-dark-gray); font-size: 0.9rem;">تمنح الأوسمة يدوياً بقرار قادة الفرق مع كل تميز والتزام ميداني.</p>
+                        {% endfor %}
+                    </div>
+                    {% if user.leader_notes %}
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--jo-border);">
+                        <span style="font-size:0.85rem; font-weight:700; color:var(--jo-dark-gray); display:block; margin-bottom:5px;">ملاحظات القادة:</span>
+                        <p style="font-size:0.9rem; line-height:1.5;">{{ user.leader_notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Digital ID Badge Link -->
+                <div class="vh-card reveal-up delay-200" style="background: var(--jo-green); color: var(--jo-white); text-align: center;">
+                    <i class="fa-solid fa-id-badge" style="font-size: 2.5rem; margin-bottom: 10px;"></i>
+                    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 8px;">بطاقة العضوية الميدانية</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px; color: #dcfce7;">رقم ميداني: LB-{{ '%04d' % user.badge_number|int if user.badge_number else '----' }}</p>
+                    <a href="#" onclick="document.getElementById('idBadgeModal').style.display='flex'; return false;" class="vh-action-btn" style="width: 100%; justify-content: center;">عـرض الـبـطـاقـة</a>
+                </div>
+
+                <!-- Duties (if any) -->
+                {% if duties %}
+                <div class="vh-card reveal-up delay-200" style="border-color: var(--jo-red);">
+                    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; color: var(--jo-red);">
+                        <i class="fa-solid fa-list-check"></i> التكليفات الميدانية
+                    </h3>
+                    {% for duty in duties %}
+                    <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--jo-border);">
+                        <h4 style="font-size: 0.95rem; font-weight: 800;">{{ duty.title }}</h4>
+                        <div style="font-size: 0.85rem; color: var(--jo-red); margin-bottom: 4px;">موعد: {{ duty.due_date }}</div>
+                        <p style="font-size: 0.85rem; color: var(--jo-dark-gray);">{{ duty.description }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+
     </div>
 
-    <main class="profile-page-wrapper">
+    <!-- MODALS -->
 
-        <!-- نسبة إكتمال الملف الشخصي -->
-        {% set completeness = 40 %}
-        {% if user.age %}{% set completeness = completeness + 10 %}{% endif %}
-        {% if user.skills %}{% set completeness = completeness + 10 %}{% endif %}
-        {% if user.photo_url %}{% set completeness = completeness + 10 %}{% endif %}
-        {% if user.emergency_contact_name %}{% set completeness = completeness + 15 %}{% endif %}
-        {% if user.emergency_contact_phone %}{% set completeness = completeness + 15 %}{% endif %}
-        <div style="margin-bottom: 20px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid var(--jo-border); box-shadow: var(--shadow-sm);">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: bold; font-size: 0.9rem;">
-                <span>نسبة اكتمال الملف الشخصي</span>
-                <span style="color: {{ 'var(--jo-green)' if completeness >= 100 else '#d97706' }}">{{ completeness if completeness <= 100 else 100 }}%</span>
-            </div>
-            <progress value="{{ completeness if completeness <= 100 else 100 }}" max="100" style="width: 100%; height: 10px; border-radius: 5px;"></progress>
-        </div>
-
-        <!-- كرت البيانات الشخصية للمتطوع -->
-        <div class="profile-header-card dark-premium-bg dark-premium-surface holo-border">
-            <div class="profile-avatar-box">
-            <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">            </div>
-            
-            <div class="profile-details-area">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
-                    <h2 class="profile-user-name" style="color: #fff;" style="color: #fff;">{{ user.name }}</h2>
-                    {% if user.status == 'approved' %}
-                        <span class="badge-volunteer-status badge-v-approved"><i class="fa-solid fa-circle-check"></i> عضوية معتمدة</span>
-                    {% else %}
-                        <span class="badge-volunteer-status badge-v-pending"><i class="fa-solid fa-clock"></i> قيد المراجعة الإدارية</span>
-                    {% endif %}
-                    
-                    {% if user.is_leader %}
-                        <span class="badge-volunteer-status" style="background: #e0f2fe; color: #0284c7;"><i class="fa-solid fa-star"></i> {{ user.position or 'قائد فريق' }}</span>
-                    {% endif %}
-                </div>
-                
-                <div class="profile-meta-tags">
-                <span><i class="fa-solid fa-venus-mars" style="color: #94a3b8;"></i> الجنس: {{ user.gender or 'غير محدد' }}</span>
-                <span><i class="fa-solid fa-cake-candles" style="color: #94a3b8;"></i> العمر: {{ user.age or 'غير محدد' }} سنة</span>
-                <span><i class="fa-solid fa-location-dot" style="color: var(--jo-red);"></i> المحافظة: {{ user.city or 'عمان' }}</span>
-                <span><i class="fa-solid fa-users" style="color: var(--jo-green);"></i> الفريق: {{ user.team or 'عمان' }}</span>
-                <span><i class="fa-solid fa-phone" style="color: #6366f1;"></i> {{ user.phone }}</span>
-                <span><i class="fa-regular fa-envelope" style="color: #0284c7;"></i> {{ user.email }}</span>
-                <span><i class="fa-solid fa-star" style="color: var(--gold);"></i> المهارة: {{ user.skills or 'لا يوجد' }}</span>
-            </div>
-
-            {% if user.experience %}
-            <div style="margin-bottom: 14px; font-size: 0.9rem; color: #ffffff; background: #f8fafc; padding: 8px 14px; border-radius: 6px; border: 1px dashed var(--jo-border); line-height: 1.6;">
-                <i class="fa-solid fa-briefcase" style="color: var(--jo-green);"></i> <strong>الخبرة السابقة:</strong> {{ user.experience }}
-            </div>
-            {% endif %}
-
-                <!-- الأوسمة والشارات الممنوحة يدوياً -->
-                <div style="margin-bottom: 12px;">
-                    <span style="font-weight: 800; font-size: 0.88rem; color: #e2e8f0; margin-left: 6px;">الأوسمة التقديرية:</span>
-                    {% for badge in user.badges_list %}
-                        <span class="volunteer-badge-ribbon"><i class="fa-solid fa-medal" style="color: var(--gold);"></i> {{ badge }}</span>
-                    {% else %}
-                        <span style="font-size: 0.85rem; color: #94a3b8;">تُمنح الأوسمة التقديرية من الإدارة مع كل إنجاز ميداني.</span>
-                    {% endfor %}
-                </div>
-
-                <p class="profile-bio-text" style="color: #94a3b8 !important;">
-                    {{ user.bio or 'لم تقم بإضافة نبذة شخصية بعد. انقر على زر تعديل بياناتي وصورتي لكتابة مهاراتك وإدراج صورتك وتغيير كلمة السر.' }}
-                </p>
-
-                <div class="profile-actions-bar">
-                    <button onclick="openProfileModal('editProfileModal')" class="btn-profile-action" style="background: var(--jo-green); color: #fff; border-color: var(--jo-green);">
-                        <i class="fa-solid fa-user-pen"></i> تعديل بياناتي وكلمة المرور
-                    </button>
-                    <button onclick="openProfileModal('deleteAccountModal')" class="btn-profile-action" style="border-color: var(--jo-red); color: var(--jo-red);">
-                        <i class="fa-solid fa-trash-can"></i> حذف حسابي
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- الباجة الميدانية الرسمية التفاعلية (3D Flip & Save Image) -->
-        <div class="badge-section-wrapper printable-badge-area dark-premium-bg dark-premium-surface">
-            <h3 style="font-size: 1.35rem; font-weight: 900; margin-bottom: 4px; color: var(--jo-black);">
-                بطاقة العضوية الميدانية الرسمية
-            </h3>
-            <p style="color: var(--jo-dark-gray); font-size: 0.92rem; margin-bottom: 1.2rem;">
-                انقر على البطاقة لقلبها وفحص رمز التحقق (QR)، أو قم بتحميلها كصورة مباشرة على هاتفك للطباعة.
-            </p>
-
-            <div class="badge-interactive-container">
-                <div class="badge-card-3d holographic-card" id="volunteerBadgeCard" onclick="toggleBadgeFlip()">
-                    
-                    <!-- الوجه الأمامي -->
-                    <div class="badge-face badge-front" id="badgeFrontFace"><div class="holo-glare"></div><div class="holo-glare"></div>
-                        <div class="badge-corner-decor decor-top-left"></div>
-                        <div class="badge-corner-decor decor-top-right"></div>
-                        <div class="badge-corner-decor decor-bottom-left"></div>
-                        <div class="badge-corner-decor decor-bottom-right"></div>
-
-                        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" class="badge-watermark" alt="watermark">
-
-                        <div class="badge-front-content">
-                            <div class="badge-title-block">
-                                <div class="badge-header-logos">
-                                    <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="logo">
-                                    <div style="text-align: right; line-height: 1.1;">
-                                        <div style="font-weight: 900; font-size: 0.92rem; color: var(--jo-black);">لمتنا بصمة</div>
-                                        <div style="font-size: 0.68rem; font-weight: 800; color: var(--jo-dark-gray);">lametna basmeh</div>
-                                    </div>
-                                </div>
-                                <h4>المملكة الأردنية الهاشمية</h4>
-                                <p>فريق لمّتنا بصمة</p>
-                                <div class="badge-doc-type">بطاقة عضوية</div>
-                            </div>
-
-                            <div class="badge-avatar-wrap {% if user.is_leader and ('رئيس' in user.position or 'نائب' in user.position) %}rank-border-presidency{% elif user.is_leader %}rank-border-leader{% else %}rank-border-volunteer{% endif %}">
-                                <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" alt="{{ user.name }}">
-                            </div>
-
-                            <div>
-                                <div class="badge-name" style="color: #000000 !important;">{{ user.name }}</div>
-                                <div class="badge-info-rows">
-                                    <div>الصفة : {{ user.position or ('متطوع معتمد' if user.status == 'approved' else 'متطوع مسجل') }}</div>
-                                    <div>الفريق : {{ user.team or 'عمان' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- الوجه الخلفي (QR Code) -->
-                    <div class="badge-face badge-back" id="badgeBackFace" style="transform: rotateY(180deg); backface-visibility: hidden;"><div class="holo-glare"></div><div class="holo-glare"></div>
-                        <div class="badge-corner-decor decor-top-left"></div>
-                        <div class="badge-corner-decor decor-top-right"></div>
-                        <div class="badge-corner-decor decor-bottom-left"></div>
-                        <div class="badge-corner-decor decor-bottom-right"></div>
-
-                        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" class="badge-watermark" alt="watermark">
-
-                        <div style="position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; width: 100%;">
-                            <div style="margin-top: 10px;">
-                                <div style="font-weight: 900; font-size: 1rem; color: var(--jo-black);">فحص وتوثيق العضوية الميدانية</div>
-                                <div style="font-size: 0.78rem; color: var(--jo-dark-gray); margin-top: 2px;">امسح الرمز للتحقق الفوري عبر المنصة</div>
-                            </div>
-
-                            <div class="badge-qr-box">
-    <img src="https://quickchart.io/qr?text={{ request.url_root }}verify/{{ user.id }}&size=140&margin=1" alt="QR Verification" style="width: 140px; height: 140px; border-radius: 8px; background: #ffffff; padding: 4px;">
-</div>
-
-                            <div>
-                                <div style="font-weight: 900; font-size: 0.9rem; color: var(--jo-black); margin-bottom: 4px;">
-                                    الرقم الميداني: LB-{{ '%04d' % user.badge_number|int if user.badge_number else '----' }}
-                                </div>
-                                <p class="badge-back-rules">
-                                    هذه البطاقة وثيقة تطوعية معتمدة صادرة عن إدارة فريق لمتنا بصمة. يُمنع استخدامها لغير الأغراض التطوعية الميدانية المقررة.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- أزرار التحكم وحفظ الباجة كصورة -->
-            <div class="badge-ctrl-btn-group">
-                <button type="button" onclick="toggleBadgeFlip()" class="btn-profile-action">
-                    <i class="fa-solid fa-arrows-rotate"></i> اقلب الباجة (QR Code)
-                </button>
-                <button type="button" onclick="downloadBadgeAsImage()" class="btn-download-badge">
-                    <i class="fa-solid fa-download"></i> حفظ الباجة كصورة على الجهاز
-                </button>
-                <button type="button" onclick="window.print()" class="btn-profile-action" style="border-color: var(--jo-green); color: var(--jo-green);">
-                    <i class="fa-solid fa-print"></i> طباعة البطاقة
-                </button>
-            </div>
-        </div>
-
-        <!-- شبكة كروت الخدمات الخمس (تظهر الأسماء والصور المعدلة من الـ CMS بدقة) -->
-        <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 1.5rem; border-right: 4px solid var(--jo-green); padding-right: 10px;">
-            لوحة خدمات ومتابعة المتطوع
-        </h3>
-
-        <div class="services-grid">
-            
-            <!-- كرت 1 -->
-            <div class="service-card" onclick="switchProfileTab('dutiesTab')">
-                <img src="{{ settings.card_img_duties }}" alt="{{ settings.card_title_duties }}">
-                <div class="service-card-title">
-                    <i class="fa-solid fa-list-check" style="display:block; margin-bottom: 8px;"></i>
-                    {{ settings.card_title_duties }} ({{ duties|length }})
-                </div>
-            </div>
-
-            <!-- كرت 2 -->
-            <div class="service-card" onclick="switchProfileTab('marksTab')">
-                <img src="{{ settings.card_img_hours }}" alt="{{ settings.card_title_hours }}">
-                <div class="service-card-title">
-                    <i class="fa-solid fa-award" style="display:block; margin-bottom: 8px;"></i>
-                    {{ settings.card_title_hours }}
-                </div>
-            </div>
-
-            <!-- كرت 3 -->
-            <div class="service-card" onclick="switchProfileTab('eventsTab')">
-                <img src="{{ settings.card_img_events }}" alt="{{ settings.card_title_events }}">
-                <div class="service-card-title">
-                    <i class="fa-regular fa-calendar-check" style="display:block; margin-bottom: 8px;"></i>
-                    {{ settings.card_title_events }}
-                </div>
-            </div>
-
-            <!-- كرت 4 -->
-            <div class="service-card" onclick="switchProfileTab('excuseTab')">
-                <img src="{{ settings.card_img_excuse }}" alt="{{ settings.card_title_excuse }}">
-                <div class="service-card-title">
-                    <i class="fa-solid fa-file-signature" style="display:block; margin-bottom: 8px;"></i>
-                    {{ settings.card_title_excuse }}
-                </div>
-            </div>
-
-            <!-- كرت 5 -->
-            <div class="service-card" onclick="switchProfileTab('transportTab')">
-                <img src="{{ settings.card_img_transport }}" alt="{{ settings.card_title_transport }}">
-                <div class="service-card-title">
-                    <i class="fa-solid fa-bus" style="display:block; margin-bottom: 8px;"></i>
-                    {{ settings.card_title_transport }}
-                </div>
-            </div>
-
-        </div>
-
-        <!-- حاويات الأقسام التفاعلية -->
-        <div class="tab-view-container" id="profileTabDisplayBox">
-            
-            <!-- أ. تبويب المهام والتكليفات -->
-            <div id="dutiesTab" class="profile-tab-content active-profile-tab">
-                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-list-check" style="color: var(--jo-green);"></i> {{ settings.card_title_duties }}
-                </h4>
-                {% if duties %}
-                    {% for duty in duties %}
-                    <div style="padding: 1.2rem; border-right: 4px solid var(--jo-green); background: var(--jo-light-gray); border-radius: 4px; margin-bottom: 12px; border: 1px solid var(--jo-border);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
-                            <span style="font-weight: 800; font-size: 1.05rem; color: var(--jo-black);">{{ duty.title }}</span>
-                            <span style="font-size: 0.85rem; color: var(--jo-red); font-weight: 700;"><i class="fa-regular fa-clock"></i> موعد الإنجاز: {{ duty.due_date }}</span>
-                        </div>
-                        <div style="color: #4a5568; font-size: 0.95rem; line-height: 1.6;">{{ duty.description }}</div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد مهام ميدانية معلقة مسندة إليك حالياً.</p>
-                {% endif %}
-            </div>
-
-            <!-- ب. تبويب الساعات والتقييم -->
-            <div id="marksTab" class="profile-tab-content">
-                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.5rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-award" style="color: var(--jo-green);"></i> {{ settings.card_title_hours }}
-                </h4>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 2rem;">
-                    <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--jo-border);">
-                        <span style="font-size: 2.4rem; font-weight: 900; color: var(--jo-green);">{{ user.volunteer_hours|default(0) }}</span>
-                        <p style="font-weight: 700; margin-top: 6px; color: var(--jo-black);">إجمالي الساعات المعتمدة</p>
-                    </div>
-                    <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--jo-border);">
-                        <span style="font-size: 2.4rem; font-weight: 900; color: var(--jo-red);">{{ user.attended_events_count|default(0) }}</span>
-                        <p style="font-weight: 700; margin-top: 6px; color: var(--jo-black);">الفعاليات المنجزة في الميدان</p>
-                    </div>
-                </div>
-
-                <h5 style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--jo-black);">الأوسمة التقديرية الحاصل عليها:</h5>
-                <div style="background: var(--jo-light-gray); padding: 1.2rem; border-radius: var(--radius-sm); border: 1px solid var(--jo-border); margin-bottom: 1.5rem;">
-                    {% for badge in user.badges_list %}
-                        <span class="volunteer-badge-ribbon" style="font-size: 0.9rem; padding: 6px 14px; margin: 4px;">
-                            <i class="fa-solid fa-medal" style="color: var(--gold);"></i> {{ badge }}
-                        </span>
-                    {% else %}
-                        <p style="color: var(--jo-dark-gray); margin: 0; font-size: 0.9rem;">تمنح الأوسمة يدوياً بقرار قادة الفرق مع كل تميز والتزام ميداني.</p>
-                    {% endfor %}
-                </div>
-
-                <h5 style="font-weight: 800; font-size: 1.05rem; margin-bottom: 10px; color: var(--jo-black);">ملاحظات وتقييمات قادة الفرق:</h5>
-                <div style="background: var(--jo-light-gray); padding: 1.2rem; border-radius: var(--radius-sm); font-size: 0.95rem; color: #4a5568; border: 1px solid var(--jo-border); line-height: 1.7;">
-                    {{ user.leader_notes or 'سجلك نظيف ومثالي، والتقييم مستمر بناءً على التزامك وحضورك في الأنشطة الميدانية القادمة.' }}
-                </div>
-            </div>
-
-            <!-- ج. سجل المشاركات والشهادات -->
-            <div id="eventsTab" class="profile-tab-content">
-                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-award" style="color: var(--jo-green);"></i> سجل المشاركات والشهادات
-                </h4>
-                
-                <div class="fintech-timeline">
-                    {% for ev in past_attended_events %}
-                    <div class="timeline-node">
-                        <div>
-                            <div class="event-meta">
-                                <span><i class="fa-regular fa-calendar"></i> {{ ev.date }}</span>
-                                <span><i class="fa-regular fa-clock"></i> {{ ev.time }}</span>
-                                <span><i class="fa-solid fa-location-dot"></i> {{ ev.location }}</span>
-                            </div>
-                            <h3 style="margin-bottom: 6px;">{{ ev.title }}</h3>
-                        </div>
-
-                        <div class="rsvp-status-box" style="justify-content: center;">
-                            <a href="{{ url_for('certificates.generate', event_id=ev.id) }}"
-                               class="btn-rsvp-join"
-                               style="background: #7c3aed; border-color: #6d28d9; color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; padding: 7px 16px; border-radius: 6px; font-weight: 800; font-size: 0.95rem; width: 100%;"
-                               title="تحميل شهادة المشاركة">
-                                <i class="fa-solid fa-certificate"></i> تحميل الشهادة
-                            </a>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p style="color: var(--jo-dark-gray); padding: 1rem 0;">لا توجد شهادات أو مشاركات سابقة مسجلة لك حالياً.</p>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- د. تبويب تقديم اعتذار عن فعالية -->
-            <div id="excuseTab" class="profile-tab-content">
-                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-file-signature" style="color: var(--jo-red);"></i> {{ settings.card_title_excuse }}
-                </h4>
-                <p style="color: var(--jo-dark-gray); font-size: 0.95rem; margin-bottom: 1.5rem;">
-                    في حال تأكيد حضورك لنشاط ميداني وطرأ ظرف طارئ، يُرجى تقديم العذر مسبقاً ليتم فتح المقعد لمتطوع بديل وتنظيم حركة الباص.
-                </p>
-                <form action="{{ url_for('submit_excuse') }}" method="POST" style="max-width: 650px;">
-                    <div class="custom-select-group">
-                <label style="display:block; margin-bottom: 6px; font-weight: 700;">المواهب والكفاءات الأبرز</label>
-                <select name="skills" class="custom-input" required>
-                    <option value="لا يوجد" {% if user.skills == 'لا يوجد' %}selected{% endif %}>لا يوجد</option>
-                    <option value="تصوير فوتوغرافي" {% if user.skills == 'تصوير فوتوغرافي' %}selected{% endif %}>تصوير فوتوغرافي</option>
-                    <option value="جرافيك ديزاين وتصميم بوستات" {% if user.skills == 'جرافيك ديزاين وتصميم بوستات' %}selected{% endif %}>جرافيك ديزاين وتصميم بوستات</option>
-                    <option value="فيديو إيديتنج" {% if user.skills == 'فيديو إيديتنج' %}selected{% endif %}>فيديو إيديتنج</option>
-                    <option value="تسويق" {% if user.skills == 'تسويق' %}selected{% endif %}>تسويق</option>
-                    <option value="إدارة وتنظيم" {% if user.skills == 'إدارة وتنظيم' %}selected{% endif %}>إدارة وتنظيم</option>
-                    <option value="عزف آلة موسيقية" {% if user.skills == 'عزف آلة موسيقية' %}selected{% endif %}>عزف آلة موسيقية</option>
-                    <option value="أخرى" {% if user.skills == 'أخرى' %}selected{% endif %}>أخرى</option>
-                </select>
-            </div>
-
-            <div class="custom-select-group">
-                <label style="display:block; margin-bottom: 6px; font-weight: 700;">الخبرة السابقة بالعمل التطوعي (اختياري)</label>
-                <textarea name="experience" class="custom-input" rows="2" placeholder="اذكر المبادرات التي شاركت بها...">{{ user.experience or '' }}</textarea>
-            </div>
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">حدد الفعالية المعتذر عنها</label>
-                        <select name="event_id" class="custom-input" required>
-                            <option value="">-- اختر الفعالية من القائمة --</option>
-                            {% for ev in user_events %}
-                                <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.date }})</option>
-                            {% else %}
-                                <option value="0">نشاط ميداني عام</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="custom-select-group">
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">سبب عدم التمكن من المشاركة</label>
-                        <textarea name="reason" class="custom-input" rows="4" placeholder="يرجى توضيح الظرف الطارئ بدقة لقادة الفريق..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary-block" style="max-width: 220px;">إرسال العذر للإدارة</button>
-                </form>
-            </div>
-
-            <!-- هـ. تبويب نقاط التجمع والمواصلات -->
-            <div id="transportTab" class="profile-tab-content">
-                <h4 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 1.2rem; color: var(--jo-black);">
-                    <i class="fa-solid fa-bus" style="color: var(--jo-green);"></i> {{ settings.card_title_transport }}
-                </h4>
-                <div style="background: var(--jo-light-gray); padding: 1.8rem; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
-                    <p style="font-weight: 800; margin-bottom: 8px; color: var(--jo-black);">
-                        <i class="fa-solid fa-map-pin" style="color: var(--jo-red);"></i> نقطة التجمع المركزية:
-                    </p>
-                    <p style="color: var(--jo-dark-gray); margin-bottom: 18px; font-size: 1rem;">
-                        {{ settings.transport_location | default('سيتم تحديد نقطة التجمع من قبل الإدارة') }}
-                    </p>
-                    <p style="font-weight: 800; margin-bottom: 8px; color: var(--jo-black);">
-                        <i class="fa-solid fa-clock" style="color: var(--jo-green);"></i> موعد ومسار الانطلاق:
-                    </p>
-                    <p style="color: var(--jo-dark-gray); line-height: 1.7; font-size: 0.95rem;">
-                        {{ settings.transport_timing | default('سيتم تحديد الموعد ومسار الانطلاق قريباً') }}
-                    </p>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- نافذة تعديل البيانات والصورة وكلمة المرور الشخصية -->
+    <!-- Edit Profile Modal -->
     <div id="editProfileModal" class="profile-modal-overlay">
         <div class="profile-modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">تعديل الملف الشخصي وكلمة المرور</h3>
-                <button onclick="closeProfileModal('editProfileModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">تعديل الملف الشخصي</h3>
+                <button onclick="document.getElementById('editProfileModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
             <form action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
-                
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;"><i class="fa-solid fa-camera" style="color: var(--jo-green);"></i> رفع صورة شخصية من الجهاز</label>
-                    <input type="file" accept="image/*" name="profile_image" class="custom-input file-upload-styled">
-                    <small style="display:block; margin-top:4px; color:#64748b; font-size:0.8rem;">أو أدخل رابط الصورة يدوياً:</small>
-                    <input type="url" name="photo_url" class="custom-input" value="{{ user.photo_url or '' }}" placeholder="https://example.com/my-photo.jpg" style="margin-top:6px;">
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">صورة الغلاف (رابط)</label>
+                    <input type="url" name="photo_url" class="custom-input" value="{{ user.photo_url or '' }}" placeholder="https://example.com/my-photo.jpg" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                 </div>
 
-                <!-- خيار تغيير كلمة المرور للمتطوع -->
-                <div class="custom-select-group" style="background: #f8fafc; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--jo-border);">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 800; color: var(--jo-green);"><i class="fa-solid fa-key"></i> تغيير كلمة المرور (اختياري)</label>
-                    <input type="password" name="new_password" class="custom-input" placeholder="اتركه فارغاً إذا كنت لا ترغب بتغييرها">
+                <div style="margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 6px;">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 800; color: var(--jo-green);">تغيير كلمة المرور (اختياري)</label>
+                    <input type="password" name="new_password" class="custom-input" placeholder="اتركه فارغاً إذا كنت لا ترغب بتغييرها" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div class="custom-select-group">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">العمر</label>
-                        <input type="number" name="age" class="custom-input" value="{{ user.age or '' }}" min="14" max="75" required>
+                        <input type="number" name="age" class="custom-input" value="{{ user.age or '' }}" min="14" max="75" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                     </div>
-                    <div class="custom-select-group">
+                    <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700;">المحافظة</label>
-                        <select name="city" class="custom-input" required>
+                        <select name="city" class="custom-input" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                             <option value="عمان" {% if user.city == 'عمان' %}selected{% endif %}>عمان</option>
                             <option value="الزرقاء" {% if user.city == 'الزرقاء' %}selected{% endif %}>الزرقاء</option>
                             <option value="إربد" {% if user.city == 'إربد' %}selected{% endif %}>إربد</option>
@@ -624,175 +444,158 @@
                     </div>
                 </div>
 
-                <div class="custom-select-group">
+                <div style="margin-bottom: 15px;">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">الفريق الميداني التابع له</label>
-                    <input type="text" name="team" class="custom-input" value="{{ user.team or 'عمان' }}" required>
+                    <input type="text" name="team" class="custom-input" value="{{ user.team or 'عمان' }}" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                 </div>
 
-                <div class="custom-select-group">
+                <div style="margin-bottom: 15px;">
                     <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم الهاتف (الواتساب)</label>
-                    <input type="tel" name="phone" class="custom-input" value="{{ user.phone or '' }}" required>
+                    <input type="tel" name="phone" class="custom-input" value="{{ user.phone or '' }}" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
                 </div>
 
-                <div class="custom-select-group" style="background: #fffbeb; padding: 12px; border-radius: var(--radius-sm); border: 1px dashed #fcd34d;">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 800; color: #b45309;"><i class="fa-solid fa-truck-medical"></i> جهة الطوارئ (اختياري)</label>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <input type="text" name="emergency_contact_name" class="custom-input" value="{{ user.emergency_contact_name or '' }}" placeholder="اسم جهة الطوارئ">
-                        <input type="tel" name="emergency_contact_phone" class="custom-input" value="{{ user.emergency_contact_phone or '' }}" placeholder="رقم هاتف جهة الطوارئ">
-                    </div>
-                    <small style="display:block; margin-top:4px; color:#92400e; font-size:0.75rem;">تستخدم فقط للحالات الطارئة أثناء الفعاليات الميدانية.</small>
-                </div>
-
-                <div class="custom-select-group">
-                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">النبذة الشخصية والمهارات (Bio)</label>
-                    <textarea name="bio" class="custom-input" rows="3" placeholder="تحدث باختصار عن شغفك التطوعي أو مهاراتك الميدانية...">{{ user.bio or '' }}</textarea>
-                </div>
-
-                <button type="submit" class="btn-primary-block" style="margin-top: 1rem;">حفظ التغييرات</button>
+                <button type="submit" class="vh-action-btn vh-action-primary" style="width: 100%; justify-content: center;">حفظ التعديلات</button>
             </form>
         </div>
     </div>
 
-    <!-- نافذة تأكيد حذف الحساب -->
+    <!-- Excuse Modal -->
+    <div id="excuseModal" class="profile-modal-overlay">
+        <div class="profile-modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">تقديم اعتذار عن فعالية</h3>
+                <button onclick="document.getElementById('excuseModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <form action="{{ url_for('submit_excuse') }}" method="POST">
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">حدد الفعالية المعتذر عنها</label>
+                    <select name="event_id" class="custom-input" required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        <option value="">-- اختر الفعالية من القائمة --</option>
+                        {% for ev in user_events %}
+                            <option value="{{ ev.id }}">{{ ev.title }} ({{ ev.date }})</option>
+                        {% else %}
+                            <option value="0">نشاط ميداني عام</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 6px; font-weight: 700;">سبب عدم التمكن من المشاركة</label>
+                    <textarea name="reason" class="custom-input" rows="4" placeholder="يرجى توضيح الظرف الطارئ بدقة لقادة الفريق..." required style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; resize:vertical;"></textarea>
+                </div>
+                <button type="submit" class="vh-action-btn vh-action-primary" style="width: 100%; justify-content: center;">إرسال العذر</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Account Modal -->
     <div id="deleteAccountModal" class="profile-modal-overlay">
         <div class="profile-modal-box" style="border-top: 5px solid var(--jo-red);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-red);">تأكيد حذف الحساب نهائياً</h3>
-                <button onclick="closeProfileModal('deleteAccountModal')" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--jo-dark-gray);">&times;</button>
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-red);">حذف الحساب نهائياً</h3>
+                <button onclick="document.getElementById('deleteAccountModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
-            <p style="color: #4a5568; line-height: 1.7; margin-bottom: 1.5rem; font-size: 0.95rem;">
-                هل أنت متأكد من رغبتك في حذف حسابك من <strong>فريق لمتنا بصمة</strong>؟ سيؤدي هذا الإجراء إلى مسح كافة بياناتك وساعاتك التطوعية المسجلة نهائياً من النظام.
+            <p style="color: var(--jo-dark-gray); line-height: 1.6; margin-bottom: 1.5rem; font-size: 0.95rem;">
+                هل أنت متأكد من حذف الحساب؟ سيتم إلغاء جميع بياناتك ومشاركاتك نهائياً ولن تتمكن من التراجع عن هذا الإجراء.
             </p>
             <form action="{{ url_for('delete_own_account') }}" method="POST" style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="closeProfileModal('deleteAccountModal')" class="btn-profile-action">إلغاء</button>
-                <button type="submit" class="btn-danger">نعم، احذف حسابي</button>
+                <button type="button" onclick="document.getElementById('deleteAccountModal').style.display='none'" class="vh-action-btn">إلغاء</button>
+                <button type="submit" class="vh-action-btn vh-action-danger">نعم، احذف حسابي</button>
             </form>
         </div>
     </div>
 
-    <!-- الفوتر Footer -->
-    <footer class="footer">
-        <div class="footer-bottom">
-            &copy; 2026 فريق لمتنا بصمة. بوابة إدارة شؤون المتطوعين الرسمية.
+    <!-- ID Badge Modal (Simulated) -->
+    <div id="idBadgeModal" class="profile-modal-overlay">
+        <div class="profile-modal-box" style="text-align:center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--jo-black);">البطاقة الميدانية</h3>
+                <button onclick="document.getElementById('idBadgeModal').style.display='none'" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+
+            <div style="background:var(--jo-white); border:2px solid var(--jo-black); border-radius:10px; padding:20px; display:inline-block; margin-bottom:20px;">
+                <img src="{{ user.photo_url or url_for('static', filename='logo.png') }}" style="width:100px; height:100px; border-radius:50%; margin-bottom:15px; border:3px solid var(--jo-green);">
+                <h2 style="margin-bottom:5px;">{{ user.name }}</h2>
+                <h4 style="color:var(--jo-dark-gray); margin-bottom:15px;">{{ user.position or 'متطوع معتمد' }} - {{ user.team or 'عمان' }}</h4>
+                <img src="https://quickchart.io/qr?text={{ request.url_root }}verify/{{ user.id }}&size=140&margin=1" style="width:140px; height:140px; border-radius:8px; border:1px solid #ddd;">
+                <p style="margin-top:10px; font-weight:bold;">LB-{{ '%04d' % user.badge_number|int if user.badge_number else '----' }}</p>
+            </div>
         </div>
-    </footer>
+    </div>
 
-    <!-- محرك التحكم التفاعلي وحفظ الباجة كصورة -->
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
     <script>
-        function toggleBadgeFlip() {
-            const card = document.getElementById('volunteerBadgeCard');
-            if (card) {
-                card.classList.toggle('flipped');
-            }
+        function loadNotifications() {
+            fetch('/notifications')
+                .then(response => response.json())
+                .then(data => {
+                    if(data.notifications) {
+                        const container = document.getElementById('notificationsContainer');
+                        container.innerHTML = '';
+                        if(data.notifications.length === 0) {
+                            container.innerHTML = `
+                                <div style="text-align:center; padding:30px; background:#f8fafc; border:1px dashed var(--jo-border); border-radius:var(--radius-lg);">
+                                    <i class="fa-regular fa-bell-slash" style="font-size:2rem; color:var(--jo-dark-gray); margin-bottom:10px;"></i>
+                                    <h4 style="font-size:1rem; font-weight:800; color:var(--jo-black);">لا توجد إشعارات</h4>
+                                    <p style="color:var(--jo-dark-gray); font-size:0.9rem;">أنت على اطلاع بكل جديد!</p>
+                                </div>
+                            `;
+                            return;
+                        }
+                        data.notifications.forEach(n => {
+                            const el = document.createElement('div');
+                            const isUnread = !n.is_read;
+                            const bg = isUnread ? '#f0fdf4' : '#ffffff';
+                            const border = isUnread ? '1px solid #86efac' : '1px solid var(--jo-border)';
+                            const shadow = isUnread ? 'box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);' : '';
+
+                            el.style = `padding: 20px; border-radius: var(--radius-md); border: ${border}; background-color: ${bg}; ${shadow} display:flex; gap: 15px; transition: transform 0.2s;`;
+                            el.className = isUnread ? 'notification-item unread' : 'notification-item';
+
+                            let icon = '<i class="fa-solid fa-bell"></i>';
+                            if(n.type === 'REGISTRATION') icon = '<i class="fa-solid fa-calendar-check"></i>';
+                            else if(n.type === 'HOURS') icon = '<i class="fa-solid fa-clock"></i>';
+                            else if(n.type === 'SYSTEM') icon = '<i class="fa-solid fa-gear"></i>';
+
+                            el.innerHTML = `
+                                <div style="flex-shrink:0; width:40px; height:40px; border-radius:50%; background: ${isUnread ? 'var(--jo-green)' : '#e2e8f0'}; color: ${isUnread ? 'white' : '#64748b'}; display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                                    ${icon}
+                                </div>
+                                <div style="flex-grow:1;">
+                                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5px; flex-wrap:wrap; gap:5px;">
+                                        <strong style="color:var(--jo-black); font-size:1rem; font-weight:800;">${n.title}</strong>
+                                        <span style="font-size:0.75rem; color:#64748b; background:#f1f5f9; padding:2px 8px; border-radius:10px;">
+                                            <i class="fa-regular fa-clock"></i> ${n.created_at}
+                                        </span>
+                                    </div>
+                                    <div style="font-size:0.95rem; color:var(--jo-dark-gray); margin-bottom: ${isUnread ? '15px' : '0'}; line-height:1.5;">${n.message}</div>
+                                    ${isUnread ? `<button onclick="markNotificationRead(${n.id})" style="background:transparent; color:var(--jo-green); border:2px solid var(--jo-green); font-size:0.85rem; font-weight:700; padding:6px 12px; border-radius:20px; cursor:pointer; transition:all 0.2s;" onmouseover="this.style.background='var(--jo-green)'; this.style.color='white';" onmouseout="this.style.background='transparent'; this.style.color='var(--jo-green)';">تحديد كمقروء</button>` : ''}
+                                </div>
+                            `;
+                            container.appendChild(el);
+                        });
+                    }
+                });
+        }
+        function markNotificationRead(id) {
+            fetch('/notifications/read/' + id, {method: 'POST'})
+                .then(response => response.json())
+                .then(data => { if(data.success) loadNotifications(); });
+        }
+        function markAllNotificationsRead() {
+            fetch('/notifications/read_all', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => { if(data.success) loadNotifications(); });
         }
 
-        function toggleMobileNav() {
-            const nav = document.getElementById('profileNavLinks');
-            if (nav) {
-                nav.classList.toggle('mobile-nav-active');
-            }
-        }
-
-        function switchProfileTab(tabId) {
-            const tabs = document.querySelectorAll('.profile-tab-content');
-            tabs.forEach(tab => tab.classList.remove('active-profile-tab'));
-            
-            const targetTab = document.getElementById(tabId);
-            if (targetTab) {
-                targetTab.classList.add('active-profile-tab');
-                const displayBox = document.getElementById('profileTabDisplayBox');
-                if (displayBox) {
-                    displayBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }
-        }
-
-        function openProfileModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
-        }
-
-        function closeProfileModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        // دالة تنزيل الباجة كصورة عالية الدقة PNG على الهاتف أو الكمبيوتر
-        function downloadBadgeAsImage() {
-            const badgeCard = document.getElementById('volunteerBadgeCard');
-            const wasFlipped = badgeCard.classList.contains('flipped');
-            
-            // التأكد من تصوير الوجه الأمامي أولاً بدون تشويه
-            if (wasFlipped) {
-                badgeCard.classList.remove('flipped');
-            }
-
-            const targetElement = document.getElementById('badgeFrontFace');
-            
-            html2canvas(targetElement, {
-                scale: 3, // دقة عالية جداً للطباعة
-                useCORS: true,
-                backgroundColor: "#ffffff"
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `باجة_متطوع_${ {{ user.id }} }.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-
-                if (wasFlipped) {
-                    badgeCard.classList.add('flipped');
-                }
-            }).catch(err => {
-                console.error("فشل حفظ الباجة كصورة:", err);
-                window.print(); // بديل فوري
-            });
-        }
-
-        window.onclick = function(e) {
-            if (e.target.classList.contains('profile-modal-overlay')) {
-                e.target.style.display = 'none';
-            }
-        };
+        document.addEventListener('DOMContentLoaded', () => {
+            loadNotifications();
+        });
     </script>
-
-    <!-- CSRF auto-injection: adds hidden csrf_token to every form before submit -->
+    <!-- CSRF auto-injection -->
     <script>
     (function () {
-        var csrfToken = document.querySelector('meta[name="csrf-token"]');
-        if (!csrfToken) return;
-        var token = csrfToken.getAttribute('content');
-
-        // Inject into all current forms
-        document.querySelectorAll('form[method="post"], form[method="POST"]').forEach(function (form) {
-            if (!form.querySelector('input[name="csrf_token"]')) {
-                var inp = document.createElement('input');
-                inp.type = 'hidden';
-                inp.name = 'csrf_token';
-                inp.value = token;
-                form.appendChild(inp);
-            }
-        });
-
-        // Inject into dynamically added forms via MutationObserver
-        var observer = new MutationObserver(function (mutations) {
-            mutations.forEach(function (m) {
-                m.addedNodes.forEach(function (node) {
-                    if (node.nodeType !== 1) return;
-                    var forms = node.tagName === 'FORM' ? [node] : Array.from(node.querySelectorAll('form'));
-                    forms.forEach(function (form) {
-                        var method = (form.getAttribute('method') || '').toUpperCase();
-                        if (method === 'POST' && !form.querySelector('input[name="csrf_token"]')) {
-                            var inp = document.createElement('input');
-                            inp.type = 'hidden';
-                            inp.name = 'csrf_token';
-                            inp.value = token;
-                            form.appendChild(inp);
-                        }
-                    });
-                });
-            });
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-
-        // Patch fetch to include X-CSRFToken header on non-GET requests
+        var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         var origFetch = window.fetch;
         window.fetch = function (url, opts) {
             opts = opts || {};
@@ -809,8 +612,6 @@
             }
             return origFetch(url, opts);
         };
-
-        // Patch XMLHttpRequest
         var origOpen = XMLHttpRequest.prototype.open;
         var origSend = XMLHttpRequest.prototype.send;
         XMLHttpRequest.prototype.open = function (method) {

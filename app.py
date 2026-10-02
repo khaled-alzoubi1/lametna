@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 from flask_wtf import CSRFProtect
+
+from flask_wtf import CSRFProtect
+
 from storage import upload_file, is_cloudinary_configured, UploadError, ALLOWED_IMAGE_EXTENSIONS, ALLOWED_MEDIA_EXTENSIONS
 
 load_dotenv()
@@ -34,6 +37,17 @@ from io import BytesIO
 from openpyxl import Workbook
 
 app = Flask(__name__)
+
+import os
+import cloudinary
+import cloudinary.uploader
+
+cloudinary.config(
+  cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+  api_key=os.environ.get('CLOUDINARY_API_KEY'),
+  api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+  secure=True
+)
 
 limiter = Limiter(
     get_remote_address,
@@ -93,6 +107,17 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB max upload (covers v
 
 db = SQLAlchemy(app)
 
+from sqlalchemy.engine import Engine
+from sqlalchemy import event
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    if "sqlite" in type(dbapi_connection).__module__:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+
 # ── CSRF protection (covers all state-changing browser form POSTs) ─────────
 csrf = CSRFProtect(app)
 
@@ -136,12 +161,12 @@ class SiteSetting(db.Model):
     vision_text = db.Column(db.Text, default='الوصول إلى مجتمع شبابي ريادي يقود المبادرات المجتمعية بأعلى معايير التنظيم، وتوسيع مظلة الأثر التطوعي لتغطي كافة محافظات ومناطق المملكة الأردنية الهاشمية.')
     mission_text = db.Column(db.Text, default='تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة، منظمة، وآمنة تضمن استدامة البصمة الإيجابية.')
     contact_email = db.Column(db.String(120), default='info@lametnahbasmeh.org')
-    
+
     # روابط المنصات الرسمية الحية
     whatsapp_url = db.Column(db.String(500), default='https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8')
     instagram_url = db.Column(db.String(500), default='https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw')
     nahno_url = db.Column(db.String(500), default='https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843')
-    
+
     # صور بطاقات خدمات المتطوعين الخمس
     card_img_duties = db.Column(db.String(500), default='https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80')
     card_img_hours = db.Column(db.String(500), default='https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80')
@@ -157,6 +182,36 @@ class SiteSetting(db.Model):
     card_title_transport = db.Column(db.String(100), default='نقاط التجمع والمواصلات')
 
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class Interest(db.Model):
+    __tablename__ = 'interests'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+class Skill(db.Model):
+    __tablename__ = 'skills'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+
+volunteer_interests = db.Table('volunteer_interests',
+    db.Column('volunteer_id', db.Integer, db.ForeignKey('volunteers.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('interest_id', db.Integer, db.ForeignKey('interests.id', ondelete='CASCADE'), primary_key=True)
+)
+
+volunteer_skills = db.Table('volunteer_skills',
+    db.Column('volunteer_id', db.Integer, db.ForeignKey('volunteers.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('skill_id', db.Integer, db.ForeignKey('skills.id', ondelete='CASCADE'), primary_key=True)
+)
+
+event_interests = db.Table('event_interests',
+    db.Column('event_id', db.Integer, db.ForeignKey('events.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('interest_id', db.Integer, db.ForeignKey('interests.id', ondelete='CASCADE'), primary_key=True)
+)
+
+event_skills = db.Table('event_skills',
+    db.Column('event_id', db.Integer, db.ForeignKey('events.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('skill_id', db.Integer, db.ForeignKey('skills.id', ondelete='CASCADE'), primary_key=True)
+)
 
 class Volunteer(db.Model):
     __tablename__ = 'volunteers'
@@ -181,16 +236,22 @@ class Volunteer(db.Model):
     leader_notes = db.Column(db.Text, nullable=True)
     badges = db.Column(db.Text, default='')  # تخزين الأوسمة مفصولة بفواصل
     badge_number = db.Column(db.String(50), unique=True, nullable=True)
-    
+
     # Phase 3 Columns
     emergency_contact_name = db.Column(db.String(100), nullable=True)
+
+    # Structured Personalization Signals
+    interests_rel = db.relationship('Interest', secondary=volunteer_interests, lazy='subquery',
+        backref=db.backref('volunteers', lazy=True))
+    structured_skills = db.relationship('Skill', secondary=volunteer_skills, lazy='subquery',
+        backref=db.backref('volunteers', lazy=True))
     emergency_contact_phone = db.Column(db.String(20), nullable=True)
     is_suspended = db.Column(db.Boolean, default=False)
     last_active = db.Column(db.DateTime, default=datetime.utcnow)
     admin_evaluation = db.Column(db.Text, nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # العلاقات التابعة
     duties = db.relationship('Duty', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     excuses = db.relationship('Excuse', backref='volunteer', lazy=True, cascade="all, delete-orphan")
@@ -251,6 +312,37 @@ class Volunteer(db.Model):
             return f"https://wa.me/{raw_phone}"
         return f"https://wa.me/{raw_phone}"
 
+
+class Team(db.Model):
+    __tablename__ = 'teams'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TeamMembership(db.Model):
+    __tablename__ = 'team_memberships'
+    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id', ondelete='CASCADE'), primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id', ondelete='CASCADE'), primary_key=True)
+    role = db.Column(db.String(20), default='MEMBER')  # MEMBER, LEADER
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    volunteer = db.relationship('Volunteer', backref=db.backref('team_memberships', lazy='dynamic', cascade='all, delete-orphan'))
+    team = db.relationship('Team', backref=db.backref('memberships', lazy='dynamic', cascade='all, delete-orphan'))
+
+class Goal(db.Model):
+    __tablename__ = 'goals'
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    target_value = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(20), default='ACTIVE') # ACTIVE, ACHIEVED, ARCHIVED
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    team = db.relationship('Team', backref=db.backref('goals', lazy='dynamic', cascade='all, delete-orphan'))
+
 class Event(db.Model):
     __tablename__ = 'events'
     id = db.Column(db.Integer, primary_key=True)
@@ -265,13 +357,22 @@ class Event(db.Model):
     capacity = db.Column(db.Integer, default=10)
     event_hours = db.Column(db.Integer, default=3)  # المقاعد المطلوبة للميدان
     secret_code = db.Column(db.String(10), nullable=True)
+    status = db.Column(db.String(50), nullable=True) # Explicit lifecycle state
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id', ondelete='SET NULL'), nullable=True)
+    team = db.relationship('Team', backref=db.backref('events', lazy='dynamic'))
+
     registrations = db.relationship('EventRegistration', backref='event', lazy=True, cascade="all, delete-orphan")
+
+    interests_rel = db.relationship('Interest', secondary=event_interests, lazy='subquery',
+        backref=db.backref('events_rel', lazy=True))
+    structured_skills = db.relationship('Skill', secondary=event_skills, lazy='subquery',
+        backref=db.backref('events_rel', lazy=True))
 
     @property
     def registered_count(self):
-        return len(self.registrations)
+        return sum(1 for r in self.registrations if r.is_active)
 
     @property
     def remaining_seats(self):
@@ -284,11 +385,15 @@ class Event(db.Model):
 
     @property
     def is_completed(self):
+        if self.status:
+            return self.status == 'COMPLETED'
+
+        # Fallback to legacy date-based logic for unmigrated data
         if not self.date:
             return False
         raw_date = str(self.date).strip()
         today = datetime.now().date()
-        
+
         # فحص كافة صيغ التاريخ المحتملة
         event_date = None
         for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d', '%d-%m-%Y'):
@@ -297,7 +402,7 @@ class Event(db.Model):
                 break
             except (ValueError, TypeError):
                 pass
-        
+
         # دعم الإدخال المختصر مثل 11/9 أو 11-9
         if not event_date:
             try:
@@ -316,12 +421,16 @@ class Event(db.Model):
         return event_date < today
 
     @property
+    def is_cancelled(self):
+        return self.status == 'CANCELLED'
+
+    @property
     def is_today(self):
         if not self.date:
             return False
         raw_date = str(self.date).strip()
         today = datetime.now().date()
-        
+
         event_date = None
         for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d', '%d-%m-%Y'):
             try:
@@ -329,7 +438,41 @@ class Event(db.Model):
                 break
             except (ValueError, TypeError):
                 pass
-        
+
+        if not event_date:
+            try:
+                parts = re.split(r'[/.-]', raw_date)
+                if len(parts) >= 2:
+                    d, m = int(parts[0]), int(parts[1])
+                    y = int(parts[2]) if len(parts) > 2 else today.year
+                    event_date = datetime(y, m, d).date()
+            except Exception:
+                return False
+
+        if not event_date:
+            return False
+
+        return event_date == today
+
+    @property
+    def is_cancelled(self):
+        return self.status == 'CANCELLED'
+
+    @property
+    def is_today(self):
+        if not self.date:
+            return False
+        raw_date = str(self.date).strip()
+        today = datetime.now().date()
+
+        event_date = None
+        for fmt in ('%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d', '%d-%m-%Y'):
+            try:
+                event_date = datetime.strptime(raw_date, fmt).date()
+                break
+            except (ValueError, TypeError):
+                pass
+
         if not event_date:
             try:
                 parts = re.split(r'[/.-]', raw_date)
@@ -354,7 +497,14 @@ class EventRegistration(db.Model):
     volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=False)
     attended = db.Column(db.Boolean, default=False)  # حالة التحضير الميداني
+    status = db.Column(db.String(50), nullable=True) # Explicit registration state
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def is_active(self):
+        """True if the registration consumes capacity."""
+        # None is allowed for legacy compatibility before migration
+        return self.status in [None, 'REGISTERED', 'ATTENDED']
 
 class HourLedger(db.Model):
     """
@@ -367,7 +517,46 @@ class HourLedger(db.Model):
     event_id = db.Column(db.Integer, db.ForeignKey('events.id'), nullable=True, index=True)
     hours = db.Column(db.Float, nullable=False)
     reason = db.Column(db.String(255), nullable=False)
+    idempotency_key = db.Column(db.String(100), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Notification(db.Model):
+    """
+    P1: Reflects state changes to volunteers as in-app notifications.
+    Notifications NEVER create or mutate state; they reflect it.
+    Idempotency is enforced via (volunteer_id, reference_id) unique index when reference_id is not None.
+    """
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id', ondelete='CASCADE'), nullable=False, index=True)
+    type = db.Column(db.String(50), nullable=False)      # e.g. 'REGISTRATION', 'ATTENDANCE', 'SYSTEM'
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    reference_id = db.Column(db.String(150), nullable=True)  # idempotency key / context
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    volunteer = db.relationship('Volunteer', backref=db.backref('notifications', lazy='dynamic', cascade='all, delete-orphan'))
+
+class EventFeedback(db.Model):
+    """
+    P1: Volunteer feedback for a completed event.
+    One feedback record per volunteer per event (enforced by unique index).
+    Only ATTENDED volunteers may submit feedback.
+    """
+    __tablename__ = 'event_feedback'
+    __table_args__ = (
+        db.UniqueConstraint('volunteer_id', 'event_id', name='uix_feedback_volunteer_event'),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id', ondelete='CASCADE'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)       # 1-5
+    comment = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    volunteer = db.relationship('Volunteer', backref=db.backref('feedbacks', lazy='dynamic'))
+    event = db.relationship('Event', backref=db.backref('feedbacks', lazy='dynamic'))
 
 class Duty(db.Model):
     __tablename__ = 'duties'
@@ -393,7 +582,7 @@ class Album(db.Model):
     category = db.Column(db.String(50), nullable=False, default='عام')
     cover_image_url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     media = db.relationship('AlbumMedia', backref='album', lazy=True, cascade="all, delete-orphan")
 
 class AlbumMedia(db.Model):
@@ -413,27 +602,261 @@ class Inquiry(db.Model):
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# ==================== Lifecycle Logic Helpers ====================
+
+def can_register(event: Event) -> bool:
+    """True if volunteer can theoretically register (does not check capacity)."""
+    if event.is_cancelled or event.is_completed:
+        return False
+    # If no status or REGISTRATION_OPEN, allow registration
+    return event.status in [None, 'REGISTRATION_OPEN', 'IN_PROGRESS']
+
+def can_edit(event: Event) -> bool:
+    """True if admin can edit the event."""
+    # To be safe, don't allow deep edits of cancelled/completed events unless an admin overrides
+    return not event.is_completed and not event.is_cancelled
+
+def can_cancel(event: Event) -> bool:
+    """True if admin can cancel the event."""
+    return not event.is_completed and not event.is_cancelled
+
+def can_complete(event: Event) -> bool:
+    """True if admin can explicitly mark event as completed."""
+    return not event.is_cancelled and not event.is_completed
+
+def change_registration_status(registration: EventRegistration, new_status: str) -> bool:
+    """Centralized safety for registration state transitions."""
+    # Legacy compatibility treat None as REGISTERED conceptually for transitions
+    old_status = registration.status or 'REGISTERED'
+
+    if old_status == new_status:
+        registration.status = new_status # Ensure None becomes explicit
+        return True
+
+    if old_status == 'ATTENDED' and new_status == 'CANCELLED':
+        return False
+
+    if old_status == 'CANCELLED' and new_status == 'ATTENDED':
+        return False
+
+    if old_status == 'WAITLISTED' and new_status == 'ATTENDED':
+        return False
+
+    registration.status = new_status
+    return True
+
+def migrate_event_lifecycle():
+    """
+    Deterministic mapping of legacy date-based implicit states to the new explicit lifecycle.
+    DO NOT CALL ON STARTUP automatically. Run manually during cutover.
+    """
+    events = Event.query.all()
+    for ev in events:
+        if ev.status is not None:
+            continue
+
+        # If the date-based logic says it's completed, it's completed
+        if ev.is_completed:
+            ev.status = 'COMPLETED'
+        else:
+            # Otherwise it was active/open
+            ev.status = 'REGISTRATION_OPEN'
+    db.session.commit()
+
+def migrate_registration_state():
+    """
+    Deterministic mapping of legacy boolean attendance to explicit registration states.
+    DO NOT CALL ON STARTUP automatically. Run manually during cutover.
+    """
+    regs = EventRegistration.query.all()
+    for reg in regs:
+        if reg.status is not None:
+            continue
+
+        if reg.attended:
+            reg.status = 'ATTENDED'
+        else:
+            # If not attended, it was active (CONFIRMED/REGISTERED).
+            # We map legacy active to REGISTERED as a safe baseline.
+            reg.status = 'REGISTERED'
+    db.session.commit()
+
 # ==================== Business Logic Helpers ====================
+
+def record_hours(volunteer, hours_delta: float, reason: str, event_id: int = None, idempotency_key: str = None) -> bool:
+    """
+    Central Hour Service: Validates, creates ledger entry, and updates compatibility cache.
+    Returns True if hours were applied, False if skipped (due to idempotency or 0 delta).
+    Does NOT commit to the database.
+    """
+    if hours_delta == 0:
+        return False
+
+    if idempotency_key:
+        existing = HourLedger.query.filter_by(idempotency_key=idempotency_key).first()
+        if existing:
+            return False
+
+    ledger = HourLedger(
+        volunteer_id=volunteer.id,
+        event_id=event_id,
+        hours=hours_delta,
+        reason=reason,
+        idempotency_key=idempotency_key
+    )
+    db.session.add(ledger)
+
+    # Lock the row and refresh the object state to prevent concurrent cache clobbering
+    locked_v = db.session.query(Volunteer).with_for_update().populate_existing().get(volunteer.id)
+    if locked_v:
+        locked_v.volunteer_hours = (locked_v.volunteer_hours or 0) + hours_delta
+        locked_v.auto_assign_badges()
+
+    return True
 
 def mark_attendance_and_grant_hours(registration) -> int:
     """
-    Business Logic: Awards hours and marks attendance.
+    Business Logic: Awards hours and marks attendance via the Hour Service.
     Does NOT commit to the database; caller must wrap in a transaction.
     Returns the number of hours awarded.
+
+    Concurrency Safety:
+    On PostgreSQL: acquires a row-level lock on the parent Event BEFORE creating
+    a HourLedger entry. This ensures serialization with EventTeamAssignmentService.assign_team,
+    which also locks the Event row. Whichever path acquires the lock first wins;
+    the loser sees the updated state after waiting.
+
+    Lock order: Event (first) → Volunteer (second). Must never be reversed.
+
+    On SQLite (tests): FOR UPDATE is not supported. The HourLedger idempotency_key
+    unique constraint acts as the final defense against double-credit.
     """
-    if registration.attended:
+    if registration.attended or registration.status == 'ATTENDED':
         return 0
-    
-    registration.attended = True
+
+    if not change_registration_status(registration, 'ATTENDED'):
+        # Transition blocked (e.g. they were CANCELLED or WAITLISTED)
+        return 0
+
     ev = registration.event
     vol = registration.volunteer
-    
     hours_to_award = ev.event_hours if (ev and ev.event_hours) else 3
-    vol.volunteer_hours = (vol.volunteer_hours or 0) + hours_to_award
-    vol.attended_events_count = (vol.attended_events_count or 0) + 1
-    vol.auto_assign_badges()
-    
+
+    # Acquire Event row lock BEFORE creating the HourLedger entry (PostgreSQL only).
+    # This serializes with assign_team which also acquires the Event lock.
+    if ev and ev.id:
+        is_sqlite = 'sqlite' in app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        if not is_sqlite:
+            # Re-fetch and lock the event row. If assign_team is mid-transaction,
+            # this will block until that transaction commits or rolls back.
+            locked_ev = db.session.query(Event).with_for_update().populate_existing().get(ev.id)
+        # On SQLite, skip the lock — rely on idempotency key.
+
+    # Use attendance as the authoritative reason and idempotency context
+    applied = record_hours(
+        volunteer=vol,
+        hours_delta=hours_to_award,
+        reason=f"حضور الفعالية الميدانية: {ev.title if ev else 'غير محدد'}",
+        event_id=ev.id if ev else None,
+        idempotency_key=f"attendance:reg:{registration.id}" if registration.id else None
+    )
+
+    registration.attended = True
+    if applied:
+        vol.attended_events_count = (vol.attended_events_count or 0) + 1
+        vol.auto_assign_badges()
+
+        # Restore P1 notification
+        notify_volunteer(
+            volunteer_id=vol.id,
+            notif_type='ATTENDANCE',
+            title='تم تسجيل حضورك',
+            message=f'شكراً لحضورك فعالية "{ev.title if ev else "الفعالية"}". تمت إضافة {hours_to_award} ساعات لرصيدك!',
+            reference_id=f"attendance:reg:{registration.id}:confirmed" if registration.id else None
+        )
+
     return hours_to_award
+
+def notify_volunteer(volunteer_id: int, notif_type: str, title: str, message: str, reference_id: str = None) -> 'Notification':
+    """
+    P1 Notification Service: Reflects a state change to a volunteer as an in-app notification.
+
+    NEVER call this before the state mutation has occurred.
+    Notifications REFLECT state; they do not CREATE state.
+
+    Idempotency: If reference_id is provided and a notification with the same
+    (volunteer_id, reference_id) already exists, returns the existing notification
+    without creating a duplicate. If reference_id is None, allows duplicates.
+
+    Does NOT commit — caller must commit the enclosing transaction.
+    Returns the Notification instance (existing or newly created).
+    """
+    if reference_id:
+        existing = Notification.query.filter_by(
+            volunteer_id=volunteer_id,
+            reference_id=reference_id
+        ).first()
+        if existing:
+            return existing
+
+    n = Notification(
+        volunteer_id=volunteer_id,
+        type=notif_type,
+        title=title[:200],
+        message=message,
+        reference_id=reference_id,
+        is_read=False,
+    )
+    db.session.add(n)
+    return n
+
+def backfill_legacy_hours():
+    """
+    Idempotent migration function to backfill existing volunteer_hours
+    into the HourLedger as a 'legacy baseline' entry.
+    """
+    # Fetch all IDs first to avoid long-running queries locking the whole table
+    volunteer_ids = [v.id for v in Volunteer.query.all()]
+
+    for vid in volunteer_ids:
+        try:
+            # Lock the volunteer row to prevent concurrent hours updates during backfill
+            v = db.session.query(Volunteer).with_for_update().get(vid)
+            if not v:
+                continue
+
+            current_hours = v.volunteer_hours or 0
+            if current_hours <= 0:
+                db.session.commit()
+                continue
+
+            baseline_key = f"baseline_migration:{v.id}"
+            existing = HourLedger.query.filter_by(idempotency_key=baseline_key).first()
+            if existing:
+                db.session.commit()
+                continue
+
+            existing_ledger_sum = db.session.query(db.func.sum(HourLedger.hours)).filter(HourLedger.volunteer_id == v.id).scalar() or 0
+            baseline_delta = current_hours - existing_ledger_sum
+
+            if baseline_delta < 0:
+                app.logger.error(f"INCONSISTENT HOURS FOR VOLUNTEER {v.id}: Ledger sum ({existing_ledger_sum}) > Cache ({current_hours}). Cannot safely reconcile. Skipping.")
+                db.session.rollback()
+                continue
+            elif baseline_delta > 0:
+                ledger = HourLedger(
+                    volunteer_id=v.id,
+                    event_id=None,
+                    hours=baseline_delta,
+                    reason="رصيد الساعات السابق (Legacy Baseline)",
+                    idempotency_key=baseline_key
+                )
+                db.session.add(ledger)
+
+            db.session.commit()
+        except Exception as e:
+            app.logger.error(f"Error backfilling volunteer {vid}: {e}")
+            db.session.rollback()
 
 # ==================== دوال المساعدة ====================
 @app.context_processor
@@ -480,6 +903,8 @@ def is_admin_session() -> bool:
         session.get('admin_email', '').lower() in _ADMIN_EMAILS
     )
 
+from services.team import EventTeamAssignmentService, TeamContributionService
+
 def _require_admin():
     """Call at the top of any admin route. Returns a redirect response if unauthorized,
     or None when the caller may proceed."""
@@ -487,6 +912,7 @@ def _require_admin():
         flash('غير مصرح لك بدخول لوحة التحكم.', 'danger')
         return redirect(url_for('index'))
     return None
+
 
 # ==================== المسارات العامة ====================
 
@@ -508,29 +934,29 @@ def index():
             db.func.lower(Volunteer.email).in_(admin_emails)
         )
     ).all()
-    # --- Public homepage: only show upcoming/active events (exclude past dates) ---
+    # --- Public homepage: only show upcoming/active events (exclude past dates and cancelled) ---
     all_public_events = Event.query.order_by(Event.id.desc()).all()
-    upcoming_events = [ev for ev in all_public_events if not ev.is_completed]
+    upcoming_events = [ev for ev in all_public_events if not ev.is_completed and not ev.is_cancelled]
 
     # Homepage event cards (max 4, upcoming only)
     events = upcoming_events[:4]
 
     albums = Album.query.order_by(Album.id.desc()).all()
-    
+
     top_volunteers = Volunteer.query.filter_by(status='approved')\
                                     .order_by(Volunteer.volunteer_hours.desc(), Volunteer.attended_events_count.desc())\
                                     .limit(5).all()
 
     volunteers_count = Volunteer.query.filter_by(status='approved').count()
     hours_count = db.session.query(db.func.sum(Volunteer.volunteer_hours)).scalar() or 0
-    events_count = Event.query.count()  # total count (including past) for stats display
+    events_count = Event.query.filter_by(status='COMPLETED').count()
 
     stats = {
         'volunteers_count': volunteers_count,
         'hours_count': hours_count,
         'events_count': events_count
     }
-    
+
     user_registered_event_ids = []
     user_attended_event_ids = []
     if 'user_id' in session:
@@ -559,13 +985,13 @@ def register():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
         gender = request.form.get('gender', '').strip()
-        
+
         import re as regex
         if not regex.match(r'^[\u0600-\u06FF\s]+$', name):
             db.session.rollback()
             flash('يرجى إدخال الاسم باللغة العربية فقط', 'danger')
             return redirect(url_for('index'))
-            
+
         if gender not in ['ذكر', 'أنثى']:
             db.session.rollback()
             flash('يرجى تحديد الجنس بشكل صحيح', 'danger')
@@ -596,7 +1022,7 @@ def register():
             emergency_contact_phone=request.form.get('emergency_contact_phone', '').strip(),
             status='pending'
         )
-        
+
         db.session.add(new_volunteer)
 
         try:
@@ -608,7 +1034,7 @@ def register():
         except Exception as e:
             db.session.rollback()
             flash('حدث خطأ أثناء التسجيل، يرجى المحاولة لاحقاً', 'danger')
-            
+
         return redirect(url_for('index'))
 
 
@@ -807,7 +1233,7 @@ def profile():
     attended_map = {r.event_id: r.attended for r in user_registrations}
 
     user_events = Event.query.filter(Event.id.in_(registered_event_ids)).order_by(Event.id.desc()).all() if registered_event_ids else []
-    
+
     past_attended_events = [ev for ev in user_events if attended_map.get(ev.id) and ev.is_completed]
 
     now = datetime.now()
@@ -871,6 +1297,57 @@ def update_profile():
     flash('تم تحديث ملفك الشخصي بنجاح.', 'success')
     return redirect(url_for('profile'))
 
+@app.route('/events')
+def events_list():
+    settings = get_settings()
+    all_events = Event.query.order_by(Event.date.desc(), Event.time.desc()).all()
+
+    user_registered_event_ids = []
+    user_waitlisted_event_ids = []
+    user_attended_event_ids = []
+
+    if session.get('user_id'):
+        user_regs = EventRegistration.query.filter_by(volunteer_id=session['user_id']).all()
+        user_registered_event_ids = [r.event_id for r in user_regs if r.status == 'REGISTERED']
+        user_waitlisted_event_ids = [r.event_id for r in user_regs if r.status == 'WAITLISTED']
+        user_attended_event_ids = [r.event_id for r in user_regs if r.attended]
+
+    return render_template('events.html',
+                           events=all_events,
+                           settings=settings,
+                           user_registered_event_ids=user_registered_event_ids,
+                           user_waitlisted_event_ids=user_waitlisted_event_ids,
+                           user_attended_event_ids=user_attended_event_ids)
+
+@app.route('/events/<int:event_id>')
+def event_detail(event_id):
+    settings = get_settings()
+    event = Event.query.get_or_404(event_id)
+
+    is_registered = False
+    is_waitlisted = False
+    is_attended = False
+    has_feedback = False
+
+    if session.get('user_id'):
+        reg = EventRegistration.query.filter_by(volunteer_id=session['user_id'], event_id=event_id).first()
+        if reg:
+            is_registered = (reg.status == 'REGISTERED')
+            is_waitlisted = (reg.status == 'WAITLISTED')
+            is_attended = reg.attended
+
+        fb = EventFeedback.query.filter_by(volunteer_id=session['user_id'], event_id=event_id).first()
+        if fb:
+            has_feedback = True
+
+    return render_template('event_detail.html',
+                           event=event,
+                           settings=settings,
+                           is_registered=is_registered,
+                           is_waitlisted=is_waitlisted,
+                           is_attended=is_attended,
+                           has_feedback=has_feedback)
+
 @app.route('/events/rsvp/<int:event_id>', methods=['POST'])
 def rsvp_event(event_id):
     if 'user_id' not in session:
@@ -892,24 +1369,34 @@ def rsvp_event(event_id):
     else:
         ev = Event.query.filter_by(id=event_id).with_for_update().first_or_404()
 
-    if ev.is_completed:
-        flash('عذراً، هذه الفعالية انتهت ومغلقة أمام التسجيل الميداني.', 'danger')
+    if not can_register(ev):
+        flash('انتهت هذه الفعالية أو تم إلغاؤها ولا يمكن التسجيل بها', 'danger')
         return redirect(request.referrer or url_for('profile'))
 
     # Both checks use a fresh DB count to avoid ORM session cache stale reads.
     # These queries run INSIDE the FOR UPDATE transaction on Postgres.
     existing_reg = EventRegistration.query.filter_by(volunteer_id=user.id, event_id=ev.id).first()
-    if existing_reg:
+    if existing_reg and existing_reg.is_active:
         flash('أنت مسجل مسبقاً في هذا النشاط الميداني.', 'info')
         return redirect(request.referrer or url_for('profile'))
 
-    current_count = EventRegistration.query.filter_by(event_id=ev.id).count()
+    # Only count ACTIVE registrations towards capacity
+    current_count = EventRegistration.query.filter(
+        EventRegistration.event_id == ev.id,
+        db.or_(EventRegistration.status.is_(None), EventRegistration.status.notin_(['CANCELLED', 'WAITLISTED']))
+    ).count()
+
     if current_count >= ev.capacity:
         flash('اكتمل العدد المطلوب للميدان في هذه الفعالية.', 'danger')
         return redirect(request.referrer or url_for('profile'))
 
-    new_reg = EventRegistration(volunteer_id=user.id, event_id=ev.id)
-    db.session.add(new_reg)
+    if existing_reg:
+        if not change_registration_status(existing_reg, 'REGISTERED'):
+            flash('لا يمكن إعادة التسجيل في هذه الفعالية.', 'danger')
+            return redirect(request.referrer or url_for('profile'))
+    else:
+        new_reg = EventRegistration(volunteer_id=user.id, event_id=ev.id, status='REGISTERED')
+        db.session.add(new_reg)
     try:
         db.session.commit()
         flash(f'تم حجز مقعدك بنجاح في: {ev.title}.', 'success')
@@ -930,13 +1417,17 @@ def cancel_rsvp(event_id):
 
     reg = EventRegistration.query.filter_by(volunteer_id=session['user_id'], event_id=event_id).first()
     if reg:
-        db.session.delete(reg)
+        if not change_registration_status(reg, 'CANCELLED'):
+            flash('لا يمكن إلغاء التسجيل لأنك حضرت الفعالية بالفعل.', 'danger')
+            return redirect(request.referrer or url_for('profile'))
+
         try:
+            notify_volunteer(reg.volunteer_id, 'REGISTRATION', 'إلغاء التسجيل', 'تم إلغاء تسجيلك في فعالية ' + reg.event.title, f'registration:{reg.id}:cancelled')
             db.session.commit()
-        except Exception as e:
+            flash('تم إلغاء حجزك في الفعالية وفتح المقعد لمتطوع آخر.', 'info')
+        except Exception:
             db.session.rollback()
             flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-        flash('تم إلغاء حجزك في الفعالية وفتح المقعد لمتطوع آخر.', 'info')
     return redirect(request.referrer or url_for('profile'))
 
 @app.route('/events/self_checkin', methods=['POST'])
@@ -956,7 +1447,11 @@ def self_checkin():
         flash('يجب أن تكون مسجلاً بالفعالية لتأكيد حضورك.', 'danger')
         return redirect(request.referrer or url_for('profile'))
 
-    if reg.attended:
+    if not reg.is_active:
+        flash('لا يمكنك تأكيد الحضور لأن حجزك ملغى أو غير فعال.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
+    if reg.attended or reg.status == 'ATTENDED':
         flash('تم تسجيل حضورك مسبقاً في هذه الفعالية.', 'info')
         return redirect(request.referrer or url_for('profile'))
 
@@ -969,44 +1464,62 @@ def self_checkin():
             db.session.rollback()
             flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
             return redirect(request.referrer or url_for('profile'))
-        flash(f'أحسنت! تم تأكيد حضورك بنجاح في "{ev.title}" وإضافة {hours_to_award} ساعات لرصيدك.', 'success')
+        flash(f'تم حجز مقعدك بنجاح في: {ev.title}.', 'success')
     else:
         flash('كود التحضير غير صحيح! يرجى مراجعة مسؤول الميدان.', 'danger')
 
     return redirect(request.referrer or url_for('profile'))
 
-@app.route('/verify_attendance_code/<int:event_id>', methods=['POST'])
+@app.route('/verify_attendance_code/<int:event_id>', methods=['GET', 'POST'])
+@limiter.limit("5 per 5 minutes", key_func=lambda: session.get('user_id', get_remote_address()), exempt_when=lambda: request.method != 'POST')
 def verify_attendance_code(event_id):
     if 'user_id' not in session:
-        flash('يرجى تسجيل الدخول أولاً.', 'danger')
+        flash('يرجى تسجيل الدخول أولاً لتأكيد الحضور.', 'danger')
         return redirect(url_for('index'))
 
-    entered_code = request.form.get('secret_code', '').strip()
+    if request.method == 'POST':
+        entered_code = request.form.get('secret_code', '').strip()
+    else:
+        entered_code = request.args.get('token', '').strip()
+
     ev = Event.query.get_or_404(event_id)
     user = Volunteer.query.get_or_404(session['user_id'])
 
+    if ev.is_cancelled or ev.is_completed:
+        flash('لا يمكن تسجيل الحضور لأن الفعالية منتهية أو ملغاة.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
     reg = EventRegistration.query.filter_by(volunteer_id=user.id, event_id=ev.id).first()
     if not reg:
-        flash('يجب أن تكون مسجلاً بالفعالية لتأكيد حضورك.', 'danger')
-        return redirect(request.referrer or url_for('index'))
+        flash('أنت غير مسجل بهذه الفعالية.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
 
-    if reg.attended:
-        flash('تم تسجيل حضورك مسبقاً في هذه الفعالية.', 'info')
-        return redirect(request.referrer or url_for('index'))
+    if not reg.is_active:
+        flash('تسجيلك غير فعال ولا يمكنك تسجيل الحضور.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
+    if reg.attended or reg.status == 'ATTENDED':
+        flash('لقد قمت بتسجيل الحضور مسبقاً في هذه الفعالية.', 'info')
+        return redirect(request.referrer or url_for('profile'))
 
     if ev.secret_code and entered_code == str(ev.secret_code).strip():
+        # Using the centralized idempotent helper
         hours_to_award = mark_attendance_and_grant_hours(reg)
+        if hours_to_award == 0 and not reg.attended:
+            # It was blocked by change_registration_status
+            flash('تعذر تسجيل الحضور بسبب حالة التسجيل الحالية.', 'danger')
+            return redirect(request.referrer or url_for('profile'))
+
         try:
             db.session.commit()
+            flash(f'تم تسجيل الحضور بنجاح ومنح {hours_to_award} ساعة.', 'success')
         except Exception:
             db.session.rollback()
             flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
-            return redirect(request.referrer or url_for('index'))
-        flash(f'تم حضور الفعالية بنجاح وإضافة {hours_to_award} ساعات.', 'success')
     else:
-        flash('كود التحضير غير صحيح! يرجى مراجعة مسؤول الميدان.', 'danger')
+        flash('كود التحضير غير صحيح! يرجى المحاولة مرة أخرى.', 'danger')
 
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('profile'))
 
 @app.route('/profile/delete', methods=['POST'])
 def delete_own_account():
@@ -1050,6 +1563,126 @@ def submit_excuse():
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     flash('تم رفع عذر عدم الحضور للإدارة وإلغاء حجز المقعد بنجاح.', 'success')
     return redirect(url_for('profile'))
+
+# ==================== P1: Notification Routes ====================
+
+@app.route('/notifications')
+def get_notifications():
+    """Return JSON list of notifications for the authenticated volunteer. Ordered newest first."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    notifications = Notification.query.filter_by(
+        volunteer_id=session['user_id']
+    ).order_by(Notification.created_at.desc()).limit(50).all()
+
+    return jsonify({
+        'notifications': [
+            {
+                'id': n.id,
+                'type': n.type,
+                'title': n.title,
+                'message': n.message,
+                'is_read': n.is_read,
+                'created_at': n.created_at.isoformat() if n.created_at else None,
+            }
+            for n in notifications
+        ]
+    })
+
+
+@app.route('/notifications/read/<int:notification_id>', methods=['POST'])
+def mark_notification_read(notification_id):
+    """Mark a notification as read. Returns 404 if the notification does not belong to the user."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    n = Notification.query.filter_by(
+        id=notification_id,
+        volunteer_id=session['user_id']
+    ).first()
+
+    if not n:
+        return jsonify({'error': 'Not found'}), 404
+
+    n.is_read = True
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        return jsonify({'error': 'Database error'}), 500
+
+    return jsonify({'success': True})
+
+
+# ==================== P1: Event Feedback Route ====================
+
+@app.route('/events/<int:event_id>/feedback', methods=['POST'])
+def submit_event_feedback(event_id):
+    """
+    Submit feedback for a completed event.
+    Rules:
+    - Volunteer must be logged in.
+    - Event must exist and be completed/ended.
+    - Volunteer must have attended (registration.attended == True, status == 'ATTENDED').
+    - Rating must be 1–5.
+    - One feedback per volunteer per event (UPSERT behaviour).
+    """
+    if 'user_id' not in session:
+        flash('يرجى تسجيل الدخول أولاً.', 'danger')
+        return redirect(url_for('index'))
+
+    ev = Event.query.get_or_404(event_id)
+
+    if not ev.is_completed:
+        flash('لا يمكن تقديم التقييم إلا بعد انتهاء الفعالية.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
+    reg = EventRegistration.query.filter_by(
+        volunteer_id=session['user_id'], event_id=event_id
+    ).first()
+
+    if not reg or not reg.attended or reg.status == 'WAITLISTED':
+        flash('يجب أن تكون قد حضرت الفعالية لتقديم التقييم.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
+    rating_raw = request.form.get('rating', '').strip()
+    try:
+        rating = int(rating_raw)
+        if not (1 <= rating <= 5):
+            raise ValueError
+    except ValueError:
+        flash('التقييم يجب أن يكون بين 1 و 5.', 'danger')
+        return redirect(request.referrer or url_for('profile'))
+
+    comment = request.form.get('comment', '').strip() or None
+
+    # UPSERT behaviour
+    fb = EventFeedback.query.filter_by(
+        volunteer_id=session['user_id'], event_id=event_id
+    ).first()
+    if fb:
+        fb.rating = rating
+        fb.comment = comment
+    else:
+        fb = EventFeedback(
+            volunteer_id=session['user_id'],
+            event_id=event_id,
+            rating=rating,
+            comment=comment,
+        )
+        db.session.add(fb)
+
+    try:
+        db.session.commit()
+        flash('تم إرسال تقييمك بنجاح. شكراً لمشاركتك!', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
+
+    return redirect(request.referrer or url_for('profile'))
+
+
 # ==================== لوحة تحكم الإدارة (Admin Dashboard & CMS) ====================
 
 import json
@@ -1064,7 +1697,7 @@ def admin_dashboard():
     settings = get_settings()
     admin_email = session.get('admin_email')
     current_admin = Volunteer.query.filter_by(email=admin_email).first()
-    
+
     # --- Task 6: Search & Filter ---
     search_name = request.args.get('search_name', '').strip()
     filter_city = request.args.get('filter_city', '').strip()
@@ -1095,7 +1728,7 @@ def admin_dashboard():
     volunteers = vol_query.order_by(Volunteer.id.desc()).all()
     inquiries = Inquiry.query.order_by(Inquiry.id.desc()).all()
 
-    
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render_template('partials/volunteers.html', volunteers=volunteers, settings=settings)
 
@@ -1111,10 +1744,10 @@ def admin_dashboard():
     if not city_counts:
         city_counts = {"عمان": 120, "الزرقاء": 85, "إربد": 60, "البلقاء": 40, "أخرى": 15}
 
-    
+
     # Real Chart Data
     import collections
-    
+
     # 1. Hours Growth Curve (by month of creation)
     hours_dict = collections.defaultdict(int)
     for v in Volunteer.query.all():
@@ -1127,13 +1760,13 @@ def admin_dashboard():
     if not growth_labels:
         growth_labels = ['لا يوجد بيانات']
         growth_data = [0]
-    
+
     # 2. Activity Stats (Events by Title Category)
     keywords = ["تنظيمي ولوجستي", "إغاثي وخيري", "بيئي وزراعي", "طبي وصحي", "تطوير وتدريب", "ثقافي واجتماعي", "إعلامي وتقني"]
     # Filter by the first word for partial matching backward compatibility
     activity_data = [Event.query.filter(Event.title.ilike(f'%{kw.split()[0]}%')).count() for kw in keywords]
     total_activities = Event.query.count()
-    
+
     chart_data = {
         'city_labels': list(city_counts.keys()),
         'city_data': list(city_counts.values()),
@@ -1144,8 +1777,12 @@ def admin_dashboard():
         'total_activities': total_activities
     }
 
+    teams = Team.query.order_by(Team.created_at.desc()).all()
+
+    event_locked_map = EventTeamAssignmentService.get_bulk_historical_locks(events)
     return render_template(
         'admin.html',
+        event_locked_map=event_locked_map,
         settings=settings,
         current_admin=current_admin,
         volunteers=volunteers,
@@ -1154,6 +1791,7 @@ def admin_dashboard():
         albums=albums,
         excuses=excuses,
         inquiries=inquiries,
+        teams=teams,
         chart_data=chart_data,
         hours_chart_data=json.dumps({"labels": growth_labels, "data": growth_data}),
         activities_chart_data=json.dumps({"labels": keywords, "data": activity_data}),
@@ -1223,7 +1861,11 @@ def remove_rsvp_volunteer(reg_id):
 
     reg = EventRegistration.query.get_or_404(reg_id)
     v_name = reg.volunteer.name
-    db.session.delete(reg)
+
+    if not change_registration_status(reg, 'CANCELLED'):
+        flash(f'لا يمكن شطب المتطوع {v_name} لأنه حضر الفعالية بالفعل.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
     try:
         db.session.commit()
     except Exception as e:
@@ -1241,13 +1883,13 @@ def approve_volunteer(volunteer_id):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
         v.team = new_location  # Usually team and city are updated together here based on previous patches
 
-    
+
     # Intercept incoming badge_number
     submitted_number = request.form.get('badge_number')
     if submitted_number:
@@ -1276,7 +1918,7 @@ def reject_volunteer(volunteer_id):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
@@ -1304,13 +1946,13 @@ def assign_leader():
     photo_url = request.form.get('photo_url')
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
         v.team = new_location  # Usually team and city are updated together here based on previous patches
 
-    
+
     # Intercept incoming badge_number
     submitted_number = request.form.get('badge_number')
     if submitted_number:
@@ -1332,11 +1974,11 @@ def assign_leader():
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
 
     flash(f'تم تحديث بيانات {v.name} وتثبيته في المنصب.', 'success')
-    
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         from flask import jsonify
         return jsonify({'success': True})
-    
+
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/toggle_suspend/<int:vol_id>', methods=['POST'])
@@ -1385,7 +2027,7 @@ def remove_leader(volunteer_id):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
@@ -1410,7 +2052,7 @@ def assign_badge(volunteer_id):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
@@ -1439,7 +2081,7 @@ def remove_badge(volunteer_id):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
@@ -1467,7 +2109,7 @@ def adjust_events(volunteer_id, action):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
@@ -1494,17 +2136,17 @@ def adjust_hours(volunteer_id, action):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
         v.team = new_location  # Usually team and city are updated together here based on previous patches
 
     if action == 'increment':
-        v.volunteer_hours = (v.volunteer_hours or 0) + 1
-        v.auto_assign_badges()
+        if record_hours(v, 1.0, "تعديل إداري: زيادة ساعات"):
+            v.auto_assign_badges()
     elif action == 'decrement' and (v.volunteer_hours or 0) >= 1:
-        v.volunteer_hours = (v.volunteer_hours or 0) - 1
+        record_hours(v, -1.0, "تعديل إداري: إنقاص ساعات")
     try:
         db.session.commit()
     except Exception as e:
@@ -1534,9 +2176,9 @@ def reset_volunteer_password(volunteer_id):
     # When the password is reset, the hash changes, invalidating the token automatically.
     s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
     token = s.dumps({'id': v.id, 'hash': v.password_hash[-10:]})
-    
+
     reset_link = url_for('handle_reset_password', token=token, _external=True)
-    
+
     flash(f'تم إنشاء رابط إعادة تعيين كلمة سر {v.name}. الرابط صالح لمدة ساعة ويستخدم لمرة واحدة فقط: {reset_link}', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -1562,11 +2204,11 @@ def handle_reset_password(token):
     if request.method == 'POST':
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
-        
+
         if not new_password or new_password != confirm_password:
             flash('كلمة المرور غير متطابقة أو فارغة.', 'danger')
             return redirect(url_for('handle_reset_password', token=token))
-            
+
         if len(new_password) < 6:
             flash('يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.', 'danger')
             return redirect(url_for('handle_reset_password', token=token))
@@ -1608,7 +2250,7 @@ def handle_reset_password(token):
     <body>
         <div class="reset-container">
             <h2>إعادة تعيين كلمة المرور</h2>
-            
+
             {% with messages = get_flashed_messages(with_categories=true) %}
               {% if messages %}
                 <ul class="flash-messages">
@@ -1648,7 +2290,7 @@ def delete_volunteer_admin(volunteer_id):
         return denied
 
     v = Volunteer.query.get_or_404(volunteer_id)
-    
+
     new_location = request.form.get('location')
     if new_location:
         v.city = new_location
@@ -1687,6 +2329,24 @@ def add_event():
     time        = (request.form.get('time', '')        or '').strip() or '-'
     location    = (request.form.get('location', '')    or '').strip() or '-'
 
+    # --- Optional team assignment (P3-E3) ---
+    # Empty or missing → no team (None). Non-digit → reject. Digit → validate existence and active state.
+    team_id_raw = request.form.get('team_id', '').strip()
+    assigned_team_id = None
+    if team_id_raw:
+        if not team_id_raw.isdigit():
+            flash('معرّف الفريق غير صالح.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+        tid = int(team_id_raw)
+        t = Team.query.get(tid)
+        if not t:
+            flash('الفريق المختار غير موجود.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+        if not t.is_active:
+            flash('لا يمكن تعيين فعالية لفريق غير نشط.', 'danger')
+            return redirect(url_for('admin_dashboard'))
+        assigned_team_id = tid
+
     code = str(random.randint(1000, 9999))
     new_event = Event(
         title=title,
@@ -1696,14 +2356,15 @@ def add_event():
         location=location,
         capacity=capacity,
         event_hours=event_hours,
-        secret_code=code
+        secret_code=code,
+        team_id=assigned_team_id,
     )
     db.session.add(new_event)
     try:
         db.session.commit()
         flash(f'تمت إضافة الفعالية بنجاح. كود التحضير السري هو: {code}', 'success')
     except Exception as e:
-        print(f"CRITICAL DB ERROR in add_event: {str(e)}")
+        app.logger.error(f"CRITICAL DB ERROR in add_event: {str(e)}")
         db.session.rollback()
         flash('حدث خطأ في قاعدة البيانات، يرجى المحاولة لاحقاً', 'error')
     return redirect(url_for('admin_dashboard'))
@@ -1815,7 +2476,7 @@ def add_gallery_item():
 
         return denied
 
-    
+
     # 1. Create the Album
     new_album = Album(
         title=request.form.get('title'),
@@ -1928,14 +2589,16 @@ def ajax_update_stat():
     action = data.get('action')
     v = Volunteer.query.get(vol_id)
     if not v: return jsonify({'error': 'Not found'}), 404
-    
+
     if stat_type == 'hours':
-        if action == 'increment': v.volunteer_hours = (v.volunteer_hours or 0) + 1
-        elif action == 'decrement' and (v.volunteer_hours or 0) >= 1: v.volunteer_hours = (v.volunteer_hours or 0) - 1
+        if action == 'increment':
+            record_hours(v, 1.0, "تعديل AJAX: زيادة ساعات")
+        elif action == 'decrement' and (v.volunteer_hours or 0) >= 1:
+            record_hours(v, -1.0, "تعديل AJAX: إنقاص ساعات")
     elif stat_type == 'events':
         if action == 'increment': v.attended_events_count = (v.attended_events_count or 0) + 1
         elif action == 'decrement' and (v.attended_events_count or 0) > 0: v.attended_events_count = (v.attended_events_count or 0) - 1
-    
+
     try:
         db.session.commit()
         return jsonify({'success': True, 'hours': v.volunteer_hours, 'events': v.attended_events_count})
@@ -1973,7 +2636,8 @@ def bulk_add_hours():
     hours = int(request.form.get('hours', 0))
     for vid in vol_ids:
         v = Volunteer.query.get(vid)
-        if v: v.volunteer_hours = (v.volunteer_hours or 0) + hours
+        if v:
+            record_hours(v, float(hours), "إضافة ساعات جماعية")
     try:
         db.session.commit()
         flash('تمت إضافة الساعات للمتطوعين المحددين', 'success')
@@ -2035,12 +2699,54 @@ def update_settings():
     setting.brand_title_main = request.form.get('brand_title_main')
     setting.brand_title_sub = request.form.get('brand_title_sub')
     setting.logo_url = request.form.get('logo_url')
+    # Hero Settings
     setting.hero_title = request.form.get('hero_title')
     setting.hero_desc = request.form.get('hero_desc')
+    if 'hero_cta_text' in request.form:
+        setting.hero_cta_text = request.form.get('hero_cta_text')
+    if 'hero_cta_link' in request.form:
+        setting.hero_cta_link = request.form.get('hero_cta_link')
+
+    hero_img_file = request.files.get('hero_image_file')
+    if hero_img_file and hero_img_file.filename:
+        try:
+            setting.hero_image_url = upload_file(hero_img_file, folder='site_settings', allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
+        except UploadError as e:
+            flash(str(e), 'danger')
+    else:
+        hero_url_field = request.form.get('hero_image_url')
+        if hero_url_field:
+            setting.hero_image_url = hero_url_field
+
+    # Featured Story Settings
+    if 'featured_story_title' in request.form:
+        setting.featured_story_title = request.form.get('featured_story_title')
+    if 'featured_story_desc' in request.form:
+        setting.featured_story_desc = request.form.get('featured_story_desc')
+    if 'featured_story_cta_text' in request.form:
+        setting.featured_story_cta_text = request.form.get('featured_story_cta_text')
+    if 'featured_story_cta_link' in request.form:
+        setting.featured_story_cta_link = request.form.get('featured_story_cta_link')
+
+    fs_img_file = request.files.get('featured_story_image_file')
+    if fs_img_file and fs_img_file.filename:
+        try:
+            setting.featured_story_image_url = upload_file(fs_img_file, folder='site_settings', allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
+        except UploadError as e:
+            flash(str(e), 'danger')
+    else:
+        fs_url_field = request.form.get('featured_story_image_url')
+        if fs_url_field:
+            setting.featured_story_image_url = fs_url_field
     setting.vision_text = request.form.get('vision_text')
     setting.mission_text = request.form.get('mission_text')
     setting.contact_email = request.form.get('contact_email')
-    
+
+    setting.impact_section_title = request.form.get('impact_section_title')
+    setting.impact_section_desc = request.form.get('impact_section_desc')
+    setting.impact_cta_text = request.form.get('impact_cta_text')
+    setting.impact_cta_link = request.form.get('impact_cta_link')
+
     setting.whatsapp_url = request.form.get('whatsapp_url')
     setting.instagram_url = request.form.get('instagram_url')
     setting.nahno_url = request.form.get('nahno_url')
@@ -2059,6 +2765,24 @@ def update_settings():
     setting.card_title_excuse = request.form.get('card_title_excuse', setting.card_title_excuse)
     setting.card_title_transport = request.form.get('card_title_transport', setting.card_title_transport)
 
+    # P2-C fields
+    if 'profile_motivational_text' in request.form:
+        setting.profile_motivational_text = request.form.get('profile_motivational_text')
+
+    uploaded_hero = request.files.get('profile_hero_image')
+    if uploaded_hero and uploaded_hero.filename:
+        try:
+            hero_url = upload_file(uploaded_hero, folder='site_settings', allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
+            setting.profile_hero_image_url = hero_url
+        except UploadError as e:
+            flash(str(e), 'danger')
+            return redirect(url_for('admin_dashboard'))
+    else:
+        # Fallback to keep existing or new text URL
+        hero_url_field = request.form.get('profile_hero_image_url')
+        if hero_url_field:
+            setting.profile_hero_image_url = hero_url_field
+
     try:
         db.session.commit()
     except Exception as e:
@@ -2071,9 +2795,10 @@ def update_settings():
 
 with app.app_context():
     db.create_all()
-    
+
     migrations = [
         ("events", "event_hours", "INTEGER DEFAULT 3"),
+        ("events", "team_id", "INTEGER"),
         ("system_settings", "banner_text", "VARCHAR(500)"),
         ("system_settings", "is_banner_active", "BOOLEAN DEFAULT FALSE"),
 
@@ -2090,6 +2815,9 @@ with app.app_context():
         ("site_settings", "card_title_events", "VARCHAR(100) DEFAULT 'الفعاليات الميدانية'"),
         ("site_settings", "card_title_excuse", "VARCHAR(100) DEFAULT 'تقديم اعتذار عن فعالية'"),
         ("site_settings", "card_title_transport", "VARCHAR(100) DEFAULT 'نقاط التجمع والمواصلات'"),
+
+        ("site_settings", "profile_hero_image_url", "VARCHAR(500)"),
+        ("site_settings", "profile_motivational_text", "TEXT"),
         ("volunteers", "badges", "TEXT DEFAULT ''"),
         ("volunteers", "badge_number", "VARCHAR(50)"),
         ("volunteers", "gender", "VARCHAR(10)"),
@@ -2104,7 +2832,10 @@ with app.app_context():
         ("volunteers", "last_active", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
         ("volunteers", "admin_evaluation", "TEXT"),
         ("events", "starts_at", "TIMESTAMP"),
-        ("events", "ends_at", "TIMESTAMP")
+        ("events", "ends_at", "TIMESTAMP"),
+        ("hour_ledger", "idempotency_key", "VARCHAR(100)"),
+        ("events", "status", "VARCHAR(50)"),
+        ("event_registrations", "status", "VARCHAR(50)")
     ]
     for tbl, col, col_type in migrations:
         try:
@@ -2141,6 +2872,40 @@ with app.app_context():
             db.session.rollback()
             app.logger.error(f"Failed to create unique index 'uix_volunteer_event': {e}")
 
+    # Idempotency index for HourLedger
+    try:
+        db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uix_hour_ledger_idemp ON hour_ledger (idempotency_key) WHERE idempotency_key IS NOT NULL;"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        # Fallback for SQLite which doesn't support WHERE in CREATE INDEX in older versions easily or just generic fail
+        try:
+            db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uix_hour_ledger_idemp ON hour_ledger (idempotency_key);"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+    # Idempotency index for Notifications
+    try:
+        dups = db.session.execute(text("SELECT volunteer_id, reference_id FROM notifications WHERE reference_id IS NOT NULL GROUP BY volunteer_id, reference_id HAVING COUNT(*) > 1")).fetchall()
+        if dups:
+            app.logger.warning(f"Duplicate notifications found for (volunteer_id, reference_id): {dups}. Will NOT create unique index to prevent data loss. Please resolve manually.")
+        else:
+            try:
+                db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uix_notif_idemp ON notifications (volunteer_id, reference_id) WHERE reference_id IS NOT NULL;"))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                # Fallback for SQLite
+                try:
+                    db.session.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uix_notif_idemp ON notifications (volunteer_id, reference_id);"))
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+    except Exception:
+        db.session.rollback()
+
+
     try:
         if not SiteSetting.query.first():
             db.session.add(SiteSetting())
@@ -2168,6 +2933,216 @@ with app.app_context():
         )
     except Exception:
         pass  # Bootstrap failures should not prevent startup
+
+
+@app.route('/admin/events/<int:event_id>/team', methods=['POST'])
+def admin_assign_event_team(event_id):
+    denied = _require_admin()
+    if denied: return denied
+
+    event = Event.query.get_or_404(event_id)
+    target_team_id_raw = request.form.get('team_id', '').strip()
+
+    if target_team_id_raw == '':
+        target_team_id = None
+    elif target_team_id_raw.isdigit():
+        target_team_id = int(target_team_id_raw)
+    else:
+        flash('Invalid team ID format.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    success, msg = EventTeamAssignmentService.assign_team(event, target_team_id)
+    if success:
+        flash(msg, 'success')
+    else:
+        flash(msg, 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/events/<int:event_id>/feedback')
+def admin_event_feedback(event_id):
+    return "Feedback"
+
+
+# ==================== TEAMS ADMIN CRUD ====================
+
+@app.route('/admin/teams/create', methods=['POST'])
+def admin_create_team():
+    denied = _require_admin()
+    if denied: return denied
+
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+
+    if not name:
+        flash('Team name is required.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    t = Team(name=name[:100], description=description)
+    try:
+        db.session.add(t)
+        db.session.commit()
+        flash('Team created successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to create team: {e}")
+        flash('Failed to create team.', 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/teams/<int:team_id>/edit', methods=['POST'])
+def admin_edit_team(team_id):
+    denied = _require_admin()
+    if denied: return denied
+
+    t = Team.query.get_or_404(team_id)
+    name = request.form.get('name', '').strip()
+    description = request.form.get('description', '').strip()
+
+    if not name:
+        flash('Team name is required.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    t.name = name[:100]
+    t.description = description
+
+    try:
+        db.session.commit()
+        flash('Team updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to edit team: {e}")
+        flash('Failed to update team.', 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/teams/<int:team_id>/toggle', methods=['POST'])
+def admin_toggle_team(team_id):
+    denied = _require_admin()
+    if denied: return denied
+
+    t = Team.query.get_or_404(team_id)
+    t.is_active = not t.is_active
+
+    try:
+        db.session.commit()
+        state_str = 'Activated' if t.is_active else 'Deactivated'
+        flash(f'Team {state_str} successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to toggle team: {e}")
+        flash('Failed to toggle team.', 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
+# ==================== GOALS ADMIN CRUD ====================
+
+@app.route('/admin/goals/create', methods=['POST'])
+def admin_create_goal():
+    denied = _require_admin()
+    if denied: return denied
+
+    team_id_raw = request.form.get('team_id', '').strip()
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    target_value_raw = request.form.get('target_value', '').strip()
+
+    if not team_id_raw or not title or not target_value_raw:
+        flash('Missing required fields for goal.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        target_value = int(target_value_raw)
+        team_id = int(team_id_raw)
+    except ValueError:
+        flash('Invalid numeric value.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    if target_value <= 0:
+        flash('Target value must be greater than zero.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    # Verify team exists
+    team = Team.query.get(team_id)
+    if not team:
+        flash('Invalid team: team does not exist.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    g = Goal(team_id=team_id, title=title[:150], description=description, target_value=target_value)
+
+    try:
+        db.session.add(g)
+        db.session.commit()
+        flash('Goal created successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to create goal: {e}")
+        flash('Failed to create goal.', 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/goals/<int:goal_id>/edit', methods=['POST'])
+def admin_edit_goal(goal_id):
+    denied = _require_admin()
+    if denied: return denied
+
+    g = Goal.query.get_or_404(goal_id)
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    target_value_raw = request.form.get('target_value', '').strip()
+
+    if not title or not target_value_raw:
+        flash('Missing required fields for goal.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    try:
+        target_value = int(target_value_raw)
+    except ValueError:
+        flash('Invalid numeric value.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    g.title = title[:150]
+    g.description = description
+    g.target_value = target_value
+
+    try:
+        db.session.commit()
+        flash('Goal updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to update goal: {e}")
+        flash('Failed to update goal.', 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/goals/<int:goal_id>/status', methods=['POST'])
+def admin_status_goal(goal_id):
+    denied = _require_admin()
+    if denied: return denied
+
+    g = Goal.query.get_or_404(goal_id)
+    new_status = request.form.get('status', '').strip()
+
+    if new_status not in ['ACTIVE', 'ACHIEVED', 'ARCHIVED']:
+        flash('Invalid status.', 'danger')
+        return redirect(url_for('admin_dashboard'))
+
+    g.status = new_status
+
+    try:
+        db.session.commit()
+        flash('Status updated successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Failed to update status: {e}")
+        flash('Failed to update status.', 'danger')
+
+    return redirect(url_for('admin_dashboard'))
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))  # [DEV] Shifted from 5000 (HSTS-poisoned) to 5001

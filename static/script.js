@@ -13,11 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerSection = document.getElementById('register-section');
     const volunteerHubSection = document.getElementById('volunteer-hub-section');
     const adminDashboard = document.getElementById('admin-dashboard');
-    
+
     const registerBtn = document.getElementById('register-btn');
     const backBtn = document.getElementById('back-btn');
     const profileBtn = document.getElementById('profile-btn');
-    
+
     const loginBtn = document.getElementById('login-btn');
     const loginModal = document.getElementById('login-modal');
     const closeLogin = document.getElementById('close-login');
@@ -494,8 +494,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const waMessage = encodeURIComponent(`مرحباً ${v.full_name}، نتواصل معك من إدارة مبادرة لمتنا بصمة بخصوص انضمامك لفريقنا.`);
                     const waLink = `https://wa.me/${waPhone}?text=${waMessage}`;
 
-                    const avatarHtml = v.avatar_url 
-                        ? `<img src="${v.avatar_url}" class="admin-volunteer-thumb" alt="${v.full_name}">` 
+                    const avatarHtml = v.avatar_url
+                        ? `<img src="${v.avatar_url}" class="admin-volunteer-thumb" alt="${v.full_name}">`
                         : `<span style="font-size:32px;">👤</span>`;
 
                     const card = document.createElement('div');
@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p><strong>📍 مكان السكن:</strong> ${v.location}</p>
                         <p><strong>🛠️ المهارات:</strong> ${v.skills.join(' - ') || 'لا توجد'}</p>
                         ${v.experience_details ? `<p><strong>الخبرة السابقة:</strong> ${v.experience_details}</p>` : ''}
-                        
+
                         <div class="behavior-box">
                             <strong>التقييم السلوكي:</strong>
                             <p>• الضغط: ${v.behavior.pressure}</p>
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
 
                         <p style="margin-top:8px;"><strong>الرتبة:</strong> ${v.rank} | <strong>الفعاليات:</strong> ${v.events_count} | <strong>الإنذارات:</strong> ${v.warnings_count}</p>
-                        
+
                         <div class="card-actions">
                             <a href="${waLink}" target="_blank" class="action-btn btn-whatsapp">💬 واتساب مباشر</a>
                             <button class="action-btn btn-accept" onclick="handleVolunteerAction(${v.id}, 'accept')">قبول</button>
@@ -621,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 data.events.forEach(e => {
-                    const attendeesTags = e.attendees.length > 0 
+                    const attendeesTags = e.attendees.length > 0
                         ? e.attendees.map(a => `<span class="attendee-tag">👤 ${a.name} (#${a.id}) <button class="remove-attendee-btn" onclick="removeAttendee(${e.id}, ${a.id})">×</button></span>`).join(' ')
                         : '<span style="color:#888; font-size:13px;">لم يتم توثيق حضور أحد بعد.</span>';
 
@@ -637,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="status-badge status-مقبول">حضور فعلي: ${e.attendees_count} | رغبة انضمام: ${e.registered_count}</span>
                         </div>
                         <p><strong>📍 المكان:</strong> ${e.location} | <strong>📅 التاريخ:</strong> ${e.event_date}</p>
-                        
+
                         <div style="margin: 8px 0;">
                             <strong>المتطوعون الذين أبدوا رغبتهم بالانضمام:</strong>
                             <div class="attendees-wrap">${registeredTags}</div>
@@ -647,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <strong>قائمة الحضور الفعلي الموثق:</strong>
                             <div class="attendees-wrap">${attendeesTags}</div>
                         </div>
-                        
+
                         <div class="card-actions">
                             <button class="action-btn btn-event" onclick="promptAttendance(${e.id})">+ توثيق حضور متطوع</button>
                             <a href="/api/export/event/${e.id}" class="action-btn export-btn" style="text-decoration:none; padding:5px 10px; font-size:12px;" download>📥 كشف الحضور (Excel)</a>
@@ -945,8 +945,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p><strong>📍 الموقع:</strong> ${e.location}</p>
                     <p><strong>👥 المسجلون بالفعالية:</strong> ${e.registered_count} متطوع</p>
                     <div class="card-actions">
-                        ${isRegistered 
-                            ? `<span class="status-badge status-مقبول" style="padding:6px 12px;">✅ تم تسجيل اهتمامك</span>` 
+                        ${isRegistered
+                            ? `<span class="status-badge status-مقبول" style="padding:6px 12px;">✅ تم تسجيل اهتمامك</span>`
                             : `<button class="action-btn btn-accept" onclick="registerInterest(${e.id})">🙋‍♂️ تسجيل اهتمامي بالانضمام</button>`}
                     </div>
                 `;
@@ -1007,4 +1007,110 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadSiteInfo();
     checkAuthSession();
+
+    // ==================== P2 MOTION SYSTEM ====================
+    // Reveal Observer
+    const revealOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, revealOptions);
+
+    document.querySelectorAll('.reveal-up, .reveal-scale').forEach(el => {
+        revealObserver.observe(el);
+    });
+
+    // CountUp Observer
+    const countUpOptions = { threshold: 0.5 };
+    const countUpObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                startCountUp(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, countUpOptions);
+
+    document.querySelectorAll('.count-up-element').forEach(el => {
+        countUpObserver.observe(el);
+    });
+
+    function startCountUp(el) {
+        const target = parseInt(el.getAttribute('data-target'), 10) || 0;
+        const duration = 2000; // ms
+        const frameRate = 30; // ms per frame
+        const totalFrames = Math.round(duration / frameRate);
+        let currentFrame = 0;
+
+        // Fast path for 0
+        if (target === 0) {
+            el.textContent = '0';
+            return;
+        }
+
+        const counter = setInterval(() => {
+            currentFrame++;
+            // Ease out quad
+            const progress = currentFrame / totalFrames;
+            const easeOutProgress = progress * (2 - progress);
+            const currentVal = Math.round(target * easeOutProgress);
+
+            el.textContent = currentVal.toLocaleString('en-US');
+
+            if (currentFrame >= totalFrames) {
+                clearInterval(counter);
+                el.textContent = target.toLocaleString('en-US');
+            }
+        }, frameRate);
+    }
+
+});
+/* =========================================
+   P2-F Community Impact Count-Up
+   ========================================= */
+document.addEventListener('DOMContentLoaded', () => {
+    const statElements = document.querySelectorAll('.count-up');
+
+    if (statElements.length > 0) {
+        // Respect prefers-reduced-motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const countObserver = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const target = parseInt(el.getAttribute('data-target') || '0');
+
+                    if (prefersReducedMotion) {
+                        el.innerText = target.toLocaleString('ar-EG');
+                        obs.unobserve(el);
+                        return;
+                    }
+
+                    const duration = 2000;
+                    const increment = target / (duration / 16);
+                    let current = 0;
+
+                    const updateCount = () => {
+                        current += increment;
+                        if (current < target) {
+                            el.innerText = Math.ceil(current).toLocaleString('ar-EG');
+                            requestAnimationFrame(updateCount);
+                        } else {
+                            el.innerText = target.toLocaleString('ar-EG');
+                        }
+                    };
+
+                    updateCount();
+                    obs.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        statElements.forEach(el => countObserver.observe(el));
+    }
 });

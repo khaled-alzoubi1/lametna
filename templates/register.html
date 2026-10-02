@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عضوية جديدة | لمتنا بصمة</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8fafc; }
+        .auth-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .auth-card {
+            background: var(--jo-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            border-top: 5px solid var(--jo-green);
+        }
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-brand img { height: 60px; margin-bottom: 10px; }
+        .auth-title { font-size: 1.8rem; font-weight: 900; color: var(--jo-black); margin-bottom: 10px; text-align: center; }
+        .auth-subtitle { color: var(--jo-dark-gray); text-align: center; margin-bottom: 30px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--jo-black); }
+        .form-control {
+            width: 100%; padding: 12px 15px; border: 1px solid var(--jo-border);
+            border-radius: var(--radius-sm); font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .form-control:focus { border-color: var(--jo-green); outline: none; box-shadow: 0 0 0 3px rgba(0, 122, 61, 0.1); }
+        
+        .btn-auth {
+            display: block; width: 100%; padding: 14px;
+            background: var(--jo-green); color: white;
+            border: none; border-radius: 30px; font-size: 1.1rem; font-weight: 800;
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-auth:hover { background: #006030; }
+        
+        .auth-links { text-align: center; margin-top: 20px; font-size: 0.95rem; }
+        .auth-links a { color: var(--jo-green); text-decoration: none; font-weight: 700; }
+        .auth-links a:hover { text-decoration: underline; }
+        
+        .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media(max-width: 600px) { .auth-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="auth-wrapper reveal-up">
+        <div class="auth-card">
+            <div class="auth-brand">
+                <a href="{{ url_for('index') }}">
+                    <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار">
+                </a>
+            </div>
+            <h1 class="auth-title">عضوية جديدة</h1>
+            <p class="auth-subtitle">انضم إلى فريق المتطوعين وكن جزءاً من الأثر</p>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div style="margin-bottom: 20px;">
+                    {% for category, message in messages %}
+                        <div style="padding: 15px; border-radius: var(--radius-sm); margin-bottom: 10px; font-weight: 700; background: {% if category == 'danger' or category == 'error' %}#fee2e2; color: #b91c1c; border: 1px solid #f87171;{% elif category == 'info' %}#e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;{% else %}#dcfce7; color: #15803d; border: 1px solid #4ade80;{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            
+            <form action="{{ url_for('register') }}" method="POST">
+                <div class="auth-grid">
+                    <div class="form-group">
+                        <label>الاسم الرباعي</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الرقم الوطني / جواز السفر</label>
+                        <input type="text" name="national_id" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>البريد الإلكتروني</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" name="phone" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة المرور</label>
+                        <input type="password" name="password" class="form-control" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>تاريخ الميلاد</label>
+                        <input type="date" name="birth_date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>المحافظة</label>
+                        <select name="city" class="form-control" required>
+                            <option value="">اختر المحافظة...</option>
+                            <option value="عمان">عمان</option>
+                            <option value="إربد">إربد</option>
+                            <option value="الزرقاء">الزرقاء</option>
+                            <option value="المفرق">المفرق</option>
+                            <option value="عجلون">عجلون</option>
+                            <option value="جرش">جرش</option>
+                            <option value="مأدبا">مأدبا</option>
+                            <option value="البلقاء">البلقاء</option>
+                            <option value="الكرك">الكرك</option>
+                            <option value="الطفيلة">الطفيلة</option>
+                            <option value="معان">معان</option>
+                            <option value="العقبة">العقبة</option>
+                            <option value="خارج الأردن">خارج الأردن</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الجنس</label>
+                        <select name="gender" class="form-control" required>
+                            <option value="">اختر...</option>
+                            <option value="ذكر">ذكر</option>
+                            <option value="أنثى">أنثى</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>زمرة الدم (اختياري)</label>
+                        <select name="blood_group" class="form-control">
+                            <option value="">غير محدد</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-auth" style="margin-top: 20px;">إنشاء الحساب</button>
+            </form>
+            <div class="auth-links">
+                <p>لديك حساب مسبقاً؟ <a href="{{ url_for('login') }}">سجل دخولك</a></p>
+                <p><a href="{{ url_for('index') }}"><i class="fa-solid fa-arrow-right"></i> العودة للرئيسية</a></p>
+            </div>
+
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
