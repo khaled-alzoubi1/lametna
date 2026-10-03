@@ -162,6 +162,39 @@ class SiteSetting(db.Model):
     mission_text = db.Column(db.Text, default='تمكين الطاقات الشبابية وتوجيه شغفها لخدمة الفئات المستحقة، وترسيخ ثقافة التعاون الميداني من خلال بيئة تطوعية محفزة، منظمة، وآمنة تضمن استدامة البصمة الإيجابية.')
     contact_email = db.Column(db.String(120), default='info@lametnahbasmeh.org')
 
+    # Featured Story fields
+    featured_story_title = db.Column(db.String(250), nullable=True)
+    featured_story_desc = db.Column(db.Text, nullable=True)
+    featured_story_image_url = db.Column(db.String(500), nullable=True)
+    featured_story_cta_text = db.Column(db.String(100), nullable=True)
+    featured_story_cta_link = db.Column(db.String(500), nullable=True)
+
+    # Impact fields
+    impact_section_title = db.Column(db.String(250), nullable=True)
+    impact_section_desc = db.Column(db.Text, nullable=True)
+    impact_image_url = db.Column(db.String(500), nullable=True)
+    impact_cta_text = db.Column(db.String(100), nullable=True)
+    impact_cta_link = db.Column(db.String(500), nullable=True)
+
+    # Closing CTA fields
+    closing_cta_title = db.Column(db.String(250), nullable=True)
+    closing_cta_desc = db.Column(db.Text, nullable=True)
+
+    stat_label_hours = db.Column(db.String(100), nullable=True)
+    stat_label_volunteers = db.Column(db.String(100), nullable=True)
+    stat_label_events = db.Column(db.String(100), nullable=True)
+
+    activities_section_title = db.Column(db.String(250), nullable=True)
+    activities_section_desc = db.Column(db.Text, nullable=True)
+
+    gallery_section_title = db.Column(db.String(250), nullable=True)
+    gallery_section_desc = db.Column(db.Text, nullable=True)
+
+    footer_about_text = db.Column(db.Text, nullable=True)
+    contact_phone1 = db.Column(db.String(50), nullable=True)
+    contact_phone2 = db.Column(db.String(50), nullable=True)
+
+
     # روابط المنصات الرسمية الحية
     whatsapp_url = db.Column(db.String(500), default='https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8')
     instagram_url = db.Column(db.String(500), default='https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw')
@@ -903,7 +936,6 @@ def is_admin_session() -> bool:
         session.get('admin_email', '').lower() in _ADMIN_EMAILS
     )
 
-from services.team import EventTeamAssignmentService, TeamContributionService
 
 def _require_admin():
     """Call at the top of any admin route. Returns a redirect response if unauthorized,
@@ -1037,6 +1069,7 @@ def register():
 
         return redirect(url_for('index'))
 
+    return render_template('register.html')
 
 # ── Admin credential bootstrap ─────────────────────────────────────────────
 # Passwords are NOT stored in source code. They live exclusively in the database
@@ -1141,7 +1174,7 @@ def login():
         flash('بيانات الدخول غير صحيحة، يرجى التحقق من البريد وكلمة المرور.', 'danger')
         return redirect(url_for('index'))
 
-    return redirect(url_for('index'))
+    return render_template('login.html')
 
 
 @app.route('/logout')
@@ -1779,6 +1812,7 @@ def admin_dashboard():
 
     teams = Team.query.order_by(Team.created_at.desc()).all()
 
+    from services.team import EventTeamAssignmentService
     event_locked_map = EventTeamAssignmentService.get_bulk_historical_locks(events)
     return render_template(
         'admin.html',
@@ -2702,6 +2736,9 @@ def update_settings():
     # Hero Settings
     setting.hero_title = request.form.get('hero_title')
     setting.hero_desc = request.form.get('hero_desc')
+    setting.hero_cta_text = request.form.get('hero_cta_text')
+    setting.hero_cta_link = request.form.get('hero_cta_link')
+    setting.profile_motivational_text = request.form.get('profile_motivational_text')
     if 'hero_cta_text' in request.form:
         setting.hero_cta_text = request.form.get('hero_cta_text')
     if 'hero_cta_link' in request.form:
@@ -2746,6 +2783,35 @@ def update_settings():
     setting.impact_section_desc = request.form.get('impact_section_desc')
     setting.impact_cta_text = request.form.get('impact_cta_text')
     setting.impact_cta_link = request.form.get('impact_cta_link')
+
+    setting.closing_cta_title = request.form.get('closing_cta_title')
+    setting.closing_cta_desc = request.form.get('closing_cta_desc')
+
+    setting.stat_label_hours = request.form.get('stat_label_hours')
+    setting.stat_label_volunteers = request.form.get('stat_label_volunteers')
+    setting.stat_label_events = request.form.get('stat_label_events')
+
+    setting.activities_section_title = request.form.get('activities_section_title')
+    setting.activities_section_desc = request.form.get('activities_section_desc')
+
+    setting.gallery_section_title = request.form.get('gallery_section_title')
+    setting.gallery_section_desc = request.form.get('gallery_section_desc')
+
+    setting.footer_about_text = request.form.get('footer_about_text')
+    setting.contact_phone1 = request.form.get('contact_phone1')
+    setting.contact_phone2 = request.form.get('contact_phone2')
+
+
+    impact_img_file = request.files.get('impact_image_file')
+    if impact_img_file and impact_img_file.filename:
+        try:
+            setting.impact_image_url = upload_file(impact_img_file, folder='site_settings', allowed_extensions=ALLOWED_IMAGE_EXTENSIONS)
+        except UploadError as e:
+            flash(str(e), 'danger')
+    else:
+        impact_url_field = request.form.get('impact_image_url')
+        if impact_url_field:
+            setting.impact_image_url = impact_url_field
 
     setting.whatsapp_url = request.form.get('whatsapp_url')
     setting.instagram_url = request.form.get('instagram_url')
@@ -2801,6 +2867,30 @@ with app.app_context():
         ("events", "team_id", "INTEGER"),
         ("system_settings", "banner_text", "VARCHAR(500)"),
         ("system_settings", "is_banner_active", "BOOLEAN DEFAULT FALSE"),
+
+        ("site_settings", "featured_story_title", "VARCHAR(250)"),
+        ("site_settings", "featured_story_desc", "TEXT"),
+        ("site_settings", "featured_story_image_url", "VARCHAR(500)"),
+        ("site_settings", "featured_story_cta_text", "VARCHAR(100)"),
+        ("site_settings", "featured_story_cta_link", "VARCHAR(500)"),
+        ("site_settings", "impact_section_title", "VARCHAR(250)"),
+        ("site_settings", "impact_section_desc", "TEXT"),
+        ("site_settings", "impact_image_url", "VARCHAR(500)"),
+        ("site_settings", "impact_cta_text", "VARCHAR(100)"),
+        ("site_settings", "impact_cta_link", "VARCHAR(500)"),
+        ("site_settings", "closing_cta_title", "VARCHAR(250)"),
+        ("site_settings", "closing_cta_desc", "TEXT"),
+        ("site_settings", "stat_label_hours", "VARCHAR(100)"),
+        ("site_settings", "stat_label_volunteers", "VARCHAR(100)"),
+        ("site_settings", "stat_label_events", "VARCHAR(100)"),
+        ("site_settings", "activities_section_title", "VARCHAR(250)"),
+        ("site_settings", "activities_section_desc", "TEXT"),
+        ("site_settings", "gallery_section_title", "VARCHAR(250)"),
+        ("site_settings", "gallery_section_desc", "TEXT"),
+        ("site_settings", "footer_about_text", "TEXT"),
+        ("site_settings", "contact_phone1", "VARCHAR(50)"),
+        ("site_settings", "contact_phone2", "VARCHAR(50)"),
+
 
         ("site_settings", "whatsapp_url", "VARCHAR(500)"),
         ("site_settings", "instagram_url", "VARCHAR(500)"),
@@ -2951,6 +3041,7 @@ def admin_assign_event_team(event_id):
         flash('Invalid team ID format.', 'danger')
         return redirect(url_for('admin_dashboard'))
 
+    from services.team import EventTeamAssignmentService
     success, msg = EventTeamAssignmentService.assign_team(event, target_team_id)
     if success:
         flash(msg, 'success')

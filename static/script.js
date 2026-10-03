@@ -1005,8 +1005,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    loadSiteInfo();
-    checkAuthSession();
+    // Stale SPA endpoints - disabled
+    // loadSiteInfo();
+    // checkAuthSession();
 
     // ==================== P2 MOTION SYSTEM ====================
     // Reveal Observer

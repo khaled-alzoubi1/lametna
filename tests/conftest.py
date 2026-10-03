@@ -1,4 +1,4 @@
-"""
+﻿"""
 Shared pytest fixtures for P1/P2/P3 tests.
 
 These fixtures are used by test_notifications.py, test_qr_attendance.py,
@@ -13,6 +13,7 @@ import pytest
 from datetime import datetime, timedelta
 
 os.environ.setdefault('FLASK_ENV', 'development')
+os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
 
 from app import app as _app, db, Volunteer, Event, EventRegistration, HourLedger
 
@@ -20,19 +21,23 @@ from app import app as _app, db, Volunteer, Event, EventRegistration, HourLedger
 @pytest.fixture(scope='function', autouse=True)
 def test_app():
     """
-    Module-scoped test application with in-memory SQLite.
-    A fresh DB is created for each test module.
+    Function-scoped test application with in-memory SQLite.
     """
     _app.config.update({
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
         'WTF_CSRF_ENABLED': False,
     })
+
     with _app.app_context():
         db.create_all()
         yield _app
         db.session.remove()
-        db.drop_all()
+        try:
+            db.drop_all()
+        except Exception:
+            pass
+
 
 
 @pytest.fixture

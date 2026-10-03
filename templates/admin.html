@@ -489,24 +489,6 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             <button class="admin-tab-btn" onclick="switchAdminTab('galleryTab', this)"><i class="fa-solid fa-photo-film"></i> معرض الصور والفيديو</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
             <button class="admin-tab-btn" onclick="switchAdminTab('excusesTab', this)"><i class="fa-solid fa-file-signature"></i> سجل الأعذار ({{ excuses|length }}) والاستفسارات ({{ inquiries|length }})</button>
         </div>
 
@@ -1083,7 +1065,63 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-primary-block" style="max-width: 250px;">حفظ وتطبيق التغييرات</button>
+
+                      <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">إحصائيات (عناوين فقط)</h5>
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">ساعات العطاء</label>
+                              <input type="text" name="stat_label_hours" class="custom-input" value="{{ settings.stat_label_hours if settings else '' }}">
+                          </div>
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">متطوع معتمد</label>
+                              <input type="text" name="stat_label_volunteers" class="custom-input" value="{{ settings.stat_label_volunteers if settings else '' }}">
+                          </div>
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">فعالية ميدانية</label>
+                              <input type="text" name="stat_label_events" class="custom-input" value="{{ settings.stat_label_events if settings else '' }}">
+                          </div>
+                      </div>
+
+                      <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">الفعاليات القادمة</h5>
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان القسم</label>
+                              <input type="text" name="activities_section_title" class="custom-input" value="{{ settings.activities_section_title if settings else '' }}">
+                          </div>
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">وصف القسم</label>
+                              <textarea name="activities_section_desc" class="custom-input" rows="2">{{ settings.activities_section_desc if settings else '' }}</textarea>
+                          </div>
+                      </div>
+
+                      <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">لقطات من الميدان</h5>
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">عنوان القسم</label>
+                              <input type="text" name="gallery_section_title" class="custom-input" value="{{ settings.gallery_section_title if settings else '' }}">
+                          </div>
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">وصف القسم</label>
+                              <textarea name="gallery_section_desc" class="custom-input" rows="2">{{ settings.gallery_section_desc if settings else '' }}</textarea>
+                          </div>
+                      </div>
+
+                      <h5 style="margin: 30px 0 15px; font-weight: 800; border-bottom: 2px solid var(--jo-light-gray); padding-bottom: 5px;">تذييل الصفحة (Footer)</h5>
+                      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">وصف الجمعية</label>
+                              <textarea name="footer_about_text" class="custom-input" rows="2">{{ settings.footer_about_text if settings else '' }}</textarea>
+                          </div>
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم هاتف 1</label>
+                              <input type="text" name="contact_phone1" class="custom-input" value="{{ settings.contact_phone1 if settings else '' }}">
+                          </div>
+                          <div class="custom-select-group">
+                              <label style="display:block; margin-bottom: 6px; font-weight: 700;">رقم هاتف 2</label>
+                              <input type="text" name="contact_phone2" class="custom-input" value="{{ settings.contact_phone2 if settings else '' }}">
+                          </div>
+                      </div>
+<button type="submit" class="btn-primary-block" style="max-width: 250px;">حفظ وتطبيق التغييرات</button>
                 </form>
             </div>
         </div>

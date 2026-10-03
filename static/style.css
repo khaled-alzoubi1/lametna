@@ -106,7 +106,7 @@ body {
     width: 100%;
     margin: 0;
     padding: 0;
-    gap: 2px;
+    gap: 6px;
 }
 .nav-links li { display: flex; align-items: center; justify-content: center; }
 .nav-links li a {
@@ -158,7 +158,7 @@ body {
 /* الأزرار العلوية */
 .btn-nav-action, .btn-danger {
     display: inline-flex !important;
-    flex-direction: column !important;
+    flex-direction: row !important; gap: 6px !important;
     align-items: center !important;
     justify-content: center !important;
     text-align: center !important;
@@ -174,6 +174,30 @@ body {
     min-width: 82px !important;
     transition: var(--transition) !important;
 }
+
+.btn-nav-login {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    text-align: center !important;
+    padding: 7px 16px !important;
+    border-radius: var(--radius-sm) !important;
+    font-weight: 800 !important;
+    font-size: 0.88rem !important;
+    background: transparent !important;
+    color: var(--jo-charcoal) !important;
+    border: 1.5px solid var(--jo-border) !important;
+    transition: var(--transition) !important;
+    line-height: 1.25 !important;
+}
+.btn-nav-login:hover {
+    background: var(--jo-surface) !important;
+    border-color: var(--jo-border-hover) !important;
+    color: var(--jo-green) !important;
+}
+
 .btn-nav-action {
     background: var(--jo-green) !important;
     color: var(--jo-white) !important;
@@ -674,6 +698,7 @@ body {
     }
     .nav-links.mobile-nav-active { display: flex !important; animation: slideDown 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
     .nav-links li { width: 100%; }
+    .nav-spacer { display: none !important; }
     .nav-links li a { width: 100%; text-align: center; padding: 12px; font-size: 1rem; border-bottom: 1px solid var(--jo-border); }
     .nav-links li a::after { display: none; }
     .btn-nav-action, .btn-danger { width: 100% !important; max-width: 100% !important; padding: 12px !important; }
@@ -885,7 +910,7 @@ button, [role="button"] { -webkit-tap-highlight-color: transparent; }
     transition: var(--transition-slow);
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 6px;
     position: relative;
     overflow: hidden;
     flex: 1;

@@ -99,23 +99,34 @@
 
     <header class="navbar">
         <a href="{{ url_for('index') }}" class="nav-brand">
-            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار المبادرة">
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار فريق لمتنا بصمة">
             <div class="nav-brand-title">
-                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }} 
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
                 <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
             </div>
         </a>
-        <button class="nav-toggle-btn" onclick="document.getElementById('mobileNav').classList.toggle('mobile-nav-active')"><i class="fa-solid fa-bars"></i></button>
+
+        <button class="nav-toggle-btn" onclick="toggleMobileNav()" aria-label="فتح القائمة">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
         <nav>
-            <ul class="nav-links" id="mobileNav">
+            <ul class="nav-links" id="mainNavLinks">
                 <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
-                <li><a href="{{ url_for('events_list') }}" class="active">الفعاليات</a></li>
-                {% if current_user %}
-                <li><a href="{{ url_for('profile') }}">بيت المتطوع</a></li>
-                <li><a href="{{ url_for('logout') }}" class="btn-danger">تسجيل خروج</a></li>
+                <li><a href="{{ url_for('index') }}#about">من نحن</a></li>
+                <li><a href="{{ url_for('index') }}#leaderboard">فرسان البصمة</a></li>
+                <li><a href="{{ url_for('index') }}#activities">الفعاليات الميدانية</a></li>
+                <li><a href="{{ url_for('index') }}#gallery">المعرض</a></li>
+                <li class="nav-spacer" style="flex-grow: 1;"></li>
+                {% if session.get('admin_logged_in') %}
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="btn-nav-action"><i class="fa-solid fa-shield-halved"></i> لوحة التحكم</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a></li>
+                {% elif session.get('user_id') %}
+                    <li><a href="{{ url_for('profile') }}" class="btn-nav-action"><i class="fa-solid fa-user-astronaut"></i> بوابة المتطوع</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a></li>
                 {% else %}
-                <li><a href="{{ url_for('login') }}">تسجيل دخول</a></li>
-                <li><a href="{{ url_for('register') }}" class="btn-primary">عضوية جديدة</a></li>
+                    <li><a href="{{ url_for('login') }}" class="btn-nav-login"><i class="fa-solid fa-arrow-right-to-bracket"></i> تسجيل الدخول</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn-nav-action"><i class="fa-solid fa-user-plus"></i> انضم كمتطوع</a></li>
                 {% endif %}
             </ul>
         </nav>
