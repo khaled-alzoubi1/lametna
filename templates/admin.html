@@ -487,9 +487,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             <button class="admin-tab-btn" onclick="switchAdminTab('cmsTab', this)"><i class="fa-solid fa-sliders"></i> تخصيص الموقع وبطاقات الخدمات الـ 5</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('dutiesTab', this)"><i class="fa-solid fa-list-check"></i> التكليفات الميدانية</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('galleryTab', this)"><i class="fa-solid fa-photo-film"></i> معرض الصور والفيديو</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> OOOO1O O U,U?O1U,</button>
-            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> OO O_O O </button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('teamsTab', this)"><i class="fa-solid fa-people-group"></i> إدارة الفرق</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('goalsTab', this)"><i class="fa-solid fa-bullseye"></i> أهداف الفريق</button>
             <button class="admin-tab-btn" onclick="switchAdminTab('excusesTab', this)"><i class="fa-solid fa-file-signature"></i> سجل الأعذار ({{ excuses|length }}) والاستفسارات ({{ inquiries|length }})</button>
+            <button class="admin-tab-btn" onclick="switchAdminTab('trainingTab', this)"><i class="fa-solid fa-graduation-cap"></i> إدارة التدريب</button>
         </div>
 
         <!-- ==================== 1. تبويب المتطوعين والقيادات والأوسمة ==================== -->
@@ -2230,7 +2231,253 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             </div>
         </div>
 
-    </main>
+    
+        <!-- ==============================
+             TRAINING TAB
+        =============================== -->
+        <div id="trainingTab" class="admin-tab-content">
+            <div class="admin-tab-header">
+                <h2>إدارة التدريب (Courses & Modules)</h2>
+                <button class="btn-primary" onclick="document.getElementById('createCourseModal').style.display='flex'">
+                    <i class="fa-solid fa-plus"></i> إضافة دورة جديدة
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>الرقم</th>
+                            <th>العنوان</th>
+                            <th>الحالة</th>
+                            <th>الوحدات (Modules)</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in training_courses %}
+                        <tr>
+                            <td>{{ course.id }}</td>
+                            <td>{{ course.title }}</td>
+                            <td>
+                                {% if course.is_published %}
+                                <span class="badge" style="background:var(--jo-green-light); color:var(--jo-green);">منشور</span>
+                                {% else %}
+                                <span class="badge" style="background:#fee2e2; color:var(--jo-red);">مسودة</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ course.modules|length }} وحدة</td>
+                            <td>
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn-secondary btn-sm" onclick="document.getElementById('editCourseModal{{ course.id }}').style.display='flex'" title="تعديل"><i class="fa-solid fa-pen"></i></button>
+                                    
+                                    <form action="{{ url_for('admin_toggle_course', course_id=course.id) }}" method="POST" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-secondary btn-sm" title="نشر / إلغاء نشر"><i class="fa-solid fa-eye"></i></button>
+                                    </form>
+                                    
+                                    <button class="btn-secondary btn-sm" onclick="document.getElementById('manageModulesModal{{ course.id }}').style.display='flex'" title="إدارة الوحدات"><i class="fa-solid fa-layer-group"></i></button>
+                                    
+                                    <form action="{{ url_for('admin_delete_course', course_id=course.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذه الدورة وكل ما يتعلق بها؟');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-secondary btn-sm" style="color:var(--jo-red);" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" style="text-align:center;">لا توجد دورات تدريبية.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+
+<!-- Create Course Modal -->
+<div id="createCourseModal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>إضافة دورة تدريبية</h3>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+        </div>
+        <form action="{{ url_for('admin_create_course') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>عنوان الدورة <span style="color:var(--jo-red);">*</span></label>
+                <input type="text" name="title" required maxlength="200" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>الوصف</label>
+                <textarea name="description" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+                <label>رابط صورة الغلاف</label>
+                <input type="url" name="cover_image_url" class="form-control" placeholder="https://...">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">حفظ</button>
+                <button type="button" class="btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% for course in training_courses %}
+<!-- Edit Course Modal -->
+<div id="editCourseModal{{ course.id }}" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تعديل الدورة</h3>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+        </div>
+        <form action="{{ url_for('admin_edit_course', course_id=course.id) }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>عنوان الدورة <span style="color:var(--jo-red);">*</span></label>
+                <input type="text" name="title" required maxlength="200" class="form-control" value="{{ course.title }}">
+            </div>
+            <div class="form-group">
+                <label>الوصف</label>
+                <textarea name="description" rows="3" class="form-control">{{ course.description or '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>رابط صورة الغلاف</label>
+                <input type="url" name="cover_image_url" class="form-control" value="{{ course.cover_image_url or '' }}">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">حفظ التعديلات</button>
+                <button type="button" class="btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Manage Modules Modal -->
+<div id="manageModulesModal{{ course.id }}" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:800px;">
+        <div class="modal-header">
+            <h3>إدارة الوحدات: {{ course.title }}</h3>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: var(--jo-surface); border-radius: var(--radius-sm);">
+            <h4>إضافة وحدة جديدة</h4>
+            <form action="{{ url_for('admin_create_module', course_id=course.id) }}" method="POST" style="display: grid; gap: 10px; grid-template-columns: 1fr 1fr;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>عنوان الوحدة <span style="color:var(--jo-red);">*</span></label>
+                    <input type="text" name="title" required maxlength="200" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label>نوع المحتوى (فيديو، نص، إلخ)</label>
+                    <input type="text" name="content_type" maxlength="50" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>الترتيب (رقم)</label>
+                    <input type="number" name="position" value="0" class="form-control">
+                </div>
+                
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>رابط المحتوى (YouTube، إلخ)</label>
+                    <input type="url" name="content_url" class="form-control">
+                </div>
+                
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>الوصف</label>
+                    <textarea name="description" rows="2" class="form-control"></textarea>
+                </div>
+                
+                <div class="form-actions" style="grid-column: 1 / -1; justify-content: flex-start;">
+                    <button type="submit" class="btn-primary">إضافة الوحدة</button>
+                </div>
+            </form>
+        </div>
+        
+        <h4>الوحدات الحالية</h4>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>الترتيب</th>
+                    <th>العنوان</th>
+                    <th>النوع</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for module in course.modules|sort(attribute='position') %}
+                <tr>
+                    <td>{{ module.position }}</td>
+                    <td>{{ module.title }}</td>
+                    <td>{{ module.content_type }}</td>
+                    <td>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-secondary btn-sm" onclick="document.getElementById('editModuleModal{{ module.id }}').style.display='flex'" title="تعديل"><i class="fa-solid fa-pen"></i></button>
+                            
+                            <form action="{{ url_for('admin_delete_module', module_id=module.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذه الوحدة؟');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-secondary btn-sm" style="color:var(--jo-red);" title="حذف"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" style="text-align:center;">لا توجد وحدات بعد.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% for module in course.modules %}
+<!-- Edit Module Modal -->
+<div id="editModuleModal{{ module.id }}" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تعديل الوحدة</h3>
+            <button class="modal-close" onclick="this.closest('.modal-overlay').style.display='none'">&times;</button>
+        </div>
+        <form action="{{ url_for('admin_edit_module', module_id=module.id) }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label>عنوان الوحدة <span style="color:var(--jo-red);">*</span></label>
+                <input type="text" name="title" required maxlength="200" class="form-control" value="{{ module.title }}">
+            </div>
+            
+            <div class="form-group">
+                <label>نوع المحتوى</label>
+                <input type="text" name="content_type" maxlength="50" class="form-control" value="{{ module.content_type or '' }}">
+            </div>
+            <div class="form-group">
+                <label>الترتيب (رقم)</label>
+                <input type="number" name="position" value="{{ module.position }}" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label>رابط المحتوى</label>
+                <input type="url" name="content_url" class="form-control" value="{{ module.content_url or '' }}">
+            </div>
+            
+            <div class="form-group">
+                <label>الوصف</label>
+                <textarea name="description" rows="2" class="form-control">{{ module.description or '' }}</textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">حفظ التعديلات</button>
+                <button type="button" class="btn-secondary" onclick="this.closest('.modal-overlay').style.display='none'">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+{% endfor %}
+
+
+</main>
 
     <!-- نافذة باجة الإدارة المذهبة التفاعلية (Admin Badge Modal) -->
     <div id="adminBadgeModal" class="admin-profile-modal">

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ course.title }} | لمتنا بصمة</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">
+    <style>
+        body { background-color: var(--jo-light-gray); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; }
+        .vh-page-wrapper { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        
+        .course-hero {
+            background: var(--jo-white);
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-sm);
+        }
+        .course-hero-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+        }
+        .course-hero-body { padding: 30px; }
+        .course-title { font-size: 2rem; font-weight: 900; color: var(--jo-black); margin: 0 0 15px 0; }
+        .course-desc { font-size: 1.1rem; color: var(--jo-dark-gray); line-height: 1.7; margin-bottom: 20px; }
+        
+        .modules-section { margin-top: 40px; }
+        .modules-title { font-size: 1.5rem; font-weight: 800; color: var(--jo-black); margin-bottom: 20px; border-bottom: 2px solid var(--jo-border); padding-bottom: 10px; }
+        
+        .module-list { display: flex; flex-direction: column; gap: 15px; }
+        .module-item {
+            background: var(--jo-white);
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .module-icon {
+            width: 50px; height: 50px;
+            background: #f1f5f9; color: var(--jo-green);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; margin-left: 20px; flex-shrink: 0;
+        }
+        .module-info { flex-grow: 1; }
+        .module-title { font-size: 1.2rem; font-weight: 700; color: var(--jo-black); margin: 0 0 5px 0; }
+        .module-desc { font-size: 0.95rem; color: var(--jo-dark-gray); margin: 0; }
+        .module-type { font-size: 0.85rem; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 8px; }
+        
+        .empty-modules { text-align: center; padding: 40px; color: var(--jo-dark-gray); background: var(--jo-white); border: 1px dashed var(--jo-border); border-radius: var(--radius-md); }
+        .module-item:hover { transform: translateX(-5px); border-color: var(--jo-green); }
+    </style>
+</head>
+<body>
+    <header class="navbar-modern">
+        <a href="{{ url_for('index') }}" class="nav-brand-modern">
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار فريق لمتنا بصمة">
+            <div class="nav-brand-title">
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
+                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+            </div>
+        </a>
+        <div class="nav-actions-modern" style="margin-right: auto;">
+            <a href="{{ url_for('training_list') }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للأكاديمية</a>
+        </div>
+    </header>
+
+    <div class="vh-page-wrapper">
+        <div class="course-hero">
+            {% if course.cover_image_url %}
+                <img src="{{ course.cover_image_url }}" alt="صورة {{ course.title }}" class="course-hero-img">
+            {% else %}
+                <div class="course-hero-img"><i class="fa-solid fa-graduation-cap fa-4x"></i></div>
+            {% endif %}
+            <div class="course-hero-body">
+                <h1 class="course-title">{{ course.title }}</h1>
+                <div class="course-desc" style="white-space: pre-line;">{{ course.description if course.description else 'لا يوجد وصف متاح.' }}</div>
+            
+                {% if course_progress and course_progress.total > 0 %}
+                <div style="background: var(--jo-light-gray); padding: 15px; border-radius: var(--radius-sm); margin-top: 20px; border: 1px solid var(--jo-border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-weight: 700; color: var(--jo-black); font-size: 0.95rem;">نسبة الإنجاز</span>
+                        {% if course_progress.is_completed %}
+                            <span style="background: #dcfce7; color: var(--jo-green); padding: 3px 8px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;"><i class="fa-solid fa-check"></i> مكتمل</span>
+                        {% else %}
+                            <span style="color: var(--jo-dark-gray); font-size: 0.85rem; font-weight: 600;">{{ course_progress.completed }} / {{ course_progress.total }}</span>
+                        {% endif %}
+                    </div>
+                    <div style="background: #cbd5e1; height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
+                        <div style="background: var(--jo-green); height: 100%; width: {{ course_progress.percentage }}%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+        
+        <div class="modules-section">
+            <h2 class="modules-title"><i class="fa-solid fa-list-check"></i> محتوى الدورة</h2>
+            
+            {% if modules %}
+            <div class="module-list">
+                {% for module in modules %}
+                <a href="{{ url_for('training_module_detail', course_id=course.id, module_id=module.id) }}" class="module-item" style="text-decoration: none; transition: transform 0.2s;">
+                    <div class="module-icon" style="{% if module.id in completed_module_ids %}background: #dcfce7; color: var(--jo-green);{% endif %}">
+                        {% if module.id in completed_module_ids %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% else %}
+                            <i class="fa-solid {% if module.content_type == 'VIDEO' %}fa-play-circle{% elif module.content_type == 'DOCUMENT' %}fa-file-pdf{% elif module.content_type == 'QUIZ' %}fa-clipboard-question{% else %}fa-book-open{% endif %}"></i>
+                        {% endif %}
+                    </div>
+                    <div class="module-info">
+                        <h3 class="module-title">{{ module.title }}</h3>
+                        {% if module.description %}
+                        <p class="module-desc">{{ module.description }}</p>
+                        {% endif %}
+                        <div style="margin-top: 8px; display: flex; gap: 10px; align-items: center;">
+                            {% if module.content_type %}
+                            <span class="module-type">{{ module.content_type }}</span>
+                            {% endif %}
+                            {% if module.id in completed_module_ids %}
+                            <span style="font-size: 0.85rem; color: var(--jo-green); font-weight: 700;"><i class="fa-solid fa-check"></i> مكتمل</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="color: var(--jo-dark-gray); padding: 0 10px;">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-modules">
+                <p>لا توجد وحدات تدريبية متاحة حالياً لهذه الدورة.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

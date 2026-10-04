@@ -2,3 +2,9 @@
 .env
 __pycache__/
 *.pyc
+
+local.db
+.pytest_cache/
+static/uploads/
+venv/
+*.log

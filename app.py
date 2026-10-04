@@ -76,23 +76,36 @@ limiter = Limiter(
 
 # ── Environment detection ──────────────────────────────────────────────────
 _is_dev = os.environ.get('FLASK_ENV', 'production').lower() == 'development'
+_is_prod = not _is_dev
 
-# ── Secret key: production MUST supply SECRET_KEY env var.
-# Crash loudly rather than silently use an insecure fallback.
+# ==================== CONFIGURATION VALIDATION ====================
+
+# 1. SECRET_KEY
 _secret_key = os.environ.get('SECRET_KEY')
 if not _secret_key:
     if _is_dev:
-        # Dev-only: ephemeral random key (sessions reset on restart, which is acceptable in dev)
+        import secrets
         _secret_key = secrets.token_hex(32)
     else:
-        raise RuntimeError(
-            "FATAL: SECRET_KEY environment variable is not set. "
-            "Provide a strong, unique secret before starting in production."
-        )
-
+        raise RuntimeError("FATAL: SECRET_KEY environment variable is missing. This is a critical security requirement for production.")
 app.config['SECRET_KEY'] = _secret_key
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///local.db')
+
+# 2. DATABASE_URL
+_db_url = os.environ.get('DATABASE_URL')
+if not _db_url:
+    if _is_dev:
+        _db_url = 'sqlite:///local.db'
+    else:
+        raise RuntimeError("FATAL: DATABASE_URL environment variable is missing. Production requires a valid database connection string (e.g., PostgreSQL).")
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# 3. PUBLIC URL SAFETY (ProxyFix)
+# Ensures url_for(_external=True) generates correct HTTPS URLs in production (e.g., behind Render proxy)
+if _is_prod or os.environ.get('RENDER', '').lower() == 'true':
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
 
 # ── Session security ────────────────────────────────────────────────────────
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -289,6 +302,7 @@ class Volunteer(db.Model):
     duties = db.relationship('Duty', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     excuses = db.relationship('Excuse', backref='volunteer', lazy=True, cascade="all, delete-orphan")
     registrations = db.relationship('EventRegistration', backref='volunteer', lazy=True, cascade="all, delete-orphan")
+    training_progress = db.relationship('TrainingProgress', backref='volunteer_rel', lazy=True, cascade='all, delete-orphan')
 
     @db.orm.reconstructor
     def enforce_admin_titles(self):
@@ -375,6 +389,49 @@ class Goal(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     team = db.relationship('Team', backref=db.backref('goals', lazy='dynamic', cascade='all, delete-orphan'))
+
+
+class TrainingCourse(db.Model):
+    __tablename__ = 'training_courses'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    cover_image_url = db.Column(db.String(500), nullable=True)
+    is_published = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    modules = db.relationship('TrainingModule', backref='course', lazy=True, cascade='all, delete-orphan')
+
+class TrainingModule(db.Model):
+    __tablename__ = 'training_modules'
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('training_courses.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    content_type = db.Column(db.String(50), nullable=True)
+    content_url = db.Column(db.String(500), nullable=True)
+    position = db.Column(db.Integer, default=0)
+    is_published = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    progress_records = db.relationship('TrainingProgress', backref='module', lazy=True, cascade='all, delete-orphan')
+
+class TrainingProgress(db.Model):
+    __tablename__ = 'training_progress'
+    id = db.Column(db.Integer, primary_key=True)
+    volunteer_id = db.Column(db.Integer, db.ForeignKey('volunteers.id', ondelete='CASCADE'), nullable=False)
+    module_id = db.Column(db.Integer, db.ForeignKey('training_modules.id', ondelete='CASCADE'), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('volunteer_id', 'module_id', name='uq_volunteer_module_progress'),
+    )
+
 
 class Event(db.Model):
     __tablename__ = 'events'
@@ -948,9 +1005,7 @@ def _require_admin():
 
 # ==================== المسارات العامة ====================
 
-@app.route('/robots.txt')
-def robots_txt():
-    return "User-agent: *\nAllow: /", 200, {'Content-Type': 'text/plain'}
+
 @app.route('/')
 def index():
     settings = get_settings()
@@ -1270,6 +1325,9 @@ def profile():
     past_attended_events = [ev for ev in user_events if attended_map.get(ev.id) and ev.is_completed]
 
     now = datetime.now()
+    
+    from services.training import TrainingVolunteerService
+    training_courses_progress = TrainingVolunteerService.get_all_courses_progress(user.id)
 
     return render_template(
         'profile.html',
@@ -1280,7 +1338,8 @@ def profile():
         registered_event_ids=registered_event_ids,
         attended_map=attended_map,
         now=now,
-        past_attended_events=past_attended_events
+        past_attended_events=past_attended_events,
+        training_courses_progress=training_courses_progress
     )
 
 @app.route('/profile/update', methods=['POST'])
@@ -1814,8 +1873,10 @@ def admin_dashboard():
 
     from services.team import EventTeamAssignmentService
     event_locked_map = EventTeamAssignmentService.get_bulk_historical_locks(events)
+    training_courses=TrainingCourse.query.order_by(TrainingCourse.created_at.desc()).all()
     return render_template(
         'admin.html',
+        training_courses=training_courses,
         event_locked_map=event_locked_map,
         settings=settings,
         current_admin=current_admin,
@@ -3233,6 +3294,227 @@ def admin_status_goal(goal_id):
         flash('Failed to update status.', 'danger')
 
     return redirect(url_for('admin_dashboard'))
+
+
+
+# ==================== TRAINING ADMIN CRUD ====================
+
+
+@app.route('/admin/training/create', methods=['POST'])
+def admin_create_course():
+    from services.training import TrainingAdminService
+    denied = _require_admin()
+    if denied: return denied
+    
+    success, msg = TrainingAdminService.create_course(
+        request.form.get('title'),
+        request.form.get('description'),
+        request.form.get('cover_image_url')
+    )
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('admin_dashboard') + '#trainingTab')
+
+@app.route('/admin/training/<int:course_id>/edit', methods=['POST'])
+def admin_edit_course(course_id):
+    from services.training import TrainingAdminService
+    denied = _require_admin()
+    if denied: return denied
+    
+    success, msg = TrainingAdminService.edit_course(
+        course_id,
+        request.form.get('title'),
+        request.form.get('description'),
+        request.form.get('cover_image_url')
+    )
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('admin_dashboard') + '#trainingTab')
+
+@app.route('/admin/training/<int:course_id>/toggle', methods=['POST'])
+def admin_toggle_course(course_id):
+    from services.training import TrainingAdminService
+    denied = _require_admin()
+    if denied: return denied
+    
+    success, msg = TrainingAdminService.toggle_course_status(course_id)
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('admin_dashboard') + '#trainingTab')
+
+@app.route('/admin/training/<int:course_id>/delete', methods=['POST'])
+def admin_delete_course(course_id):
+    from services.training import TrainingAdminService
+    denied = _require_admin()
+    if denied: return denied
+    
+    success, msg = TrainingAdminService.delete_course(course_id)
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('admin_dashboard') + '#trainingTab')
+
+@app.route('/admin/training/<int:course_id>/modules/create', methods=['POST'])
+def admin_create_module(course_id):
+    from services.training import TrainingAdminService
+    denied = _require_admin()
+    if denied: return denied
+    
+    success, msg = TrainingAdminService.create_module(
+        course_id,
+        request.form.get('title'),
+        request.form.get('description'),
+        request.form.get('content_type'),
+        request.form.get('content_url'),
+        request.form.get('position')
+    )
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('admin_dashboard') + '#trainingTab')
+
+@app.route('/admin/training/modules/<int:module_id>/edit', methods=['POST'])
+def admin_edit_module(module_id):
+    from services.training import TrainingAdminService
+    denied = _require_admin()
+    if denied: return denied
+    
+    success, msg = TrainingAdminService.edit_module(
+        module_id,
+        request.form.get('title'),
+        request.form.get('description'),
+        request.form.get('content_type'),
+        request.form.get('content_url'),
+        request.form.get('position')
+    )
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('admin_dashboard') + '#trainingTab')
+
+@app.route('/admin/training/modules/<int:module_id>/delete', methods=['POST'])
+def admin_delete_module(module_id):
+    from services.training import TrainingAdminService
+    denied = _require_admin()
+    if denied: return denied
+    
+    success, msg = TrainingAdminService.delete_module(module_id)
+    flash(msg, 'success' if success else 'danger')
+    return redirect(url_for('admin_dashboard') + '#trainingTab')
+
+
+# ==================== LEGAL PAGES ====================
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html', settings=get_settings())
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html', settings=get_settings())
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html', settings=get_settings()), 404
+
+
+from flask_wtf.csrf import CSRFError
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html', settings=get_settings()), 500
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return render_template('csrf_error.html', settings=get_settings(), reason=e.description), 400
+
+
+@app.route('/sitemap.xml')
+def sitemap():
+    pages = []
+    from flask import make_response
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint in ['index', 'events_list', 'privacy', 'terms', 'resources']:
+            url = url_for(rule.endpoint, _external=True)
+            pages.append(f"  <url><loc>{url}</loc></url>")
+            
+    # events
+    events = Event.query.filter(db.or_(Event.status != 'CANCELLED', Event.status.is_(None))).all()
+    for ev in events:
+        url = url_for('event_detail', event_id=ev.id, _external=True)
+        pages.append(f"  <url><loc>{url}</loc></url>")
+
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + '\n'.join(pages) + '\n</urlset>'
+    
+    response = make_response(xml)
+    response.headers["Content-Type"] = "application/xml"
+    return response
+
+@app.route('/robots.txt')
+def robots():
+    from flask import make_response
+    sitemap_url = url_for('sitemap', _external=True)
+    text = f"User-agent: *\nDisallow: /admin\nDisallow: /profile\nDisallow: /verify_attendance_code\nSitemap: {sitemap_url}\n"
+    response = make_response(text)
+    response.headers["Content-Type"] = "text/plain"
+    return response
+
+
+# ==================== VOLUNTEER TRAINING ====================
+
+@app.route('/training')
+def training_list():
+    if 'user_id' not in session:
+        flash('يُرجى تسجيل الدخول أولاً.', 'danger')
+        return redirect(url_for('login'))
+        
+    settings = get_settings()
+    courses = TrainingCourse.query.options(db.joinedload(TrainingCourse.modules.and_(TrainingModule.is_published == True))).filter_by(is_published=True).order_by(TrainingCourse.created_at.desc()).all()
+    
+    return render_template('training_list.html', courses=courses, settings=settings)
+
+@app.route('/training/<int:course_id>/module/<int:module_id>')
+def training_module_detail(course_id, module_id):
+    if 'user_id' not in session:
+        flash('يُرجى تسجيل الدخول أولاً.', 'danger')
+        return redirect(url_for('login'))
+        
+    settings = get_settings()
+    course = TrainingCourse.query.filter_by(id=course_id, is_published=True).first_or_404()
+    module = TrainingModule.query.filter_by(id=module_id, course_id=course.id, is_published=True).first_or_404()
+    
+    progress = TrainingProgress.query.filter_by(volunteer_id=session['user_id'], module_id=module.id).first()
+    is_completed = progress.is_completed if progress else False
+    
+    return render_template('training_module.html', course=course, module=module, is_completed=is_completed, settings=settings)
+
+@app.route('/training/<int:course_id>/module/<int:module_id>/complete', methods=['POST'])
+def training_module_complete(course_id, module_id):
+    if 'user_id' not in session:
+        flash('يُرجى تسجيل الدخول أولاً.', 'danger')
+        return redirect(url_for('login'))
+        
+    course = TrainingCourse.query.filter_by(id=course_id, is_published=True).first_or_404()
+    module = TrainingModule.query.filter_by(id=module_id, course_id=course.id, is_published=True).first_or_404()
+    
+    from services.training import TrainingVolunteerService
+    success, msg = TrainingVolunteerService.mark_module_completed(session['user_id'], module.id)
+    
+    if success:
+        flash('تم إكمال الوحدة بنجاح!', 'success')
+    else:
+        flash(msg, 'danger')
+        
+    return redirect(url_for('training_module_detail', course_id=course.id, module_id=module.id))
+
+@app.route('/training/<int:course_id>')
+def training_detail(course_id):
+    if 'user_id' not in session:
+        flash('يُرجى تسجيل الدخول أولاً.', 'danger')
+        return redirect(url_for('login'))
+        
+    settings = get_settings()
+    course = TrainingCourse.query.filter_by(id=course_id, is_published=True).first_or_404()
+    modules = TrainingModule.query.filter_by(course_id=course_id, is_published=True).order_by(TrainingModule.position.asc(), TrainingModule.id.asc()).all()
+    
+    module_ids = [m.id for m in modules]
+    progress_records = TrainingProgress.query.filter_by(volunteer_id=session['user_id']).filter(TrainingProgress.module_id.in_(module_ids)).all() if module_ids else []
+    completed_module_ids = {p.module_id for p in progress_records if p.is_completed}
+    
+    from services.training import TrainingVolunteerService
+    course_progress = TrainingVolunteerService.get_course_progress(session['user_id'], course_id)
+    
+    return render_template('training_detail.html', course=course, modules=modules, completed_module_ids=completed_module_ids, settings=settings, course_progress=course_progress)
 
 
 if __name__ == '__main__':

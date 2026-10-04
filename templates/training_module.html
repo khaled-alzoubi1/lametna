@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ module.title }} | {{ course.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">
+    <style>
+        body { background-color: var(--jo-light-gray); font-family: 'Tajawal', sans-serif; margin: 0; padding: 0; }
+        .vh-page-wrapper { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        
+        .module-container {
+            background: var(--jo-white);
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 30px;
+        }
+        
+        .module-header {
+            padding: 30px;
+            border-bottom: 1px solid var(--jo-border);
+        }
+        .module-title { font-size: 2rem; font-weight: 900; color: var(--jo-black); margin: 0 0 10px 0; }
+        .course-link { font-size: 1rem; color: var(--jo-dark-gray); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .course-link:hover { color: var(--jo-black); }
+        
+        .module-content-area {
+            padding: 30px;
+            min-height: 200px;
+        }
+        .module-desc {
+            font-size: 1.1rem; color: var(--jo-dark-gray); line-height: 1.7; margin-bottom: 30px;
+            white-space: pre-line;
+        }
+        
+        .content-embed {
+            background: #f8fafc;
+            border: 1px solid var(--jo-border);
+            border-radius: var(--radius-sm);
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            overflow: hidden;
+            border-radius: var(--radius-sm);
+            margin-top: 20px;
+            background: #000;
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+        
+        .action-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 12px 25px;
+            background: var(--jo-black); color: var(--jo-white);
+            border-radius: var(--radius-sm); font-weight: 700; text-decoration: none;
+            transition: background 0.2s; border: none; cursor: pointer; font-family: inherit; font-size: 1rem;
+        }
+        .action-btn:hover { background: #333; color: white; }
+        .action-btn.success { background: var(--jo-green); }
+        .action-btn.success:hover { background: #16a34a; }
+        .action-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        
+        .completion-bar {
+            padding: 20px 30px;
+            background: #f1f5f9;
+            border-top: 1px solid var(--jo-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .completion-status {
+            font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;
+        }
+        .completed-text { color: var(--jo-green); }
+        .incomplete-text { color: var(--jo-dark-gray); }
+    </style>
+</head>
+<body>
+    <header class="navbar-modern">
+        <a href="{{ url_for('index') }}" class="nav-brand-modern">
+            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار فريق لمتنا بصمة">
+            <div class="nav-brand-title">
+                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
+                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+            </div>
+        </a>
+        <div class="nav-actions-modern" style="margin-right: auto;">
+            <a href="{{ url_for('training_detail', course_id=course.id) }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right"></i> العودة للدورة</a>
+        </div>
+    </header>
+
+    <div class="vh-page-wrapper">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div style="padding: 15px; margin-bottom: 20px; border-radius: var(--radius-sm); background: {% if category == 'success' %}#dcfce7{% else %}#fee2e2{% endif %}; color: {% if category == 'success' %}#166534{% else %}#991b1b{% endif %}; border: 1px solid {% if category == 'success' %}#bbf7d0{% else %}#fecaca{% endif %};">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="module-container">
+            <div class="module-header">
+                <a href="{{ url_for('training_detail', course_id=course.id) }}" class="course-link">
+                    <i class="fa-solid fa-book-open"></i> {{ course.title }}
+                </a>
+                <h1 class="module-title">{{ module.title }}</h1>
+            </div>
+            
+            <div class="module-content-area">
+                <div class="module-desc">{{ module.description if module.description else 'لا يوجد وصف متاح.' }}</div>
+                
+                {% set safe_url = module.content_url if module.content_url and (module.content_url.startswith('http://') or module.content_url.startswith('https://')) else None %}
+                
+                {% if module.content_type == 'VIDEO' %}
+                    {% if safe_url %}
+                        <div class="content-embed">
+                            <i class="fa-solid fa-play-circle fa-3x" style="color: #94a3b8; margin-bottom: 15px;"></i>
+                            <h3 style="margin-top: 0;">محتوى مرئي</h3>
+                            <a href="{{ safe_url }}" target="_blank" rel="noopener noreferrer" class="action-btn">
+                                <i class="fa-solid fa-external-link-alt"></i> فتح الفيديو
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="content-embed">
+                            <i class="fa-solid fa-video-slash fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i>
+                            <p>لا يوجد رابط فيديو صالح لهذه الوحدة.</p>
+                        </div>
+                    {% endif %}
+                {% elif module.content_type == 'DOCUMENT' %}
+                    {% if safe_url %}
+                        <div class="content-embed">
+                            <i class="fa-solid fa-file-pdf fa-3x" style="color: #94a3b8; margin-bottom: 15px;"></i>
+                            <h3 style="margin-top: 0;">مستند / ملف للقراءة</h3>
+                            <a href="{{ safe_url }}" target="_blank" rel="noopener noreferrer" class="action-btn">
+                                <i class="fa-solid fa-download"></i> عرض المستند
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="content-embed">
+                            <i class="fa-solid fa-file-excel fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i>
+                            <p>لا يوجد رابط مستند صالح لهذه الوحدة.</p>
+                        </div>
+                    {% endif %}
+                {% elif module.content_type == 'QUIZ' %}
+                    <div class="content-embed">
+                        <i class="fa-solid fa-clipboard-question fa-3x" style="color: #94a3b8; margin-bottom: 15px;"></i>
+                        <h3 style="margin-top: 0;">اختبار تفاعلي</h3>
+                        <p style="color: var(--jo-dark-gray);">ميزة الاختبارات التفاعلية قيد التطوير وسيتم توفيرها قريباً.</p>
+                        <button disabled class="action-btn" style="background: #e2e8f0; color: #94a3b8;"><i class="fa-solid fa-lock"></i> قريباً</button>
+                    </div>
+                {% else %}
+                    {% if safe_url %}
+                        <div class="content-embed">
+                            <i class="fa-solid fa-link fa-3x" style="color: #94a3b8; margin-bottom: 15px;"></i>
+                            <h3 style="margin-top: 0;">رابط خارجي</h3>
+                            <a href="{{ safe_url }}" target="_blank" rel="noopener noreferrer" class="action-btn">
+                                <i class="fa-solid fa-external-link-alt"></i> فتح الرابط
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="content-embed">
+                            <i class="fa-solid fa-circle-info fa-3x" style="color: #cbd5e1; margin-bottom: 15px;"></i>
+                            <p>لا يوجد محتوى إضافي متاح لهذه الوحدة.</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            
+            <div class="completion-bar">
+                <div class="completion-status">
+                    {% if is_completed %}
+                        <i class="fa-solid fa-circle-check completed-text"></i>
+                        <span class="completed-text">مكتمل</span>
+                    {% else %}
+                        <i class="fa-regular fa-circle incomplete-text"></i>
+                        <span class="incomplete-text">غير مكتمل</span>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    {% if not is_completed %}
+                        <form action="{{ url_for('training_module_complete', course_id=course.id, module_id=module.id) }}" method="POST" style="margin: 0;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="action-btn success">
+                                <i class="fa-solid fa-check"></i> تحديد كمكتمل
+                            </button>
+                        </form>
+                    {% else %}
+                        <button disabled class="action-btn" style="background: #e2e8f0; color: var(--jo-green); border: 1px solid var(--jo-green);">
+                            <i class="fa-solid fa-check-double"></i> تم الإكمال
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1115,3 +1115,22 @@ document.addEventListener('DOMContentLoaded', () => {
         statElements.forEach(el => countObserver.observe(el));
     }
 });
+
+﻿
+// MODERN NAVBAR TOGGLE
+function toggleMobileNavModern() {
+    const navMenu = document.getElementById('modernNavMenu');
+    if (navMenu) {
+        navMenu.classList.toggle('active');
+        const icon = document.querySelector('.nav-toggle-btn-modern i');
+        if (icon) {
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+    }
+}

@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مركز الوثائق | فريق لمتنا بصمة</title>
+    <meta name="description" content="المكتبة الرقمية والموارد المتاحة لمتطوعي فريق لمتنا بصمة، تشمل سياسات التطوع والأدلة الإرشادية المعتمدة.">
+    <meta property="og:title" content="مركز الوثائق | فريق لمتنا بصمة">
+    <meta property="og:description" content="المكتبة الرقمية والموارد المتاحة لمتطوعي فريق لمتنا بصمة، تشمل سياسات التطوع والأدلة الإرشادية المعتمدة.">
+    <meta property="og:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <link rel="canonical" href="{{ request.base_url }}">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="{{ settings.logo_url or url_for('static', filename='logo.png') }}?v=1">
     <style>

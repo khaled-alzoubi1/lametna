@@ -206,40 +206,45 @@
 </head>
 <body>
 
-    <header class="navbar">
-        <a href="{{ url_for('index') }}" class="nav-brand">
-            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار فريق لمتنا بصمة">
-            <div class="nav-brand-title">
-                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
-                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
-            </div>
-        </a>
+    <header class="navbar-modern">
+    <a href="{{ url_for('index') }}" class="nav-brand-modern">
+        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار لمتنا بصمة">
+        <div class="nav-brand-title">
+            {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
+            <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+        </div>
+    </a>
 
-        <button class="nav-toggle-btn" onclick="toggleMobileNav()" aria-label="فتح القائمة">
-            <i class="fa-solid fa-bars"></i>
-        </button>
+    <button class="nav-toggle-btn-modern" onclick="toggleMobileNavModern()" aria-label="فتح القائمة">
+        <i class="fa-solid fa-bars"></i>
+    </button>
 
-        <nav>
-            <ul class="nav-links" id="mainNavLinks">
-                <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
-                <li><a href="{{ url_for('index') }}#about">من نحن</a></li>
-                <li><a href="{{ url_for('index') }}#leaderboard">فرسان البصمة</a></li>
-                <li><a href="{{ url_for('index') }}#activities">الفعاليات الميدانية</a></li>
-                <li><a href="{{ url_for('index') }}#gallery">المعرض</a></li>
-                <li class="nav-spacer" style="flex-grow: 1;"></li>
-                {% if session.get('admin_logged_in') %}
-                    <li><a href="{{ url_for('admin_dashboard') }}" class="btn-nav-action"><i class="fa-solid fa-shield-halved"></i> لوحة التحكم</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a></li>
-                {% elif session.get('user_id') %}
-                    <li><a href="{{ url_for('profile') }}" class="btn-nav-action"><i class="fa-solid fa-user-astronaut"></i> بوابة المتطوع</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('login') }}" class="btn-nav-login"><i class="fa-solid fa-arrow-right-to-bracket"></i> تسجيل الدخول</a></li>
-                    <li><a href="{{ url_for('register') }}" class="btn-nav-action"><i class="fa-solid fa-user-plus"></i> انضم كمتطوع</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </header>
+    <div class="nav-menu-wrapper" id="modernNavMenu">
+        <ul class="nav-links-modern">
+            <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
+            <li><a href="{{ url_for('index') }}#about">من نحن</a></li>
+            <li><a href="{{ url_for('index') }}#activities">الفعاليات الميدانية</a></li>
+            <li><a href="{{ url_for('index') }}#leaderboard">فرسان البصمة</a></li>
+            <li><a href="{{ url_for('index') }}#gallery">المعرض</a></li>
+            <li><a href="{{ url_for('index') }}#leadership">الهيئة الإدارية والقيادات</a></li>
+            <li><a href="{{ url_for('index') }}#channels">قنواتنا وشراكاتنا</a></li>
+            <li><a href="#footer">تواصل معنا</a></li>
+        </ul>
+
+        <div class="nav-actions-modern">
+            {% if session.get('admin_logged_in') %}
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-btn-primary"><i class="fa-solid fa-shield-halved"></i> لوحة التحكم</a>
+                <a href="{{ url_for('logout') }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a>
+            {% elif session.get('user_id') %}
+                <a href="{{ url_for('profile') }}" class="nav-btn-primary"><i class="fa-solid fa-user-astronaut"></i> بوابة المتطوع</a>
+                <a href="{{ url_for('logout') }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right-to-bracket"></i> تسجيل الدخول</a>
+                <a href="{{ url_for('register') }}" class="nav-btn-primary"><i class="fa-solid fa-user-plus"></i> انضم كمتطوع</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
 
     {% if sys_settings and sys_settings.is_banner_active and sys_settings.banner_text %}
     <div style="background: #facc15; color: #854d0e; text-align: center; padding: 10px; font-weight: bold; font-size: 0.95rem;">
@@ -284,6 +289,9 @@
 
         <!-- ACTIONS ROW -->
         <div class="reveal-up delay-100" style="display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap;">
+            <a href="{{ url_for('training_list') }}" class="vh-action-btn vh-action-primary">
+                <i class="fa-solid fa-graduation-cap"></i> الأكاديمية
+            </a>
             <button onclick="document.getElementById('editProfileModal').style.display='flex'" class="vh-action-btn">
                 <i class="fa-solid fa-user-pen"></i> تعديل بياناتي
             </button>
@@ -353,6 +361,47 @@
                         <p style="color: var(--jo-dark-gray); font-size: 0.95rem;">لم تسجل في أي فعاليات ميدانية بعد. انطلق إلى الرئيسية لاستعراض الفرص التطوعية.</p>
                     {% endif %}
                 </div>
+
+
+                <!-- Training Progress -->
+                {% if training_courses_progress %}
+                <div class="vh-card reveal-up delay-200" style="margin-bottom: 25px;">
+                    <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 1.2rem; border-bottom: 1px solid var(--jo-border); padding-bottom: 10px;">
+                        <i class="fa-solid fa-graduation-cap" style="color: var(--jo-green);"></i> الأكاديمية والتدريب
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        {% for item in training_courses_progress %}
+                        <div style="border: 1px solid var(--jo-border); border-radius: var(--radius-sm); padding: 15px; display: flex; flex-direction: column; gap: 10px; background: {% if item.progress.is_completed %}#f8fafc{% else %}var(--jo-white){% endif %};">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--jo-black);">{{ item.course.title }}</h4>
+                                {% if item.progress.is_completed %}
+                                    <span style="background: #dcfce7; color: var(--jo-green); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;"><i class="fa-solid fa-check"></i> مكتمل</span>
+                                {% else %}
+                                    <span style="color: var(--jo-dark-gray); font-size: 0.85rem; font-weight: 600;">{{ item.progress.completed }} / {{ item.progress.total }} وحدة</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
+                                <div style="background: var(--jo-green); height: 100%; width: {{ item.progress.percentage }}%; transition: width 0.3s ease;"></div>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                                <span style="font-size: 0.85rem; font-weight: 600; color: {% if item.progress.percentage == 100 %}var(--jo-green){% else %}var(--jo-dark-gray){% endif %};">{{ item.progress.percentage }}%</span>
+                                <a href="{{ url_for('training_detail', course_id=item.course.id) }}" style="font-size: 0.85rem; color: var(--jo-green); font-weight: 700; text-decoration: none;">
+                                    {% if item.progress.is_completed %}
+                                        <i class="fa-solid fa-rotate-left"></i> مراجعة
+                                    {% elif item.progress.percentage > 0 %}
+                                        <i class="fa-solid fa-play"></i> متابعة
+                                    {% else %}
+                                        <i class="fa-solid fa-play"></i> البدء
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Notifications -->
                 <div class="vh-card reveal-up delay-200" id="notificationsArea">

@@ -6,6 +6,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ settings.site_name if settings and settings.site_name else 'فريق لمتنا بصمة | المنصة التطوعية الرسمية' }}</title>
+    <meta name="description" content="المنصة الرسمية لفريق لمتنا بصمة لإدارة العمل التطوعي. انضم إلينا وشارك في مبادراتنا وفعالياتنا المجتمعية لترك بصمة إيجابية.">
+    <meta property="og:title" content="{{ settings.site_name if settings and settings.site_name else 'فريق لمتنا بصمة | المنصة التطوعية الرسمية' }}">
+    <meta property="og:description" content="المنصة الرسمية لفريق لمتنا بصمة لإدارة العمل التطوعي. انضم إلينا وشارك في مبادراتنا وفعالياتنا المجتمعية لترك بصمة إيجابية.">
+    <meta property="og:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <link rel="canonical" href="{{ request.base_url }}">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">
@@ -83,40 +91,45 @@
 <body>
 
     <!-- القائمة العلوية التجاوبية -->
-    <header class="navbar">
-        <a href="{{ url_for('index') }}" class="nav-brand">
-            <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار فريق لمتنا بصمة">
-            <div class="nav-brand-title">
-                {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
-                <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
-            </div>
-        </a>
+    <header class="navbar-modern">
+    <a href="{{ url_for('index') }}" class="nav-brand-modern">
+        <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار لمتنا بصمة">
+        <div class="nav-brand-title">
+            {{ settings.brand_title_main if settings and settings.brand_title_main else 'فريق لمتنا' }}
+            <span>{{ settings.brand_title_sub if settings and settings.brand_title_sub else 'بصمة' }}</span>
+        </div>
+    </a>
 
-        <button class="nav-toggle-btn" onclick="toggleMobileNav()" aria-label="فتح القائمة">
-            <i class="fa-solid fa-bars"></i>
-        </button>
+    <button class="nav-toggle-btn-modern" onclick="toggleMobileNavModern()" aria-label="فتح القائمة">
+        <i class="fa-solid fa-bars"></i>
+    </button>
 
-        <nav>
-            <ul class="nav-links" id="mainNavLinks">
-                <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
-                <li><a href="{{ url_for('index') }}#about">من نحن</a></li>
-                <li><a href="{{ url_for('index') }}#leaderboard">فرسان البصمة</a></li>
-                <li><a href="{{ url_for('index') }}#activities">الفعاليات الميدانية</a></li>
-                <li><a href="{{ url_for('index') }}#gallery">المعرض</a></li>
-                <li class="nav-spacer" style="flex-grow: 1;"></li>
-                {% if session.get('admin_logged_in') %}
-                    <li><a href="{{ url_for('admin_dashboard') }}" class="btn-nav-action"><i class="fa-solid fa-shield-halved"></i> لوحة التحكم</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a></li>
-                {% elif session.get('user_id') %}
-                    <li><a href="{{ url_for('profile') }}" class="btn-nav-action"><i class="fa-solid fa-user-astronaut"></i> بوابة المتطوع</a></li>
-                    <li><a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a></li>
-                {% else %}
-                    <li><a href="{{ url_for('login') }}" class="btn-nav-login"><i class="fa-solid fa-arrow-right-to-bracket"></i> تسجيل الدخول</a></li>
-                    <li><a href="{{ url_for('register') }}" class="btn-nav-action"><i class="fa-solid fa-user-plus"></i> انضم كمتطوع</a></li>
-                {% endif %}
-            </ul>
-        </nav>
-    </header>
+    <div class="nav-menu-wrapper" id="modernNavMenu">
+        <ul class="nav-links-modern">
+            <li><a href="{{ url_for('index') }}">الرئيسية</a></li>
+            <li><a href="{{ url_for('index') }}#about">من نحن</a></li>
+            <li><a href="{{ url_for('index') }}#activities">الفعاليات الميدانية</a></li>
+            <li><a href="{{ url_for('index') }}#leaderboard">فرسان البصمة</a></li>
+            <li><a href="{{ url_for('index') }}#gallery">المعرض</a></li>
+            <li><a href="{{ url_for('index') }}#leadership">الهيئة الإدارية والقيادات</a></li>
+            <li><a href="{{ url_for('index') }}#channels">قنواتنا وشراكاتنا</a></li>
+            <li><a href="#footer">تواصل معنا</a></li>
+        </ul>
+
+        <div class="nav-actions-modern">
+            {% if session.get('admin_logged_in') %}
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-btn-primary"><i class="fa-solid fa-shield-halved"></i> لوحة التحكم</a>
+                <a href="{{ url_for('logout') }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a>
+            {% elif session.get('user_id') %}
+                <a href="{{ url_for('profile') }}" class="nav-btn-primary"><i class="fa-solid fa-user-astronaut"></i> بوابة المتطوع</a>
+                <a href="{{ url_for('logout') }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="nav-btn-secondary"><i class="fa-solid fa-arrow-right-to-bracket"></i> تسجيل الدخول</a>
+                <a href="{{ url_for('register') }}" class="nav-btn-primary"><i class="fa-solid fa-user-plus"></i> انضم كمتطوع</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
 
     <main id="main-content">
 
@@ -283,7 +296,7 @@
                             {% if top_volunteers|length > 1 %}
                             <div class="reveal-up delay-100" style="background: var(--jo-white); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); width: 200px; border-top: 4px solid #94a3b8; position: relative;">
                                 <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #94a3b8; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-weight: 800; display: flex; align-items: center; justify-content: center;">2</div>
-                                <img src="{{ top_volunteers[1].photo_url or url_for('static', filename='logo.png') }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid #94a3b8;">
+                                <img src="{{ top_volunteers[1].photo_url or url_for('static', filename='logo.png') }}" alt="صورة المتطوع {{ top_volunteers[1].name }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid #94a3b8;">
                                 <h4 style="font-weight: 800; color: var(--jo-black); font-size: 1.1rem; margin-bottom: 5px;">{{ top_volunteers[1].name }}</h4>
                                 <p style="font-size: 0.85rem; color: var(--jo-dark-gray); margin-bottom: 10px;">{{ top_volunteers[1].city or 'الأردن' }}</p>
                                 <div style="font-weight: 800; color: var(--jo-green); font-size: 0.95rem;">{{ top_volunteers[1].volunteer_hours }} ساعة</div>
@@ -293,7 +306,7 @@
                             <!-- 1st Place -->
                             <div class="reveal-up" style="background: var(--jo-white); border-radius: var(--radius-lg); padding: 2rem 1.5rem; box-shadow: var(--shadow-md); width: 240px; border-top: 5px solid #fbbf24; position: relative; z-index: 2;">
                                 <div style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); background: #fbbf24; color: #fff; width: 40px; height: 40px; border-radius: 50%; font-weight: 900; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-crown"></i></div>
-                                <img src="{{ top_volunteers[0].photo_url or url_for('static', filename='logo.png') }}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 4px solid #fbbf24;">
+                                <img src="{{ top_volunteers[0].photo_url or url_for('static', filename='logo.png') }}" alt="صورة المتطوع {{ top_volunteers[0].name }}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 4px solid #fbbf24;">
                                 <h4 style="font-weight: 900; color: var(--jo-black); font-size: 1.3rem; margin-bottom: 5px;">{{ top_volunteers[0].name }}</h4>
                                 <p style="font-size: 0.9rem; color: var(--jo-dark-gray); margin-bottom: 12px;">{{ top_volunteers[0].city or 'الأردن' }}</p>
                                 <div style="font-weight: 900; color: var(--jo-green); font-size: 1.1rem;"><i class="fa-solid fa-award" style="margin-left: 5px;"></i>{{ top_volunteers[0].volunteer_hours }} ساعة</div>
@@ -303,7 +316,7 @@
                             {% if top_volunteers|length > 2 %}
                             <div class="reveal-up delay-200" style="background: var(--jo-white); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); width: 200px; border-top: 4px solid #b45309; position: relative;">
                                 <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: #b45309; color: #fff; width: 30px; height: 30px; border-radius: 50%; font-weight: 800; display: flex; align-items: center; justify-content: center;">3</div>
-                                <img src="{{ top_volunteers[2].photo_url or url_for('static', filename='logo.png') }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid #b45309;">
+                                <img src="{{ top_volunteers[2].photo_url or url_for('static', filename='logo.png') }}" alt="صورة المتطوع {{ top_volunteers[2].name }}" style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 3px solid #b45309;">
                                 <h4 style="font-weight: 800; color: var(--jo-black); font-size: 1.1rem; margin-bottom: 5px;">{{ top_volunteers[2].name }}</h4>
                                 <p style="font-size: 0.85rem; color: var(--jo-dark-gray); margin-bottom: 10px;">{{ top_volunteers[2].city or 'الأردن' }}</p>
                                 <div style="font-weight: 800; color: var(--jo-green); font-size: 0.95rem;">{{ top_volunteers[2].volunteer_hours }} ساعة</div>
@@ -318,7 +331,7 @@
                             <div class="reveal-up delay-300" style="display: flex; align-items: center; justify-content: space-between; background: var(--jo-white); padding: 1rem 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
                                 <div style="display: flex; align-items: center; gap: 15px;">
                                     <div style="font-weight: 900; color: var(--jo-dark-gray); font-size: 1.2rem; width: 25px; text-align: center;">{{ loop.index + 3 }}</div>
-                                    <img src="{{ runner.photo_url or url_for('static', filename='logo.png') }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
+                                    <img src="{{ runner.photo_url or url_for('static', filename='logo.png') }}" alt="صورة {{ runner.name }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
                                     <div>
                                         <h5 style="font-weight: 800; color: var(--jo-black); font-size: 1.05rem; margin: 0;">{{ runner.name }}</h5>
                                         <span style="font-size: 0.8rem; color: var(--jo-dark-gray);">{{ runner.city or 'الأردن' }}</span>
@@ -355,7 +368,7 @@
                     <div class="editorial-event-card">
                         <div class="editorial-event-img">
                             {% if event.photo_url %}
-                            <img src="{{ event.photo_url }}" alt="Event Image">
+                            <img src="{{ event.photo_url }}" alt="صورة الفعالية {{ event.title }}">
                             {% else %}
                             <img src="{{ settings.card_img_events }}" alt="Event Default Image">
                             {% endif %}
@@ -612,7 +625,90 @@
         </script>
 
         <!-- P2-B Closing CTA -->
-        <section style="background: var(--jo-green); padding: 5rem 1rem; text-align: center; color: var(--jo-white);">
+
+<!-- LEADERSHIP SECTION -->
+<section class="section-p2 reveal-up" id="leadership">
+    <div class="section-header-p2" style="margin-bottom: 40px; text-align: center;">
+        <h2 class="section-title-p2">الهيئة الإدارية وقادة الفرق</h2>
+        <p class="section-desc-p2">تعرف على قادة فريق لمتنا بصمة</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+        {% for leader in leaders %}
+        <div class="jo-surface" style="padding: 24px; text-align: center; border-radius: var(--radius-lg); transition: transform 0.2s; box-shadow: var(--shadow-sm);" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='none'">
+            <div style="width: 100px; height: 100px; margin: 0 auto 16px; border-radius: 50%; overflow: hidden; border: 3px solid var(--jo-green-light); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <img src="{{ leader.photo_url or url_for('static', filename='logo.png') }}" alt="{{ leader.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.2rem; color: var(--jo-black); font-weight: 800;">{{ leader.name }}</h3>
+            <p style="margin: 0 0 16px 0; color: var(--jo-green); font-weight: 700; font-size: 0.95rem;">{{ leader.position or 'عضو هيئة إدارية' }}</p>
+
+            {% if leader.wa_link %}
+            <a href="{{ leader.wa_link }}" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #eafff0; color: #16a34a; text-decoration: none; border-radius: 20px; font-weight: 700; font-size: 0.9rem; transition: background 0.2s;" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#eafff0'">
+                <i class="fa-brands fa-whatsapp"></i> تواصل عبر واتساب
+            </a>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="jo-surface" style="padding: 24px; text-align: center; border-radius: var(--radius-lg);">
+            <div style="width: 100px; height: 100px; margin: 0 auto 16px; border-radius: 50%; overflow: hidden; border: 3px solid var(--jo-green-light);">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="رئيس الفريق" style="width: 100%; height: 100%; object-fit: contain; padding: 10px;">
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 800;">لين أبوخيط</h3>
+            <p style="margin: 0 0 16px 0; color: var(--jo-green); font-weight: 700;">رئيسة الفريق</p>
+            <a href="https://wa.me/962796425003" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #eafff0; color: #16a34a; text-decoration: none; border-radius: 20px; font-weight: 700; font-size: 0.9rem;"><i class="fa-brands fa-whatsapp"></i> تواصل</a>
+        </div>
+        <div class="jo-surface" style="padding: 24px; text-align: center; border-radius: var(--radius-lg);">
+            <div style="width: 100px; height: 100px; margin: 0 auto 16px; border-radius: 50%; overflow: hidden; border: 3px solid var(--jo-green-light);">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="نائب رئيس الفريق" style="width: 100%; height: 100%; object-fit: contain; padding: 10px;">
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.2rem; font-weight: 800;">خالد الزعبي</h3>
+            <p style="margin: 0 0 16px 0; color: var(--jo-green); font-weight: 700;">نائب رئيس الفريق</p>
+            <a href="https://wa.me/962793888086" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: #eafff0; color: #16a34a; text-decoration: none; border-radius: 20px; font-weight: 700; font-size: 0.9rem;"><i class="fa-brands fa-whatsapp"></i> تواصل</a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- CHANNELS SECTION -->
+<section class="section-p2 reveal-up delay-100" id="channels" style="background: var(--jo-surface);">
+    <div class="section-header-p2" style="margin-bottom: 40px; text-align: center;">
+        <h2 class="section-title-p2">قنواتنا وشراكاتنا</h2>
+        <p class="section-desc-p2">تعرف على قنواتنا الرسمية وشراكاتنا المعتمدة</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+
+        <a href="{{ settings.nahno_url if settings and settings.nahno_url else 'https://www.nahno.org/ngo/%D9%81%D8%B1%D9%8A%D9%82-%D9%84%D9%85%D8%AA%D9%86%D8%A7-%D8%A8%D8%B5%D9%85%D8%A9-81843' }}" target="_blank" class="jo-surface" style="padding: 30px; border-radius: var(--radius-lg); text-decoration: none; text-align: center; border: 2px solid transparent; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#0284c7'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='none'">
+            <div style="width: 70px; height: 70px; border-radius: 18px; background: #e0f2fe; color: #0284c7; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fa-solid fa-hand-holding-heart"></i>
+            </div>
+            <h3 style="color: var(--jo-black); font-size: 1.3rem; margin-bottom: 12px; font-weight: 800;">منصة نحن (Nahno)</h3>
+            <p style="color: var(--jo-dark-gray); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">الموثق الرسمي لساعات وتاريخ العمل التطوعي الأردني.</p>
+            <span style="color: #0284c7; font-weight: 700; font-size: 0.9rem;">زيارة صفحة الفريق &larr;</span>
+        </a>
+
+        <a href="{{ settings.instagram_url if settings and settings.instagram_url else 'https://www.instagram.com/lametna_basmeh?stkn=ZGd5NHZiNmVteDFw' }}" target="_blank" class="jo-surface" style="padding: 30px; border-radius: var(--radius-lg); text-decoration: none; text-align: center; border: 2px solid transparent; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#e1306c'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='none'">
+            <div style="width: 70px; height: 70px; border-radius: 18px; background: #fce7f3; color: #e1306c; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fa-brands fa-instagram"></i>
+            </div>
+            <h3 style="color: var(--jo-black); font-size: 1.3rem; margin-bottom: 12px; font-weight: 800;">انستقرام</h3>
+            <p style="color: var(--jo-dark-gray); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">تابع أحدث الفعاليات والأنشطة الشبابية فور حدوثها.</p>
+            <span style="color: #e1306c; font-weight: 700; font-size: 0.9rem;">متابعة الحساب &larr;</span>
+        </a>
+
+        <a href="{{ settings.whatsapp_url if settings and settings.whatsapp_url else 'https://chat.whatsapp.com/DtNFEE9hSaDHQNIIPjHZJ8' }}" target="_blank" class="jo-surface" style="padding: 30px; border-radius: var(--radius-lg); text-decoration: none; text-align: center; border: 2px solid transparent; transition: all 0.3s ease;" onmouseover="this.style.borderColor='#16a34a'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='none'">
+            <div style="width: 70px; height: 70px; border-radius: 18px; background: #dcfce7; color: #16a34a; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fa-brands fa-whatsapp"></i>
+            </div>
+            <h3 style="color: var(--jo-black); font-size: 1.3rem; margin-bottom: 12px; font-weight: 800;">مجتمع واتساب</h3>
+            <p style="color: var(--jo-dark-gray); font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">للتواصل والإعلان عن الفعاليات الميدانية مع قادة الفريق.</p>
+            <span style="color: #16a34a; font-weight: 700; font-size: 0.9rem;">الانضمام للمجموعة &larr;</span>
+        </a>
+
+    </div>
+</section>
+
+<section style="background: var(--jo-green); padding: 5rem 1rem; text-align: center; color: var(--jo-white);">
             <div class="section-inner reveal-scale">
                 <h2 style="font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem;">{{ settings.closing_cta_title if settings and settings.closing_cta_title else 'انضم إلى رحلتنا اليوم' }}</h2>
                 <p style="font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9;">{{ settings.closing_cta_desc if settings and settings.closing_cta_desc else 'بصمتك تصنع الفارق في مجتمعنا' }}</p>
@@ -626,7 +722,7 @@
 
     </main>
 
-<footer style="background: linear-gradient(180deg, #091a14 0%, #050d0a 100%); color: #e2e8f0; width: 100%; border-top: 3px solid #dc2626; position: relative; margin-top: 60px; padding: 45px 20px 20px; direction: rtl; box-sizing: border-box;">
+<footer style="background: linear-gradient(180deg, #091a14 0%, #050d0a 100%); color: #e2e8f0; width: 100%; border-top: 3px solid #dc2626; position: relative; margin-top: 60px; padding: 45px 20px 20px; direction: rtl; box-sizing: border-box;" id="footer">
         <div style="max-width: 1150px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px;">
 
             <!-- التعريف بالمبادرة -->
@@ -670,6 +766,14 @@
         </div>
 
         <!-- شريط التوقيع والحقوق -->
+        
+        <!-- Legal Links -->
+        <div style="max-width: 1150px; margin: 0 auto; padding-top: 20px; text-align: center; font-size: 0.9rem;">
+            <a href="{{ url_for('privacy') }}" style="color: #cbd5e1; text-decoration: none; margin: 0 15px; transition: color 0.3s;">سياسة الخصوصية</a>
+            <span style="color: #4b5563;">|</span>
+            <a href="{{ url_for('terms') }}" style="color: #cbd5e1; text-decoration: none; margin: 0 15px; transition: color 0.3s;">الشروط والأحكام</a>
+        </div>
+
         <div style="max-width: 1150px; margin: 30px auto 0; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; font-size: 0.82rem; color: #64748b;">
             <div>جميع الحقوق محفوظة &copy; فريق لمتنا بصمة التطوعي</div>
             <div style="color: #94a3b8; font-weight: 600; letter-spacing: 0.3px;">

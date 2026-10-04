@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الفعاليات الميدانية | لمتنا بصمة</title>
-    <meta name="description" content="تصفح أحدث الفعاليات والأنشطة التطوعية القادمة مع فريق لمتنا بصمة. سجل الآن وكن جزءاً من التغيير الإيجابي في المجتمع.">
-    <meta property="og:title" content="الفعاليات الميدانية | لمتنا بصمة">
-    <meta property="og:description" content="تصفح أحدث الفعاليات والأنشطة التطوعية القادمة مع فريق لمتنا بصمة. سجل الآن وكن جزءاً من التغيير الإيجابي في المجتمع.">
+    <title>الشروط والأحكام | لمتنا بصمة</title>
+    <meta name="description" content="الشروط والأحكام الخاصة باستخدام منصة لمتنا بصمة للعمل التطوعي والتسجيل في الفعاليات والمبادرات المجتمعية.">
+    <meta property="og:title" content="الشروط والأحكام | لمتنا بصمة">
+    <meta property="og:description" content="الشروط والأحكام الخاصة باستخدام منصة لمتنا بصمة للعمل التطوعي والتسجيل في الفعاليات والمبادرات المجتمعية.">
     <meta property="og:image" content="{{ url_for('static', filename='logo.png', _external=True) }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
@@ -105,8 +105,7 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo.png') }}?v=1">
 </head>
 <body>
-
-    <header class="navbar-modern">
+<header class="navbar-modern">
     <a href="{{ url_for('index') }}" class="nav-brand-modern">
         <img src="{{ settings.logo_url if settings and settings.logo_url else url_for('static', filename='logo.png') }}" alt="شعار لمتنا بصمة">
         <div class="nav-brand-title">
@@ -146,60 +145,35 @@
     </div>
 </header>
 
-    <main class="events-page-wrapper">
-        <div class="events-header reveal-up">
-            <h1>الفعاليات الميدانية</h1>
-            <p style="color: var(--jo-dark-gray); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">استكشف الفرص التطوعية المتاحة، وسجل حضورك لتصنع أثراً حقيقياً في المجتمع.</p>
-        </div>
+<main class="page-wrapper" style="max-width: 900px; margin: 40px auto; padding: 40px 20px; background: var(--jo-surface); border-radius: var(--radius-lg); border: 1px solid var(--jo-border); box-shadow: var(--shadow-sm);">
+    
+    <h1 style="font-size: 2.2rem; font-weight: 800; color: var(--jo-black); margin-bottom: 30px; text-align: center;">الشروط والأحكام</h1>
+    <div style="color: var(--text-color); line-height: 1.8;">
+        <p style="margin-bottom: 20px; font-size: 1.1rem;">أهلاً بك في منصة "لمتنا بصمة". باستخدامك لهذه المنصة، فإنك توافق على الالتزام بالشروط والأحكام التالية التي تنظم علاقتك بالمنصة والمبادرة.</p>
+        
+        <h3 style="color: var(--jo-green); font-size: 1.3rem; margin-top: 30px; margin-bottom: 15px;">1. مسؤولية الحساب</h3>
+        <p style="margin-bottom: 15px;">أنت مسؤول عن الحفاظ على سرية معلومات حسابك وكلمة المرور الخاصة بك. يجب أن تكون جميع المعلومات المقدمة عند التسجيل صحيحة ودقيقة، حيث تُستخدم لتوثيق مشاركاتك التطوعية.</p>
 
-        <div class="events-grid-full">
-            {% for event in events %}
-            <a href="{{ url_for('event_detail', event_id=event.id) }}" class="card-link-wrapper reveal-up delay-100">
-                <article class="event-card">
-                    <img src="{{ event.photo_url if event.photo_url else (settings.card_img_events|default('https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80')) }}" alt="{{ event.title }}" class="event-card-img">
-                    
-                    <div class="event-card-body">
-                        <h2 class="event-card-title">{{ event.title }}</h2>
-                        <div class="event-card-meta">
-                            <span><i class="fa-regular fa-calendar"></i> {{ event.date }} &nbsp;&bull;&nbsp; {{ event.time }}</span>
-                            <span><i class="fa-solid fa-location-dot"></i> {{ event.location }}</span>
-                        </div>
-                        
-                        {% if event.is_cancelled %}
-                            <div class="event-state-badge state-cancelled"><i class="fa-solid fa-ban"></i> ملغاة</div>
-                        {% elif event.is_completed %}
-                            <div class="event-state-badge state-completed"><i class="fa-solid fa-check-double"></i> منتهية</div>
-                        {% elif current_user %}
-                            {% if event.id in user_registered_event_ids %}
-                                <div class="event-state-badge state-registered"><i class="fa-solid fa-clipboard-check"></i> مسجل للمشاركة</div>
-                            {% elif event.id in user_waitlisted_event_ids %}
-                                <div class="event-state-badge state-waitlisted"><i class="fa-solid fa-hourglass-half"></i> على قائمة الانتظار</div>
-                            {% elif event.is_full %}
-                                <div class="event-state-badge state-full"><i class="fa-solid fa-lock"></i> اكتمل العدد</div>
-                            {% else %}
-                                <div class="event-state-badge state-open"><i class="fa-solid fa-user-plus"></i> متاح للتسجيل</div>
-                            {% endif %}
-                        {% else %}
-                            {% if event.is_full %}
-                                <div class="event-state-badge state-full"><i class="fa-solid fa-lock"></i> اكتمل العدد</div>
-                            {% else %}
-                                <div class="event-state-badge state-open"><i class="fa-solid fa-user-plus"></i> متاح للتسجيل</div>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                </article>
-            </a>
-            {% else %}
-            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: #f8fafc; border-radius: var(--radius-lg); border: 1px dashed var(--jo-border);">
-                <i class="fa-regular fa-calendar-xmark" style="font-size: 3rem; color: var(--jo-dark-gray); margin-bottom: 15px;"></i>
-                <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--jo-black);">لا توجد فعاليات مجدولة</h3>
-                <p style="color: var(--jo-dark-gray);">تابعنا باستمرار للاطلاع على الفرص التطوعية القادمة.</p>
-            </div>
-            {% endfor %}
-        </div>
-    </main>
+        <h3 style="color: var(--jo-green); font-size: 1.3rem; margin-top: 30px; margin-bottom: 15px;">2. التسجيل والمشاركة في الفعاليات</h3>
+        <ul style="list-style-type: disc; margin-right: 30px; margin-bottom: 20px;">
+            <li>التسجيل في الفعالية يمثل التزاماً بالحضور والمشاركة الإيجابية.</li>
+            <li>في حال عدم التمكن من الحضور، يجب إرسال عذر غياب عبر النظام لتجنب التأثير السلبي على سجلك التطوعي.</li>
+            <li>تحتفظ إدارة الفريق بحق قبول أو رفض طلبات الانضمام للفعاليات بناءً على الطاقة الاستيعابية ومتطلبات الفعالية.</li>
+        </ul>
 
-    <footer class="footer">
+        <h3 style="color: var(--jo-green); font-size: 1.3rem; margin-top: 30px; margin-bottom: 15px;">3. السلوك والاستخدام المقبول</h3>
+        <p style="margin-bottom: 15px;">يُتوقع من جميع المتطوعين التحلي بالمسؤولية واحترام الآخرين. يُمنع استخدام المنصة لأي أغراض مسيئة، أو لرفع محتوى غير لائق أو ضار، أو محاولة العبث بالبيانات والأنظمة التقنية للمنصة.</p>
+
+        <h3 style="color: var(--jo-green); font-size: 1.3rem; margin-top: 30px; margin-bottom: 15px;">4. إخلاء المسؤولية</h3>
+        <p style="margin-bottom: 15px;">تم تصميم هذه المنصة لتسهيل إدارة العمل التطوعي. بالرغم من حرصنا على توفر المنصة بشكل دائم وموثوق، إلا أننا لا نضمن عدم حدوث توقفات تقنية مفاجئة ولا نتحمل أي مسؤولية قانونية تنشأ عن استخدام المنصة.</p>
+
+        <h3 style="color: var(--jo-green); font-size: 1.3rem; margin-top: 30px; margin-bottom: 15px;">5. التعديل على الشروط</h3>
+        <p style="margin-bottom: 20px;">نحتفظ بالحق في تعديل أو تحديث هذه الشروط في أي وقت لتتوافق مع تطور متطلبات المبادرة أو الجوانب التنظيمية، ويُعتبر استمرارك في استخدام المنصة موافقة على هذه التعديلات.</p>
+    </div>
+
+</main>
+
+<footer class="footer">
         
             <div style="text-align: center; margin-bottom: 15px; font-size: 0.9rem;">
                 <a href="{{ url_for('privacy') }}" style="color: #cbd5e1; text-decoration: none; margin: 0 10px; transition: color 0.3s;">سياسة الخصوصية</a>
