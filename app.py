@@ -1870,15 +1870,26 @@ def admin_dashboard():
     }
 
     teams = Team.query.order_by(Team.created_at.desc()).all()
+    active_teams = [t for t in teams if t.is_active]
 
-    from services.team import EventTeamAssignmentService
+    from services.team import EventTeamAssignmentService, TeamContributionService
     event_locked_map = EventTeamAssignmentService.get_bulk_historical_locks(events)
-    training_courses=TrainingCourse.query.order_by(TrainingCourse.created_at.desc()).all()
+    training_courses = TrainingCourse.query.order_by(TrainingCourse.created_at.desc()).all()
+
+    # Goals + progress rollup per team
+    goals = Goal.query.order_by(Goal.id.desc()).all()
+    team_ids_with_goals = list({g.team_id for g in goals})
+    team_progress_map = TeamContributionService.get_bulk_team_progress(team_ids_with_goals)
+
+    # System settings (banner, etc.)
+    sys_settings = SystemSettings.query.first()
+
     return render_template(
         'admin.html',
         training_courses=training_courses,
         event_locked_map=event_locked_map,
         settings=settings,
+        sys_settings=sys_settings,
         current_admin=current_admin,
         volunteers=volunteers,
         events=events,
@@ -1887,6 +1898,9 @@ def admin_dashboard():
         excuses=excuses,
         inquiries=inquiries,
         teams=teams,
+        active_teams=active_teams,
+        goals=goals,
+        team_progress_map=team_progress_map,
         chart_data=chart_data,
         hours_chart_data=json.dumps({"labels": growth_labels, "data": growth_data}),
         activities_chart_data=json.dumps({"labels": keywords, "data": activity_data}),

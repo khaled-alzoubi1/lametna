@@ -672,6 +672,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الموقع الجغرافي</label>
                         <input type="text" name="location" class="custom-input" placeholder="عمان - وسط البلد - المسجد الحسيني" required>
+                    </div>
                     <div>
                         <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">Team (Optional)</label>
                         <select name="team_id" class="custom-input">
@@ -803,7 +804,6 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                             {% endif %}
                         </div>
                     </div>
-                    </details>
                     {% else %}
                     <p style="color: var(--jo-dark-gray);">لا توجد فعاليات مسجلة حالياً.</p>
                     {% endfor %}
@@ -1218,34 +1218,34 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
 
         <!-- ==================== 6. تبويب سجل الأعذار والاستفسارات ==================== -->
 
-        <!-- ==================== TEAMS ADMIN TAB ==================== -->
+                <!-- ==================== 6. إدارة الفرق ==================== -->
         <div id="teamsTab" class="admin-tab-content">
             <div class="admin-box">
                 <div class="admin-section-title">
-                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
+                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> إدارة الفرق (Teams)
                 </div>
 
                 <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">اسم الفريق (Team Name) *</label>
                         <input type="text" name="name" class="custom-input" required maxlength="100">
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الوصف (Description)</label>
                         <input type="text" name="description" class="custom-input">
                     </div>
                     <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> إضافة فريق</button>
                     </div>
                 </form>
 
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>OO3U. O U,U?O1USU,</th>
-                            <th>O U,U^O OU?</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
+                            <th>اسم الفريق</th>
+                            <th>الوصف</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1255,19 +1255,19 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                             <td>{{ team.description or '-' }}</td>
                             <td>
                                 {% if team.is_active %}
-                                <span style="color: green; font-weight: bold;">U+O'O</span>
+                                <span style="color: green; font-weight: bold;">نشط</span>
                                 {% else %}
-                                <span style="color: red; font-weight: bold;">U.O U,O</span>
+                                <span style="color: red; font-weight: bold;">غير نشط</span>
                                 {% endif %}
                             </td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> تعديل</button>
                                     <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
                                         {% if team.is_active %}
-                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
+                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> إلغاء تنشيط</button>
                                         {% else %}
-                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
+                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> تنشيط</button>
                                         {% endif %}
                                     </form>
                                 </div>
@@ -1278,19 +1278,19 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                         <div id="editTeamModal{{ team.id }}" class="admin-modal">
                             <div class="admin-modal-content">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
+                                    <h3 style="margin: 0; color: var(--jo-black);">تعديل فريق: {{ team.name }}</h3>
                                     <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
                                 </div>
                                 <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
                                     <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">اسم الفريق *</label>
                                         <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
                                     </div>
                                     <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الوصف</label>
+                                        <input type="text" name="description" class="custom-input" value="{{ team.description or '' }}">
                                     </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> حفظ التعديلات</button>
                                 </form>
                             </div>
                         </div>
@@ -1300,50 +1300,49 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             </div>
         </div>
 
-
-        <!-- ==================== GOALS ADMIN TAB ==================== -->
+        <!-- ==================== 7. أهداف الفريق ==================== -->
         <div id="goalsTab" class="admin-tab-content">
             <div class="admin-box">
                 <div class="admin-section-title">
-                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
+                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> أهداف الفريق (Goals)
                 </div>
 
                 <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الفريق (Team) *</label>
                         <select name="team_id" class="custom-input" required>
-                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
+                            <option value="">-- اختر الفريق --</option>
                             {% for team in teams %}
                             <option value="{{ team.id }}">{{ team.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">العنوان (Title) *</label>
                         <input type="text" name="title" class="custom-input" required maxlength="150">
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الوصف (Description)</label>
                         <input type="text" name="description" class="custom-input">
                     </div>
                     <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
+                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">الهدف المطلوب (Target) *</label>
                         <input type="number" name="target_value" class="custom-input" required min="1">
                     </div>
                     <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
+                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> إضافة هدف</button>
                     </div>
                 </form>
 
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>O U,U?O1USU,</th>
-                            <th>O U,O U+U^O O+</th>
-                            <th>O U,U?OOO_U?O_</th>
-                            <th>O U,OU+O,O O3</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
+                            <th>الفريق</th>
+                            <th>العنوان</th>
+                            <th>الهدف</th>
+                            <th>الإنجاز</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1366,7 +1365,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                             </td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
+                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> تعديل</button>
                                     <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
                                         <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
                                             <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
@@ -1382,23 +1381,23 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
                         <div id="editGoalModal{{ goal.id }}" class="admin-modal">
                             <div class="admin-modal-content">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
+                                    <h3 style="margin: 0; color: var(--jo-black);">تعديل هدف: {{ goal.title }}</h3>
                                     <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
                                 </div>
                                 <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
                                     <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">العنوان *</label>
                                         <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
                                     </div>
                                     <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الوصف</label>
                                         <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
                                     </div>
                                     <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
+                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">الهدف المطلوب *</label>
                                         <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
                                     </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
+                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> حفظ التعديلات</button>
                                 </form>
                             </div>
                         </div>
@@ -1408,771 +1407,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--jo-black); }
             </div>
         </div>
 
-
-        <!-- ==================== TEAMS ADMIN TAB ==================== -->
-        <div id="teamsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
-                </div>
-
-                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
-                        <input type="text" name="name" class="custom-input" required maxlength="100">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>OO3U. O U,U?O1USU,</th>
-                            <th>O U,U^O OU?</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for team in teams %}
-                        <tr>
-                            <td>{{ team.name }}</td>
-                            <td>{{ team.description or '-' }}</td>
-                            <td>
-                                {% if team.is_active %}
-                                <span style="color: green; font-weight: bold;">U+O'O</span>
-                                {% else %}
-                                <span style="color: red; font-weight: bold;">U.O U,O</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
-                                        {% if team.is_active %}
-                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
-                                        {% else %}
-                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
-                                        {% endif %}
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Team Modal -->
-                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
-                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ==================== GOALS ADMIN TAB ==================== -->
-        <div id="goalsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
-                </div>
-
-                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
-                        <select name="team_id" class="custom-input" required>
-                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
-                            {% for team in teams %}
-                            <option value="{{ team.id }}">{{ team.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
-                        <input type="text" name="title" class="custom-input" required maxlength="150">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
-                        <input type="number" name="target_value" class="custom-input" required min="1">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>O U,U?O1USU,</th>
-                            <th>O U,O U+U^O O+</th>
-                            <th>O U,U?OOO_U?O_</th>
-                            <th>O U,OU+O,O O3</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for goal in goals %}
-                        <tr>
-                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
-                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
-                            <td>{{ goal.target_value }}</td>
-                            <td>
-                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
-                            </td>
-                            <td>
-                                {% if goal.status == 'ACTIVE' %}
-                                <span style="color: green; font-weight: bold;">ACTIVE</span>
-                                {% elif goal.status == 'ACHIEVED' %}
-                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
-                                {% else %}
-                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
-                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
-                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
-                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
-                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
-                                        </select>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Goal Modal -->
-                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
-                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
-                                    </div>
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
-                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ==================== TEAMS ADMIN TAB ==================== -->
-        <div id="teamsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
-                </div>
-
-                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
-                        <input type="text" name="name" class="custom-input" required maxlength="100">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>OO3U. O U,U?O1USU,</th>
-                            <th>O U,U^O OU?</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for team in teams %}
-                        <tr>
-                            <td>{{ team.name }}</td>
-                            <td>{{ team.description or '-' }}</td>
-                            <td>
-                                {% if team.is_active %}
-                                <span style="color: green; font-weight: bold;">U+O'O</span>
-                                {% else %}
-                                <span style="color: red; font-weight: bold;">U.O U,O</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
-                                        {% if team.is_active %}
-                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
-                                        {% else %}
-                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
-                                        {% endif %}
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Team Modal -->
-                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
-                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ==================== GOALS ADMIN TAB ==================== -->
-        <div id="goalsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
-                </div>
-
-                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
-                        <select name="team_id" class="custom-input" required>
-                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
-                            {% for team in teams %}
-                            <option value="{{ team.id }}">{{ team.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
-                        <input type="text" name="title" class="custom-input" required maxlength="150">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
-                        <input type="number" name="target_value" class="custom-input" required min="1">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>O U,U?O1USU,</th>
-                            <th>O U,O U+U^O O+</th>
-                            <th>O U,U?OOO_U?O_</th>
-                            <th>O U,OU+O,O O3</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for goal in goals %}
-                        <tr>
-                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
-                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
-                            <td>{{ goal.target_value }}</td>
-                            <td>
-                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
-                            </td>
-                            <td>
-                                {% if goal.status == 'ACTIVE' %}
-                                <span style="color: green; font-weight: bold;">ACTIVE</span>
-                                {% elif goal.status == 'ACHIEVED' %}
-                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
-                                {% else %}
-                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
-                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
-                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
-                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
-                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
-                                        </select>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Goal Modal -->
-                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
-                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
-                                    </div>
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
-                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ==================== TEAMS ADMIN TAB ==================== -->
-        <div id="teamsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
-                </div>
-
-                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
-                        <input type="text" name="name" class="custom-input" required maxlength="100">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>OO3U. O U,U?O1USU,</th>
-                            <th>O U,U^O OU?</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for team in teams %}
-                        <tr>
-                            <td>{{ team.name }}</td>
-                            <td>{{ team.description or '-' }}</td>
-                            <td>
-                                {% if team.is_active %}
-                                <span style="color: green; font-weight: bold;">U+O'O</span>
-                                {% else %}
-                                <span style="color: red; font-weight: bold;">U.O U,O</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
-                                        {% if team.is_active %}
-                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
-                                        {% else %}
-                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
-                                        {% endif %}
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Team Modal -->
-                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
-                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ==================== GOALS ADMIN TAB ==================== -->
-        <div id="goalsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
-                </div>
-
-                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
-                        <select name="team_id" class="custom-input" required>
-                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
-                            {% for team in teams %}
-                            <option value="{{ team.id }}">{{ team.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
-                        <input type="text" name="title" class="custom-input" required maxlength="150">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
-                        <input type="number" name="target_value" class="custom-input" required min="1">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>O U,U?O1USU,</th>
-                            <th>O U,O U+U^O O+</th>
-                            <th>O U,U?OOO_U?O_</th>
-                            <th>O U,OU+O,O O3</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for goal in goals %}
-                        <tr>
-                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
-                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
-                            <td>{{ goal.target_value }}</td>
-                            <td>
-                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
-                            </td>
-                            <td>
-                                {% if goal.status == 'ACTIVE' %}
-                                <span style="color: green; font-weight: bold;">ACTIVE</span>
-                                {% elif goal.status == 'ACHIEVED' %}
-                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
-                                {% else %}
-                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
-                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
-                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
-                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
-                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
-                                        </select>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Goal Modal -->
-                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
-                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
-                                    </div>
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
-                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ==================== TEAMS ADMIN TAB ==================== -->
-        <div id="teamsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-people-group" style="color: var(--jo-green);"></i> OOOO1O O U,U?O1U, (Teams)
-                </div>
-
-                <form action="{{ url_for('admin_create_team') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">OO3U. O U,U?O1USU, (Team Name) *</label>
-                        <input type="text" name="name" class="custom-input" required maxlength="100">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O1USU,</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>OO3U. O U,U?O1USU,</th>
-                            <th>O U,U^O OU?</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for team in teams %}
-                        <tr>
-                            <td>{{ team.name }}</td>
-                            <td>{{ team.description or '-' }}</td>
-                            <td>
-                                {% if team.is_active %}
-                                <span style="color: green; font-weight: bold;">U+O'O</span>
-                                {% else %}
-                                <span style="color: red; font-weight: bold;">U.O U,O</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editTeamModal{{ team.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_toggle_team', team_id=team.id) }}" method="POST" style="display: inline;">
-                                        {% if team.is_active %}
-                                        <button type="submit" class="admin-btn admin-btn-red" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O U,O_USO </button>
-                                        {% else %}
-                                        <button type="submit" class="admin-btn admin-btn-green" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fa-solid fa-power-off"></i> O O?O_USU,</button>
-                                        {% endif %}
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Team Modal -->
-                        <div id="editTeamModal{{ team.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O1USU,: {{ team.name }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editTeamModal{{ team.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_team', team_id=team.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">OO3U. O U,U?O1USU, *</label>
-                                        <input type="text" name="name" class="custom-input" value="{{ team.name }}" required maxlength="100">
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ team.description }}</textarea>
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
-        <!-- ==================== GOALS ADMIN TAB ==================== -->
-        <div id="goalsTab" class="admin-tab-content">
-            <div class="admin-box">
-                <div class="admin-section-title">
-                    <i class="fa-solid fa-bullseye" style="color: var(--jo-green);"></i> OO O_O O  (Goals)
-                </div>
-
-                <form action="{{ url_for('admin_create_goal') }}" method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 2rem;">
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?O1USU, (Team) *</label>
-                        <select name="team_id" class="custom-input" required>
-                            <option value="">-- O O?O O1 O U,U?O1USU, --</option>
-                            {% for team in teams %}
-                            <option value="{{ team.id }}">{{ team.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,O U+U^O O+ (Title) *</label>
-                        <input type="text" name="title" class="custom-input" required maxlength="150">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U^O OU? (Description)</label>
-                        <input type="text" name="description" class="custom-input">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 6px; font-weight: 700; font-size: 0.9rem;">O U,U?OOO_U?O_ (Target) *</label>
-                        <input type="number" name="target_value" class="custom-input" required min="1">
-                    </div>
-                    <div style="display: flex; align-items: flex-end;">
-                        <button type="submit" class="admin-btn admin-btn-green" style="width: 100%;"><i class="fa-solid fa-plus"></i> OO U?O O? U?O_U?</button>
-                    </div>
-                </form>
-
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>O U,U?O1USU,</th>
-                            <th>O U,O U+U^O O+</th>
-                            <th>O U,U?OOO_U?O_</th>
-                            <th>O U,OU+O,O O3</th>
-                            <th>O U,O-OU,O </th>
-                            <th>OO_O1OO OO </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for goal in goals %}
-                        <tr>
-                            <td>{{ goal.team.name if goal.team else 'Unknown' }}</td>
-                            <td>{{ goal.title }}<br><small style="color: #666;">{{ goal.description or '' }}</small></td>
-                            <td>{{ goal.target_value }}</td>
-                            <td>
-                                <strong>{{ team_progress_map.get(goal.team_id, 0) | round(1) }}</strong> / {{ goal.target_value }}
-                            </td>
-                            <td>
-                                {% if goal.status == 'ACTIVE' %}
-                                <span style="color: green; font-weight: bold;">ACTIVE</span>
-                                {% elif goal.status == 'ACHIEVED' %}
-                                <span style="color: blue; font-weight: bold;">ACHIEVED</span>
-                                {% else %}
-                                <span style="color: gray; font-weight: bold;">ARCHIVED</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="admin-btn admin-btn-blue" style="padding: 4px 8px; font-size: 0.8rem;" onclick="openAdminModal('editGoalModal{{ goal.id }}')"><i class="fa-solid fa-pen"></i> O O_O_USU,</button>
-                                    <form action="{{ url_for('admin_status_goal', goal_id=goal.id) }}" method="POST" style="display: inline;">
-                                        <select name="status" onchange="this.form.submit()" style="padding: 4px; font-size: 0.8rem; border-radius: 4px; border: 1px solid var(--jo-border);">
-                                            <option value="ACTIVE" {% if goal.status == 'ACTIVE' %}selected{% endif %}>ACTIVE</option>
-                                            <option value="ACHIEVED" {% if goal.status == 'ACHIEVED' %}selected{% endif %}>ACHIEVED</option>
-                                            <option value="ARCHIVED" {% if goal.status == 'ARCHIVED' %}selected{% endif %}>ARCHIVED</option>
-                                        </select>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Edit Goal Modal -->
-                        <div id="editGoalModal{{ goal.id }}" class="admin-modal">
-                            <div class="admin-modal-content">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-                                    <h3 style="margin: 0; color: var(--jo-black);">O O_O_USU, U?O_U?: {{ goal.title }}</h3>
-                                    <span style="cursor: pointer; font-size: 1.5rem; line-height: 1;" onclick="closeAdminModal('editGoalModal{{ goal.id }}')">&times;</span>
-                                </div>
-                                <form action="{{ url_for('admin_edit_goal', goal_id=goal.id) }}" method="POST">
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,O U+U^O O+ *</label>
-                                        <input type="text" name="title" class="custom-input" value="{{ goal.title }}" required maxlength="150">
-                                    </div>
-                                    <div style="margin-bottom: 15px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U^O OU?</label>
-                                        <textarea name="description" class="custom-input" rows="3">{{ goal.description }}</textarea>
-                                    </div>
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display:block; margin-bottom: 6px; font-weight: 700;">O U,U?OOO_U?O_ *</label>
-                                        <input type="number" name="target_value" class="custom-input" value="{{ goal.target_value }}" required min="1">
-                                    </div>
-                                    <button type="submit" class="admin-btn admin-btn-blue" style="width: 100%;"><i class="fa-solid fa-save"></i> O-U?O U O U,O O_O_USU,OO </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div id="excusesTab" class="admin-tab-content">
+<div id="excusesTab" class="admin-tab-content">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
 
                 <!-- الجانب الأيمن: سجل الأعذار -->
